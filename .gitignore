@@ -1,0 +1,58 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+tox.ini
+
+# Django
+*.log
+db.sqlite3
+backend/db.sqlite3
+staticfiles/
+media/
+static/uploads/
+*.sqlite3
+
+# Variables de entorno
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Documentos de prueba / temporales
+/tmp/
