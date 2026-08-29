@@ -1,3 +1,4 @@
+from cloudinary.models import CloudinaryField
 from django.db import models
 
 
@@ -70,11 +71,11 @@ class Product(models.Model):
         verbose_name='Precio anterior',
         help_text='Precio tachado con fines promocionales (opcional).',
     )
-    image = models.CharField(
-        max_length=500,
+    image = CloudinaryField(
+        'Imagen del producto',
+        null=True,
         blank=True,
-        verbose_name='Imagen',
-        help_text='URL de Cloudinary de la imagen principal del producto.',
+        help_text='Imagen principal del producto almacenada en Cloudinary.',
     )
     quantity = models.PositiveIntegerField(
         default=0,

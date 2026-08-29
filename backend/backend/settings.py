@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 SHARED_APPS = [
+    'cloudinary_storage',
     'django_tenants',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -51,10 +52,24 @@ TENANT_APPS = [
     'catalog',
     'customers',
     'orders',
-    'payments',
 ]
 
 INSTALLED_APPS = list(dict.fromkeys(SHARED_APPS + TENANT_APPS))
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 MIDDLEWARE = [
     'django_tenants.middleware.main.TenantMainMiddleware',

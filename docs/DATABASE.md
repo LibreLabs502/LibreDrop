@@ -2,12 +2,14 @@
 
 Este documento describe el modelo de datos de LibreDrop: las aplicaciones, los esquemas (multi-tenant), cada modelo y el significado de sus campos.
 
+> **Imágenes y Cloudinary:** los campos `StoreProfile.logo` y `Product.image` usan `CloudinaryField`, que sube y almacena los archivos en Cloudinary. Requiere las variables `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET` en las variables de entorno (leídas en `settings.py`). Sin credenciales el servidor arranca, pero las subidas de archivos fallan.
+
 ## Arquitectura multi-tenant
 
 LibreDrop usa **django-tenants**. Cada tienda es un `Tenant` y sus datos se aíslan en un **esquema de PostgreSQL propio**.
 
 - **Esquema público (`public`)**: datos globales — tenants, dominios y usuarios.
-- **Esquema por tienda (uno por cada `Tenant`)**: catálogo, clientes, pedidos, pagos y perfil de la tienda.
+- **Esquema por tienda (uno por cada `Tenant`)**: catálogo, clientes, pedidos y perfil de la tienda.
 
 ```
 public (shared)
@@ -19,7 +21,6 @@ esquema "mitienda" (tenant)
   └── catalog.Category, catalog.Product
   └── customers.Customer
   └── orders.Order, orders.OrderItem
-  └── payments.Payment
 ```
 
 Cuando se crea un `Tenant`, `auto_create_schema` genera su esquema y ejecuta las migraciones de las apps `TENANT_APPS` automáticamente.
@@ -34,7 +35,8 @@ Cuando se crea un `Tenant`, `auto_create_schema` genera su esquema y ejecuta las
 | `catalog` | tenant | `Category`, `Product` |
 | `customers` | tenant | `Customer` |
 | `orders` | tenant | `Order`, `OrderItem` |
-| `payments` | tenant | `Payment` |
+
+> El seguimiento de pagos se agregará en una futura versión; en el MVP v0.1 la venta se cierra directamente por WhatsApp.
 
 ---
 
@@ -90,7 +92,7 @@ Configuración y datos públicos de la tienda dentro de su propio esquema.
 | `tenant` | `OneToOne → tenants.Tenant` | Tienda a la que pertenece el perfil. |
 | `trade_name` | `CharField(100)` | Nombre mostrado públicamente. |
 | `description` | `TextField`, opcional | Descripción corta para la landing. |
-| `logo` | `CharField(500)`, opcional | URL de Cloudinary del logo. |
+| `logo` | `CloudinaryField`, opcional | Logo de la tienda. Se sube y almacena en Cloudinary. |
 | `whatsapp_number` | `CharField(20)` | Número en E.164 (ej. `+50212345678`). **Destino de los pedidos**: el botón "Comprar" abre `wa.me` con este número. |
 | `currency` | `CharField(3)`, default `GTQ` | Código ISO 4217 de la moneda (GTQ, USD, MXN…). |
 | `primary_color` | `CharField(7)`, opcional | Color de marca en HEX (ej. `#FF5722`). |
@@ -119,7 +121,7 @@ Producto publicado en la tienda.
 | `description` | `TextField`, opcional | Detalle del producto. |
 | `price` | `DecimalField(10, 2)` | Precio de venta en la moneda de la tienda. |
 | `compare_at_price` | `DecimalField(10, 2)`, nulo | Precio anterior (tachado) con fines promocionales. |
-| `image` | `CharField(500)`, opcional | URL de Cloudinary de la imagen principal. |
+| `image` | `CloudinaryField`, opcional | Imagen principal del producto. Se sube y almacena en Cloudinary. |
 | `quantity` | `PositiveIntegerField`, default `0` | Existencias simples. Sin control de inventario. |
 | `is_active` | `BooleanField`, default `True` | **Soft-delete**: desmarcado oculta el producto pero conserva su historial en pedidos. |
 | `is_featured` | `BooleanField`, default `False` | Lo muestra en la sección destacada. |
@@ -180,23 +182,6 @@ Línea de un pedido. **Guarda una fotografía (snapshot) del producto** al momen
 
 > **Por qué los snapshots:** si un producto se renombra, cambia de precio o se elimina, el historial del pedido (qué se vendió y a cuánto) se conserva intacto.
 
-### `payments.Payment`
-
-Método y seguimiento del pago de un pedido.
-
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `order` | `OneToOne → Order` (`CASCADE`) | Pedido al que corresponde. Un pedido tiene un solo pago. |
-| `method` | `CharField(20)`, choices, default `other` | Forma de pago (ver abajo). |
-| `status` | `CharField(20)`, choices, default `pending` | Seguimiento del pago (ver abajo). |
-| `amount` | `DecimalField(10, 2)` | Monto pagado o por pagar. |
-| `transaction_id` | `CharField(100)`, opcional | Referencia externa (boleta, transferencia). |
-| `paid_at` | `DateTimeField`, nulo | Cuándo se confirmó el pago. |
-
-**Valores de `method`:** `cash_on_delivery` (contra entrega), `transfer` (transferencia), `other` (otro).
-
-**Valores de `status`:** `pending` (pendiente), `confirmed` (confirmado), `refunded` (reembolsado).
-
 ---
 
 ## Relaciones principales
@@ -209,14 +194,15 @@ Category 1──* Product
 Product 1──* OrderItem
 Customer 1──* Order
 Order 1──* OrderItem
-Order 1──1 Payment
 ```
 
 ## Ciclo de vida de un pedido (WhatsApp)
 
 1. Un visitante arma su lista de productos en la tienda.
 2. El botón de compra abre WhatsApp (`wa.me/<whatsapp_number>` de `StoreProfile`) con el detalle y total del pedido.
-3. Se crea `Order` (`pending`) con sus `OrderItem` (snapshots) y un `Payment` ligado.
-4. El mensaje se envía → `sent_wa`; el vendedor y el cliente lo confirman → `confirmed`.
-5. Al entregar → `fulfilled`; el pago pasa a `confirmed` (con `paid_at`).
+3. El mensaje se envía al vendedor → `sent_wa`.
+4. El vendedor y el cliente confirman la compra → `confirmed`; la forma de pago (contra entrega, transferencia, etc.) se acuerda directamente en WhatsApp.
+5. Al entregar → `fulfilled`.
 6. Si no procede → `cancelled`.
+
+> **Nota:** en el MVP v0.1 no existe registro de pagos; el cobro se gestiona por fuera de la plataforma. Un modelo `Payment` puede agregarse en el futuro.

@@ -1,3 +1,4 @@
+from cloudinary.models import CloudinaryField
 from django.db import models
 
 
@@ -21,11 +22,11 @@ class StoreProfile(models.Model):
         verbose_name='Descripción',
         help_text='Descripción corta de la tienda para la landing.',
     )
-    logo = models.CharField(
-        max_length=500,
+    logo = CloudinaryField(
+        'Logo de la tienda',
+        null=True,
         blank=True,
-        verbose_name='Logo',
-        help_text='URL de Cloudinary del logo de la tienda.',
+        help_text='Logo de la tienda almacenado en Cloudinary.',
     )
     whatsapp_number = models.CharField(
         max_length=20,
