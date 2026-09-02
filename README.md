@@ -13,7 +13,7 @@ LibreDrop es una plataforma open source para crear tiendas online simples. Hecha
 | --- | --- |
 | Backend | Python 3.12+, Django 6, DRF |
 | Autenticación | JWT (djangorestframework-simplejwt) |
-| Base de datos | PostgreSQL (producción) / SQLite (desarrollo) |
+| Base de datos | PostgreSQL (requerido por django-tenants) |
 | Imágenes | Cloudinary |
 | API | REST |
 | Landing pages | HTML, CSS y JS vanilla (deploy en Vercel) |
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 # Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus credenciales
+# Edita .env con tus credenciales (requiere PostgreSQL)
 
 # Migrar base de datos
 python manage.py migrate
@@ -49,7 +49,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-> **Nota sobre la base de datos:** el backend usa PostgreSQL por defecto en el código de ejemplo. Para desarrollo con SQLite, define `DB_ENGINE=django.db.backends.sqlite3` en tu `.env`. Consulta `docs/DEPLOYMENT.md` para el detalle.
+> **Nota sobre la base de datos:** el proyecto usa **django-tenants**, que requiere **PostgreSQL** (las tiendas se aíslan en esquemas propios). No es compatible con SQLite. Las credenciales se configuran con `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` y `DB_PORT`.
 
 ## Configuración
 
@@ -63,7 +63,6 @@ Copia `.env.example` a `.env` y completa las variables:
 | `CLOUDINARY_CLOUD_NAME` | Tu cloud name de Cloudinary |
 | `CLOUDINARY_API_KEY` | Tu API key de Cloudinary |
 | `CLOUDINARY_API_SECRET` | Tu API secret de Cloudinary |
-| `DB_ENGINE` | Motor de BD (default `django.db.backends.postgresql`) |
 | `DB_NAME` | Nombre de la base de datos |
 | `DB_USER` | Usuario de la base de datos |
 | `DB_PASSWORD` | Contraseña de la base de datos |
@@ -75,13 +74,13 @@ Copia `.env.example` a `.env` y completa las variables:
 ```
 LibreDrop/
 ├── backend/          # API REST (Django)
+│   ├── backend/      # Configuración del proyecto Django (settings, urls)
 │   ├── accounts/     # Registro, login y gestión de usuarios
-│   ├── shop/         # Creación y configuración de tiendas
+│   ├── tenants/      # Multi-tenant (Tenant, Domain)
+│   ├── stores/       # Creación y configuración de tiendas
 │   ├── catalog/      # Categorías y productos
-│   └── libredrop/    # Configuración del proyecto Django
-├── landing/          # Landing pages estáticas
-│   ├── libredrop/       # libredrop.vercel.app
-│   └── libredrop_cloud/ # libredrop-cloud.vercel.app
+│   ├── customers/    # Clientes
+│   └── orders/       # Pedidos (WhatsApp)
 └── docs/             # Documentación técnica
 ```
 
@@ -90,8 +89,11 @@ LibreDrop/
 | App | Descripción |
 | --- | --- |
 | `accounts` | Registro, inicio de sesión y gestión de usuarios |
-| `shop` | Creación y configuración de tiendas |
+| `tenants` | Multi-tenant: `Tenant` y `Domain` (django-tenants) |
+| `stores` | Perfil y configuración de la tienda |
 | `catalog` | Gestión de categorías y productos |
+| `customers` | Clientes que compran por WhatsApp |
+| `orders` | Pedidos y líneas de pedido |
 
 ## Documentación
 
