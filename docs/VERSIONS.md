@@ -6,4 +6,20 @@ LibreDrop es una plataforma open source para crear tiendas online simples. La ve
 
 ## Multi-tenancy
 
-Usaremos **django-tenants** para el aislamiento de datos por tienda.
+Usamos **django-tenants** para el aislamiento de datos por tienda.
+
+## Estado actual de modelos (reset v0.1)
+
+Este proyecto pasó por un **reset de modelos**. La base mínima actual es:
+
+```
+accounts
+└── User (AbstractUser)
+
+tenants
+├── Tenant   (TenantMixin, name + auto_create_schema)
+├── Domain   (DomainMixin)
+└── Membership (User ↔ Tenant, role)
+```
+
+`stores`, `catalog`, `customers` y `orders` están registradas como apps tenant pero **sin modelos propios** todavía. Se construirán después, de a uno.

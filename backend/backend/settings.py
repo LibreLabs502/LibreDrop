@@ -17,6 +17,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def env(key, default=None):
+    """Lee una variable de entorno tratando las vacías como no definidas.
+
+    django-dotenv carga el .env con placeholders vacíos (p. ej. `DB_NAME=`),
+    lo que deja la variable presente pero con valor ''. Eso haría que
+    `os.environ.get(key, default)` devuelva '' en vez del default. Aquí
+    tratamos '' como ausente para que el default se aplique correctamente.
+    """
+    value = os.environ.get(key)
+    if value is None or value == "":
+        return default
+    return value
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,23 +51,23 @@ ALLOWED_HOSTS = []
 # Application definition
 
 SHARED_APPS = [
-    'cloudinary_storage',
     'django_tenants',
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
+    'django.contrib.sessions',
+    'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'cloudinary_storage',
     'django_cleanup',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'tenants',
     'accounts',
-    'rest_framework_simplejwt.token_blacklist',
 ]
 
 TENANT_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'rest_framework',
-    'rest_framework_simplejwt',
     'stores',
     'catalog',
     'customers',
@@ -81,9 +96,9 @@ SIMPLE_JWT = {
 }
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': env('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': env('CLOUDINARY_API_SECRET', ''),
 }
 
 STORAGES = {
@@ -143,11 +158,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': os.environ.get('DB_NAME', 'libredrop'),
-        'USER': os.environ.get('DB_USER', 'libredrop'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'libredrop'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': env('DB_NAME', 'libredrop'),
+        'USER': env('DB_USER', 'libredrop'),
+        'PASSWORD': env('DB_PASSWORD', 'libredrop'),
+        'HOST': env('DB_HOST', 'localhost'),
+        'PORT': env('DB_PORT', '5432'),
     }
 }
 

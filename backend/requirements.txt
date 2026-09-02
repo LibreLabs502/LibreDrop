@@ -15,10 +15,8 @@ psycopg==3.3.4
 PyJWT==2.13.0
 python-dotenv==1.2.3
 requests==2.34.2
-simplejwt==2.0.1
 six==1.17.0
 sqlparse==0.6.0
 types-PyYAML==6.0.12.20260815
-typing==3.7.4.3
 typing_extensions==4.16.0
 urllib3==2.7.0

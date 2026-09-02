@@ -89,11 +89,11 @@ LibreDrop/
 | App | Descripción |
 | --- | --- |
 | `accounts` | Registro, inicio de sesión y gestión de usuarios |
-| `tenants` | Multi-tenant: `Tenant` y `Domain` (django-tenants) |
-| `stores` | Perfil y configuración de la tienda |
-| `catalog` | Gestión de categorías y productos |
-| `customers` | Clientes que compran por WhatsApp |
-| `orders` | Pedidos y líneas de pedido |
+| `tenants` | Multi-tenant: `Tenant`, `Domain` y `Membership` (django-tenants) |
+| `stores` | Perfil y configuración de la tienda *(modelos aún por definir)* |
+| `catalog` | Categorías y productos *(modelos aún por definir)* |
+| `customers` | Clientes *(modelos aún por definir)* |
+| `orders` | Pedidos y líneas de pedido *(modelos aún por definir)* |
 
 ## Documentación
 
