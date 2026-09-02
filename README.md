@@ -95,6 +95,12 @@ LibreDrop/
 | `customers` | Clientes *(modelos aún por definir)* |
 | `orders` | Pedidos y líneas de pedido *(modelos aún por definir)* |
 
+## Modelo de datos
+
+Diagrama entidad-relación (ERD) con los modelos actuales del MVP:
+
+![Diagrama ERD de LibreDrop](libredrop_erd.jpg)
+
 ## Documentación
 
 - [VERSIONS.md](docs/VERSIONS.md) — versionado y características del proyecto.
