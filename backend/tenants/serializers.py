@@ -10,8 +10,8 @@ class TenantSerializer(serializers.ModelSerializer):
     domain = DomainSerializer(many=True, read_only=True)
     class Meta:
         model = Tenant
-        fields = ["id", "name", "description", "phone", "email", "logo", "domains"]
-        read_only_fields = ["id", "domains"]
+        fields = ["id", "name", "description", "phone", "email", "logo", "domain"]
+        read_only_fields = ["id", "domain"]
 
 class TenantCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,5 +25,5 @@ class MemberShipSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "tenant"]
 
     def create(self, validated_data):
-        tenant = self.context["request"].tenat
+        tenant = self.context["request"].tenant
         return Membership.objects.create(tenant=tenant, **validated_data, role=Membership.Role.OWNER)

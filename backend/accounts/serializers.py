@@ -13,7 +13,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "email", "password", "confirm_password"]
 
     def validate(self, attrs):
-        if attrs["password"] != attrs("confirm_password"):
+        if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError("Las contraseñas no coinciden")
 
         attrs.pop("confirm_password")
