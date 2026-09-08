@@ -75,6 +75,9 @@ TENANT_APPS = [
 
 INSTALLED_APPS = list(dict.fromkeys(SHARED_APPS + TENANT_APPS))
 
+TENANT_MODEL = "tenants.Tenant"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+
 AUTH_USER_MODEL = 'accounts.User'
 
 REST_FRAMEWORK = {
@@ -132,6 +135,7 @@ DATABASE_ROUTERS = (
 )
 
 ROOT_URLCONF = 'backend.urls'
+PUBLIC_SCHEMA_URLCONF = 'backend.urls_public'
 
 TEMPLATES = [
     {
