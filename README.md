@@ -5,7 +5,8 @@ LibreDrop es una plataforma open source para crear tiendas online simples. Hecha
 - Crea tu tienda, publica productos y recibe pedidos por WhatsApp.
 - Sin intermediarios ni comisiones. Tú controlas tus datos y API keys.
 - Arquitectura modular con Django y Django REST Framework.
-- Multi-tenant: cada tienda aísla sus categorías y productos.
+- Multi-tenant: cada tienda aísla sus categorías y productos en un esquema propio.
+- Registro en un solo paso: al crear el usuario se genera su tienda, esquema y dominio automáticamente.
 
 ## Stack
 
@@ -76,8 +77,7 @@ LibreDrop/
 ├── backend/          # API REST (Django)
 │   ├── backend/      # Configuración del proyecto Django (settings, urls)
 │   ├── accounts/     # Registro, login y gestión de usuarios
-│   ├── tenants/      # Multi-tenant (Tenant, Domain)
-│   ├── stores/       # Creación y configuración de tiendas
+│   ├── tenants/      # Multi-tenant (Tenant, Domain, Membership)
 │   ├── catalog/      # Categorías y productos
 │   ├── customers/    # Clientes
 │   └── orders/       # Pedidos (WhatsApp)
@@ -90,8 +90,7 @@ LibreDrop/
 | --- | --- |
 | `accounts` | Registro, inicio de sesión y gestión de usuarios |
 | `tenants` | Multi-tenant: `Tenant`, `Domain` y `Membership` (django-tenants) |
-| `stores` | Perfil y configuración de la tienda *(modelos aún por definir)* |
-| `catalog` | Categorías y productos *(modelos aún por definir)* |
+| `catalog` | Categorías y productos (modelos de tenant) |
 | `customers` | Clientes *(modelos aún por definir)* |
 | `orders` | Pedidos y líneas de pedido *(modelos aún por definir)* |
 
@@ -99,11 +98,59 @@ LibreDrop/
 
 Diagrama entidad-relación (ERD) con los modelos actuales del MVP:
 
-![Diagrama ERD de LibreDrop](libredrop_erd.jpg)
+```mermaid
+erDiagram
+    Tenant ||--o{ Domain : "domains"
+    Tenant ||--o{ Membership : "memberships"
+    User ||--o{ Membership : "memberships"
+    Category ||--o{ Product : "products"
+
+    Tenant {
+        int id PK
+        string schema_name UK "esquema PostgreSQL"
+        string name "nombre comercial"
+        text description
+        string phone
+        string email
+        string logo "Cloudinary"
+    }
+    Domain {
+        int id PK
+        string domain UK "ej. mitienda.libredrop.localhost"
+        boolean is_primary
+    }
+    Membership {
+        int id PK
+        string role "OWNER | STAFF"
+    }
+    User {
+        int id PK
+        string username UK
+        string email
+        string password
+    }
+    Category {
+        int id PK
+        string name
+        text description
+    }
+    Product {
+        int id PK
+        string name
+        text description
+        decimal price
+        string image "Cloudinary"
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+> Los modelos `User`, `Tenant`, `Domain` y `Membership` viven en el esquema `public`; `Category` y `Product` en el esquema de cada tenant.
 
 ## Documentación
 
 - [VERSIONS.md](docs/VERSIONS.md) — versionado y características del proyecto.
+- [DATABASE.md](docs/DATABASE.md) — modelo de datos y arquitectura multi-tenant.
 - [CONTRIB.md](docs/CONTRIB.md) — guía para contribuir.
 
 ## Contribuciones

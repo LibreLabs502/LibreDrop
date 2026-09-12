@@ -2,14 +2,12 @@
 
 Este documento describe el modelo de datos de LibreDrop: las aplicaciones, los esquemas (multi-tenant), cada modelo y el significado de sus campos.
 
-> **Estado actual (MVP):** el proyecto está en una fase de **reseteo de modelos**. En este momento solo existen los modelos base de la plataforma: `accounts.User`, `tenants.Tenant`, `tenants.Domain` y `tenants.Membership`. Las apps `stores`, `catalog`, `customers` y `orders` están **sin modelos propios**; se diseñarán manualmente, uno por uno, en versiones futuras.
-
 ## Arquitectura multi-tenant
 
 LibreDrop usa **django-tenants**. Cada tienda es un `Tenant` y sus datos se aíslan en un **esquema de PostgreSQL propio**.
 
 - **Esquema público (`public`)**: datos globales de la plataforma — tenants, dominios, usuarios y membresías.
-- **Esquema por tienda (uno por cada `Tenant`)**: el catálogo, clientes, pedidos y perfil de tienda se crearán por tenant cuando se definan esos modelos.
+- **Esquema por tienda (uno por cada `Tenant`)**: el catálogo (categorías y productos) vive en el esquema de cada tienda. Clientes y pedidos se añadirán cuando se definan esos modelos.
 
 ```
 public (shared)
@@ -17,10 +15,11 @@ public (shared)
   └── django_tenants.middleware analiza el dominio de la petición y activa el esquema correcto
 
 esquema "mitienda" (tenant)
-  └── (sin modelos por ahora; stores, catalog, customers, orders se añaden después)
+  └── catalog.Category, catalog.Product
+  └── (customers, orders se añaden después)
 ```
 
-Cuando se crea un `Tenant`, `auto_create_schema` genera su esquema y ejecuta las migraciones de las apps `TENANT_APPS` automáticamente.
+Cuando se crea un `Tenant`, `auto_create_schema` genera su esquema y ejecuta las migraciones de las apps `TENANT_APPS` automáticamente. El registro de un usuario crea la tienda, su esquema y su dominio en un solo paso (ver [Registro y creación automática de tienda](#registro-y-creacion-automatica-de-tienda)).
 
 ### Apps shared vs tenant
 
@@ -28,8 +27,7 @@ Cuando se crea un `Tenant`, `auto_create_schema` genera su esquema y ejecuta las
 | --- | --- | --- |
 | `tenants` | shared | `Tenant`, `Domain`, `Membership` |
 | `accounts` | shared | `User` |
-| `stores` | tenant | *(sin modelos aún)* |
-| `catalog` | tenant | *(sin modelos aún)* |
+| `catalog` | tenant | `Category`, `Product` |
 | `customers` | tenant | *(sin modelos aún)* |
 | `orders` | tenant | *(sin modelos aún)* |
 
@@ -45,8 +43,12 @@ Registro de la tienda en el esquema público. Cada `Tenant` genera y posee un es
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `schema_name` | `CharField(63)`, único | Subdominio que identifica a la tienda, p. ej. `mitienda` para `mitienda.libredrop.app`. Heredado de `TenantMixin`. |
+| `schema_name` | `CharField(63)`, único | Subdominio que identifica a la tienda, p. ej. `mitienda` para `mitienda.libredrop.localhost`. Heredado de `TenantMixin`. |
 | `name` | `CharField(200)` | Nombre comercial del tenant. |
+| `description` | `TextField`, opcional | Descripción de la tienda. |
+| `phone` | `CharField(20)` | Teléfono de contacto de la tienda (donde se reciben los pedidos por WhatsApp). |
+| `email` | `EmailField`, opcional | Correo de contacto de la tienda. |
+| `logo` | `CloudinaryField`, opcional | Logo de la tienda almacenado en Cloudinary. |
 
 - `auto_create_schema = True`: al guardar el registro se crea el esquema y se migran las apps tenant.
 
@@ -56,9 +58,11 @@ Dominio o subdominio asociado a un tenant, proveniente del mixin `DomainMixin`.
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `domain` | `CharField(253)`, único | Dominio completo, p. ej. `mitienda.libredrop.app`. |
+| `domain` | `CharField(253)`, único | Dominio completo, p. ej. `mitienda.libredrop.localhost` en desarrollo. |
 | `tenant` | `FK → tenants.Tenant` | Tienda a la que pertenece el dominio. |
 | `is_primary` | `BooleanField` | Indica si es el dominio principal de la tienda. |
+
+> En desarrollo los dominios de tenant usan la zona `*.libredrop.localhost`, para lo cual hay que mapear `libredrop.localhost` a `127.0.0.1` en `/etc/hosts` (p. ej. `127.0.0.1 mitienda.libredrop.localhost`). En producción se usará el dominio real de cada tienda.
 
 ### `tenants.Membership`
 
@@ -68,7 +72,10 @@ Relación global que indica a qué tiendas (`Tenant`) pertenece un usuario de la
 | --- | --- | --- |
 | `user` | `FK → accounts.User` (`CASCADE`) | Usuario de la plataforma. |
 | `tenant` | `FK → tenants.Tenant` (`CASCADE`) | Tienda a la que el usuario pertenece. |
-| `role` | `CharField(200)` | Rol dentro de la tienda (texto libre por ahora). |
+| `role` | `CharField(20)` con `TextChoices` | Rol dentro de la tienda: `OWNER` o `STAFF`. Por defecto `OWNER`. |
+
+- **Unicidad:** existe la constraint `unique_user_tenant_membership` sobre `(user, tenant)`: un usuario solo puede tener una membresía por tienda.
+- La relación es simétrica: `user.memberships` y `tenant.memberships`.
 
 ### `accounts.User`
 
@@ -86,11 +93,63 @@ Usuario global de la plataforma (dueño/administrador de una o varias tiendas). 
 
 ---
 
+## Registro y creación automática de tienda
+
+Al registrarse un nuevo usuario (`POST /accounts/register/`), el `RegisterSerializer` realiza en una sola transacción atómica:
+
+1. Crea el usuario (`accounts.User`).
+2. Crea el `Tenant` con `schema_name` basado en `tenant_name` (slug separado por `-`, convertido a `_`); `auto_create_schema` genera el esquema.
+3. Crea la `Membership` entre el usuario y la tienda con rol `OWNER`.
+4. Crea el `Domain` primario `{slug}.libredrop.localhost`.
+
+El mismo flujo se aplica al crear una tienda vía API: `TenantViewSet.perform_create` (con `TenantCreateSerializer`) crea la tienda y su esquema y asocia al usuario autenticado como `OWNER` (el dominio se debe agregar por separado vía `/domains/`).
+
+## API de tenants
+
+El router de `tenants` expone tres viewsets bajo `backend.urls` (y `backend.urls_public` para el esquema `public`):
+
+| Endpoint | Acciones | Permisos |
+| --- | --- | --- |
+| `/tenants/` | CRUD de tiendas del usuario autenticado | Lista/ver: autenticado (miembro). Crear/actualizar/eliminar: `IsTenantMember` / propietario |
+| `/domains/` | CRUD de dominios del tenant actual | Lista/ver: `IsTenantMember`; crear/actualizar/eliminar: `IsTenantOwner` |
+| `/memberships/` | CRUD de membresías del tenant actual | Lista/ver: `IsTenantMember`; crear/actualizar/eliminar: `IsTenantOwner` |
+
+Los viewsets de `Domain` y `Membership` siempre operan sobre el tenant de la petición (`request.tenant`), de modo que cada tienda solo ve y administra sus propios dominios y miembros.
+
+> En el esquema `public` solo se sirven los recursos globales (`/accounts/`, `admin/` y `/tenants/`); cuando una petición llega a un dominio de tenant se activa su esquema y se sirve la misma URLconf (`backend.urls`). `SHOW_PUBLIC_IF_NO_TENANT_FOUND = True` muestra el esquema público si no hay un tenant coincidente.
+
+---
+
 ## Esquema tenant (por tienda)
 
-*(En construcción)* Las apps `stores`, `catalog`, `customers` y `orders` están registradas como `TENANT_APPS` y sus futuros modelos se crearán en el esquema de cada tienda, pero todavía **no tienen modelos propios**.
+En cada esquema de tienda se crean los modelos de las apps declaradas en `TENANT_APPS`.
 
-Mientras no existan modelos propios, no generan migraciones y no crean tablas en los esquemas de tenant.
+### `catalog.Category`
+
+Categoría de productos de la tienda.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | `AutoField` | Identificador. |
+| `name` | `CharField(255)` | Nombre de la categoría. |
+| `description` | `TextField`, opcional | Descripción de la categoría. |
+
+### `catalog.Product`
+
+Producto de la tienda, asociado a una categoría.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `id` | `AutoField` | Identificador. |
+| `name` | `CharField(200)` | Nombre del producto. |
+| `description` | `TextField`, opcional | Descripción del producto. |
+| `price` | `DecimalField(10, 2)` | Precio del producto. |
+| `image` | `CloudinaryField`, opcional | Imagen del producto almacenada en Cloudinary. |
+| `category` | `FK → catalog.Category` (`CASCADE`) | Categoría a la que pertenece (acceso reverso `category.products`). |
+| `created_at` | `DateTimeField(auto_now_add)` | Fecha de creación. |
+| `updated_at` | `DateTimeField(auto_now)` | Fecha de última actualización. |
+
+> Las apps `customers` y `orders` no tienen modelos propios todavía; cuando se definan, sus tablas se crearán en el esquema de cada tienda.
 
 ---
 
@@ -99,11 +158,12 @@ Mientras no existan modelos propios, no generan migraciones y no crean tablas en
 ```
 User 1──* Membership *──1 Tenant
 Tenant 1──* Domain
+Category 1──* Product
 ```
 
 ---
 
 ## Notas
 
-- `membership` (en `tenants/models.py`) importa `get_user_model` sin usarlo directamente; las FKs referencian los modelos por string (`"accounts.User"` / `"tenants.Tenant"`).
-- Los `related_name` de ambas FKs de `Membership` usan `membership` (singular), por lo que el acceso reverso es `user.membership` y `tenant.membership` (con `.get()`).
+- Los `related_name` de ambas FKs de `Membership` son `memberships` (plural): `user.memberships` y `tenant.memberships`.
+- Los roles de `Membership.Role` (`OWNER`, `STAFF`) se definen como `TextChoices` en `tenants/models.py`.
