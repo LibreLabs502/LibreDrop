@@ -1,16 +1,21 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
+from django.utils.text import slugify
 from rest_framework import serializers
+
+from tenants.models import Membership, Tenant
 
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True)
+    tenant_name = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "password", "confirm_password"]
+        fields = ["id", "username", "email", "password", "confirm_password", "tenant_name"]
 
     def validate(self, attrs):
         if attrs["password"] != attrs["confirm_password"]:
@@ -20,13 +25,27 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return attrs
 
-
+    @transaction.atomic
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data) # type: ignore
+        tenant_name = validated_data.pop("tenant_name")
+
+        user = User.objects.create_user(**validated_data) # type: ignore
+
+        tenant = Tenant.objects.create(
+            name = tenant_name
+        )
+
+        membership = Membership.objects.create(
+            user = user,
+            tenant = tenant,
+            role = Membership.Role.OWNER
+        )
+
+        return user
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
-    password = serializers.CharField(write_only = True, required = True, validators = [validate_password])
+    password = serializers.CharField(write_only = True, required = True)
 
     def validate(self, attrs):
         username = attrs.get("username")
@@ -45,4 +64,4 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "email", "first_name", "last_name"]
-        read_only_fields = ["id", "email"]
+        read_only_fields = ["email"]
