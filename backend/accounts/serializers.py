@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
+from django.utils.text import slugify
 
 from rest_framework import serializers
 
@@ -32,7 +33,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data) # type: ignore
 
         tenant = Tenant.objects.create(
-            name = tenant_name
+            schema_name=slugify(tenant_name).replace("-", "_"),
+            name=tenant_name,
         )
 
         membership = Membership.objects.create(
@@ -54,8 +56,6 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username = username, password = password)
         if not user:
             raise serializers.ValidationError("Credenciales invalidas")
-        if not user.is_active:
-            raise serializers.ValidationError("La cuenta esta desactivada")
 
         attrs["user"] = user
         return attrs

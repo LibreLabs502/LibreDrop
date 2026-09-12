@@ -136,6 +136,7 @@ DATABASE_ROUTERS = (
 
 ROOT_URLCONF = 'backend.urls'
 PUBLIC_SCHEMA_URLCONF = 'backend.urls_public'
+SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
 
 TEMPLATES = [
     {

@@ -1,11 +1,14 @@
+from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, User
-# Create your views here.
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+
+User = get_user_model()
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
@@ -22,7 +25,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data["user"] # type: ignore
 
-            refresh = RefreshToken.for_user(user)
+            refresh = RefreshToken.for_user(user) # type: ignore
 
             return Response(
                 {
