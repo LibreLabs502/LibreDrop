@@ -47,7 +47,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         Domain.objects.create(
-            domain = f"{base}.localhost",
+            domain = f"{base}.libredrop.localhost",
             tenant = tenant,
             is_primary = True
         )
