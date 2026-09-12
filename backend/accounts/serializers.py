@@ -5,7 +5,7 @@ from django.utils.text import slugify
 
 from rest_framework import serializers
 
-from tenants.models import Membership, Tenant
+from tenants.models import Membership, Tenant, Domain
 
 User = get_user_model()
 
@@ -32,8 +32,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user = User.objects.create_user(**validated_data) # type: ignore
 
+        base = slugify(tenant_name) or f"tenant-{user.id}"
+        schema_name = base.replace("-", "_")
+
         tenant = Tenant.objects.create(
-            schema_name=slugify(tenant_name).replace("-", "_"),
+            schema_name = schema_name,
             name=tenant_name,
         )
 
@@ -41,6 +44,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             user = user,
             tenant = tenant,
             role = Membership.Role.OWNER
+        )
+
+        Domain.objects.create(
+            domain = f"{base}.localhost",
+            tenant = tenant,
+            is_primary = True
         )
 
         return user

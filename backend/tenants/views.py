@@ -4,7 +4,7 @@ from .serializers import TenantSerializer, TenantCreateSerializer, DomainSeriali
 from .permissions import IsTenantMember, IsTenantOwner
 
 # Create your views here.
-class TenantView(viewsets.ModelViewSet):
+class TenantViewSet(viewsets.ModelViewSet):
     serializer_class = TenantSerializer
 
     def get_serializer_class(self): # type: ignore
