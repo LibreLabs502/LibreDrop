@@ -118,6 +118,17 @@ Los viewsets de `Domain` y `Membership` siempre operan sobre el tenant de la pet
 
 > En el esquema `public` solo se sirven los recursos globales (`/accounts/`, `admin/` y `/tenants/`); cuando una petición llega a un dominio de tenant se activa su esquema y se sirve la misma URLconf (`backend.urls`). `SHOW_PUBLIC_IF_NO_TENANT_FOUND = True` muestra el esquema público si no hay un tenant coincidente.
 
+## API de catálogo
+
+El router de `catalog` expone dos viewsets bajo `backend.urls` (y `backend.urls_public`) que operan sobre los modelos del esquema del tenant actual:
+
+| Endpoint | Acciones | Permisos |
+| --- | --- | --- |
+| `/category/` | CRUD de categoría | Lista/ver: público; crear/actualizar/eliminar: `IsAuthenticated` + `IsTenantMember` |
+| `/products/` | CRUD de producto | Lista/ver: público; crear/actualizar/eliminar: `IsAuthenticated` + `IsTenantMember` |
+
+`ProductSerializer` define campos de escritura (`name`, `description`, `price`, `image`, `category`) y marca `id`, `created_at` y `updated_at` como de solo lectura.
+
 ---
 
 ## Esquema tenant (por tienda)
@@ -149,7 +160,7 @@ Producto de la tienda, asociado a una categoría.
 | `created_at` | `DateTimeField(auto_now_add)` | Fecha de creación. |
 | `updated_at` | `DateTimeField(auto_now)` | Fecha de última actualización. |
 
-> Las apps `customers` y `orders` no tienen modelos propios todavía; cuando se definan, sus tablas se crearán en el esquema de cada tienda.
+> Las apps `customers` y `orders` no tienen modelos propios todavía; no se tocarán por ahora y se construirán en futuras versiones. Cuando se definan, sus tablas se crearán en el esquema de cada tienda.
 
 ---
 

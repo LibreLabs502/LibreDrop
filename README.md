@@ -7,6 +7,7 @@ LibreDrop es una plataforma open source para crear tiendas online simples. Hecha
 - Arquitectura modular con Django y Django REST Framework.
 - Multi-tenant: cada tienda aísla sus categorías y productos en un esquema propio.
 - Registro en un solo paso: al crear el usuario se genera su tienda, esquema y dominio automáticamente.
+- API de catálogo: CRUD de categorías y productos por tienda (backend de v1 terminado).
 
 ## Stack
 
@@ -90,9 +91,9 @@ LibreDrop/
 | --- | --- |
 | `accounts` | Registro, inicio de sesión y gestión de usuarios |
 | `tenants` | Multi-tenant: `Tenant`, `Domain` y `Membership` (django-tenants) |
-| `catalog` | Categorías y productos (modelos de tenant) |
-| `customers` | Clientes *(modelos aún por definir)* |
-| `orders` | Pedidos y líneas de pedido *(modelos aún por definir)* |
+| `catalog` | API de categorías y productos (modelos de tenant) |
+| `customers` | Clientes *(pendiente, se abordará en futuras versiones)* |
+| `orders` | Pedidos y líneas de pedido *(pendiente, se abordará en futuras versiones)* |
 
 ## Modelo de datos
 
@@ -146,6 +147,17 @@ erDiagram
 ```
 
 > Los modelos `User`, `Tenant`, `Domain` y `Membership` viven en el esquema `public`; `Category` y `Product` en el esquema de cada tenant.
+
+## API
+
+Endpoints principales del backend:
+
+| Endpoint | Descripción | Permisos |
+| --- | --- | --- |
+| `POST /accounts/register/` | Registro en un paso: usuario + tienda + esquema + dominio + membresía `OWNER` | Público |
+| `POST /accounts/token/` | Login JWT | Público |
+| `/tenants/`, `/domains/`, `/memberships/` | Gestión de tiendas, dominios y miembros | `IsTenantMember` / `IsTenantOwner` |
+| `/category/`, `/products/` | CRUD del catálogo de la tienda | Lectura pública; escritura: autenticado + `IsTenantMember` |
 
 ## Documentación
 
