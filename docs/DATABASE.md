@@ -43,7 +43,7 @@ Registro de la tienda en el esquema público. Cada `Tenant` genera y posee un es
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `schema_name` | `CharField(63)`, único | Subdominio que identifica a la tienda, p. ej. `mitienda` para `mitienda.libredrop.localhost`. Heredado de `TenantMixin`. |
+| `schema_name` | `CharField(63)`, único | Subdominio que identifica a la tienda, p. ej. `mitienda` para `mitienda.libredrop.com`. Heredado de `TenantMixin`. |
 | `name` | `CharField(200)` | Nombre comercial del tenant. |
 | `description` | `TextField`, opcional | Descripción de la tienda. |
 | `phone` | `CharField(20)` | Teléfono de contacto de la tienda (donde se reciben los pedidos por WhatsApp). |
@@ -58,11 +58,11 @@ Dominio o subdominio asociado a un tenant, proveniente del mixin `DomainMixin`.
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
-| `domain` | `CharField(253)`, único | Dominio completo, p. ej. `mitienda.libredrop.localhost` en desarrollo. |
+| `domain` | `CharField(253)`, único | Dominio completo, p. ej. `mitienda.libredrop.com`. |
 | `tenant` | `FK → tenants.Tenant` | Tienda a la que pertenece el dominio. |
 | `is_primary` | `BooleanField` | Indica si es el dominio principal de la tienda. |
 
-> En desarrollo los dominios de tenant usan la zona `*.libredrop.localhost`, para lo cual hay que mapear `libredrop.localhost` a `127.0.0.1` en `/etc/hosts` (p. ej. `127.0.0.1 mitienda.libredrop.localhost`). En producción se usará el dominio real de cada tienda.
+> Cada tienda recibe el dominio `{slug}.libredrop.com`. Para desarrollarlo en local, mapea la zona `libredrop.com` a `127.0.0.1` en `/etc/hosts` (p. ej. `127.0.0.1 mitienda.libredrop.com`).
 
 ### `tenants.Membership`
 
@@ -100,7 +100,9 @@ Al registrarse un nuevo usuario (`POST /accounts/register/`), el `RegisterSerial
 1. Crea el usuario (`accounts.User`).
 2. Crea el `Tenant` con `schema_name` basado en `tenant_name` (slug separado por `-`, convertido a `_`); `auto_create_schema` genera el esquema.
 3. Crea la `Membership` entre el usuario y la tienda con rol `OWNER`.
-4. Crea el `Domain` primario `{slug}.libredrop.localhost`.
+4. Crea el `Domain` primario `{slug}.libredrop.com`.
+
+La respuesta de `POST /accounts/register/` (y del login `POST /accounts/token/`) incluye `domain`, el dominio primario de la primera tienda del usuario, para que el frontend pueda dirigirse a su storefront/panel.
 
 El mismo flujo se aplica al crear una tienda vía API: `TenantViewSet.perform_create` (con `TenantCreateSerializer`) crea la tienda y su esquema y asocia al usuario autenticado como `OWNER` (el dominio se debe agregar por separado vía `/domains/`).
 
@@ -113,6 +115,7 @@ El router de `tenants` expone tres viewsets bajo `backend.urls` (y `backend.urls
 | `/tenants/` | CRUD de tiendas del usuario autenticado | Lista/ver: autenticado (miembro). Crear/actualizar/eliminar: `IsTenantMember` / propietario |
 | `/domains/` | CRUD de dominios del tenant actual | Lista/ver: `IsTenantMember`; crear/actualizar/eliminar: `IsTenantOwner` |
 | `/memberships/` | CRUD de membresías del tenant actual | Lista/ver: `IsTenantMember`; crear/actualizar/eliminar: `IsTenantOwner` |
+| `GET /store/` | Información pública de la tienda del tenant de la petición (storefront). Devuelve `404` si no hay tenant | `AllowAny` (público) |
 
 Los viewsets de `Domain` y `Membership` siempre operan sobre el tenant de la petición (`request.tenant`), de modo que cada tienda solo ve y administra sus propios dominios y miembros.
 
@@ -128,6 +131,8 @@ El router de `catalog` expone dos viewsets bajo `backend.urls` (y `backend.urls_
 | `/products/` | CRUD de producto | Lista/ver: público; crear/actualizar/eliminar: `IsAuthenticated` + `IsTenantMember` |
 
 `ProductSerializer` define campos de escritura (`name`, `description`, `price`, `image`, `category`) y marca `id`, `created_at` y `updated_at` como de solo lectura.
+
+> **Campos Cloudinary:** `Tenant.logo` (en `TenantSerializer`) y `Product.image` usan `CloudinaryUrlField` (`tenants/serializers.py`). Al escribir aceptan un archivo (multipart/form-data); al leer devuelven la URL completa y segura del recurso o `null` si no hay imagen. El frontend también usa este comportamiento para subir logos e imágenes.
 
 ---
 

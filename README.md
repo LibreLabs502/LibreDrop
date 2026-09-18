@@ -14,11 +14,11 @@ LibreDrop es una plataforma open source para crear tiendas online simples. Hecha
 | Capa | Tecnología |
 | --- | --- |
 | Backend | Python 3.12+, Django 6, DRF |
+| Frontend | React 18, Vite (landing, storefront y panel de admin) |
 | Autenticación | JWT (djangorestframework-simplejwt) |
 | Base de datos | PostgreSQL (requerido por django-tenants) |
 | Imágenes | Cloudinary |
 | API | REST |
-| Landing pages | HTML, CSS y JS vanilla (deploy en Vercel) |
 
 ## Requisitos
 
@@ -49,9 +49,16 @@ python manage.py migrate
 
 # Iniciar servidor de desarrollo
 python manage.py runserver
+
+# En otra terminal: la interfaz web (React + Vite)
+cd ../frontend
+npm install
+npm run dev   # http://127.0.0.1:5173 (proxy de /api al backend en :8000)
 ```
 
 > **Nota sobre la base de datos:** el proyecto usa **django-tenants**, que requiere **PostgreSQL** (las tiendas se aíslan en esquemas propios). No es compatible con SQLite. Las credenciales se configuran con `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` y `DB_PORT`.
+>
+> **Nota sobre dominios:** cada tienda recibe el dominio `{slug}.libredrop.com`. Para desarrollarlo en local, mapea esa zona a `127.0.0.1` en `/etc/hosts` (p. ej. `127.0.0.1 mitienda.libredrop.com`).
 
 ## Configuración
 
@@ -82,6 +89,7 @@ LibreDrop/
 │   ├── catalog/      # Categorías y productos
 │   ├── customers/    # Clientes
 │   └── orders/       # Pedidos (WhatsApp)
+├── frontend/         # Interfaz web (React 18 + Vite)
 └── docs/             # Documentación técnica
 ```
 
@@ -117,7 +125,7 @@ erDiagram
     }
     Domain {
         int id PK
-        string domain UK "ej. mitienda.libredrop.localhost"
+        string domain UK "ej. mitienda.libredrop.com"
         boolean is_primary
     }
     Membership {
@@ -154,10 +162,11 @@ Endpoints principales del backend:
 
 | Endpoint | Descripción | Permisos |
 | --- | --- | --- |
-| `POST /accounts/register/` | Registro en un paso: usuario + tienda + esquema + dominio + membresía `OWNER` | Público |
-| `POST /accounts/token/` | Login JWT | Público |
+| `POST /accounts/register/` | Registro en un paso: usuario + tienda + esquema + dominio + membresía `OWNER`. Responde con el dominio primario de la tienda creada | Público |
+| `POST /accounts/token/` | Login JWT. Responde con `access`, `refresh` y el dominio primario de la tienda | Público |
 | `/tenants/`, `/domains/`, `/memberships/` | Gestión de tiendas, dominios y miembros | `IsTenantMember` / `IsTenantOwner` |
-| `/category/`, `/products/` | CRUD del catálogo de la tienda | Lectura pública; escritura: autenticado + `IsTenantMember` |
+| `GET /store/` | Información pública de la tienda resuelta por el dominio de la petición | Público |
+| `/category/`, `/products/` | CRUD del catálogo de la tienda. `image` se envía como archivo y se devuelve como URL completa de Cloudinary | Lectura pública; escritura: autenticado + `IsTenantMember` |
 
 ## Documentación
 

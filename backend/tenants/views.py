@@ -1,7 +1,23 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from .models import Tenant, Domain, Membership
 from .serializers import TenantSerializer, TenantCreateSerializer, DomainSerializer, MembershipSerializer
 from .permissions import IsTenantMember, IsTenantOwner
+
+class StoreView(APIView):
+    """Información pública de la tienda resuelta por el tenant de la petición."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        tenant = getattr(request, "tenant", None)
+        if tenant is None:
+            return Response(
+                {"detail": "Tienda no encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(TenantSerializer(tenant).data)
 
 # Create your views here.
 class TenantViewSet(viewsets.ModelViewSet):

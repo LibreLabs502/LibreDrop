@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from tenants.serializers import CloudinaryUrlField
 from .models import Category, Product
 
 class CategorySerializers(serializers.ModelSerializer):
@@ -7,6 +8,7 @@ class CategorySerializers(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
+    image = CloudinaryUrlField()
     class Meta:
         model = Product
         fields = ["id", "name", "description", "price", "image", "category", "created_at", "updated_at"]

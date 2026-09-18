@@ -12,8 +12,22 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"mensaje": "Usuario Creado con exito"}, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+
+            membership = user.memberships.select_related("tenant").first()
+            domain = (
+                membership.tenant.domains.filter(is_primary=True).values_list("domain", flat=True).first()
+                if membership
+                else None
+            )
+
+            return Response(
+                {
+                    "mensaje": "Usuario Creado con exito",
+                    "domain": domain,
+                },
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
@@ -23,12 +37,20 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data["user"] # type: ignore
 
+            membership = user.memberships.select_related("tenant").first()
+            domain = (
+                membership.tenant.domains.filter(is_primary=True).values_list("domain", flat=True).first()
+                if membership
+                else None
+            )
+
             refresh = RefreshToken.for_user(user) # type: ignore
 
             return Response(
                 {
                     "access": str(refresh.access_token),
-                    "refresh": str(refresh)
+                    "refresh": str(refresh),
+                    "domain": domain,
                 }
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

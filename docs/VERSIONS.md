@@ -38,15 +38,21 @@ catalog
 
 ## Registro
 
-`POST /accounts/register/` crea en un solo paso (transacción atómica): el usuario, su tienda (`Tenant`), el esquema de PostgreSQL (`auto_create_schema`), el dominio primario `{slug}.libredrop.localhost` y la membresía `OWNER`.
+`POST /accounts/register/` crea en un solo paso (transacción atómica): el usuario, su tienda (`Tenant`), el esquema de PostgreSQL (`auto_create_schema`), el dominio primario `{slug}.libredrop.com` y la membresía `OWNER`. Responde `201` con `{"mensaje": ..., "domain": ...}` donde `domain` es el dominio primario de la tienda creada.
+
+## Autenticación
+
+- `POST /accounts/token/` (login) devuelve los tokens JWT (`access`, `refresh`) **y** el `domain` primario de la primera tienda del usuario, para que el frontend pueda redirigir al panel de la tienda.
+- `GET/PATCH /accounts/user/` consulta/actualiza los datos del usuario autenticado.
 
 ## API de tenants
 
 - `GET/POST /tenants/` — listar/crear tiendas del usuario autenticado (al crear se asocia como `OWNER`).
 - `/domains/` — administrar dominios del tenant de la petición.
 - `/memberships/` — administrar miembros del tenant de la petición.
+- `GET /store/` — información pública de la tienda resuelta por el tenant de la petición (usado por el storefront). Permiso `AllowAny`; devuelve `404` si no hay tenant.
 
-Permisos: `IsTenantMember` para lectura, `IsTenantOwner` para escritura. En desarrollo los dominios de tenant usan la zona `*.libredrop.localhost` (mapear a `127.0.0.1` en `/etc/hosts`).
+Permisos: `IsTenantMember` para lectura, `IsTenantOwner` para escritura. Cada tienda recibe el dominio `{slug}.libredrop.com`; en desarrollo hay que mapear esa zona a `127.0.0.1` en `/etc/hosts`.
 
 ## API de catálogo
 
@@ -58,3 +64,7 @@ Los viewsets de `catalog` se exponen en la URLconf `backend.urls` (y `backend.ur
 | `/products/` | CRUD de productos del tenant actual |
 
 Permisos: `AllowAny` para lecturas (`list`/`retrieve`); `IsAuthenticated` + `IsTenantMember` para crear, actualizar y eliminar. Como viven en `TENANT_APPS`, categorías y productos se guardan en el esquema de cada tienda.
+
+### Serializadores y Cloudinary
+
+`Tenant.logo` y `Product.image` usan el campo `CloudinaryUrlField` (definido en `tenants/serializers.py`): al escribir aceptan un archivo cargado (multipart/form-data) y al leer devuelven la **URL completa** (`secure=True`) del recurso en Cloudinary, o `null` si no hay imagen.
