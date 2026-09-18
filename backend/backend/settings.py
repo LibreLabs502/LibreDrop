@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -160,15 +161,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': env('DB_NAME', 'libredrop'),
-        'USER': env('DB_USER', 'libredrop'),
-        'PASSWORD': env('DB_PASSWORD', 'libredrop'),
-        'HOST': env('DB_HOST', 'localhost'),
-        'PORT': env('DB_PORT', '5432'),
-    }
+    'default': dj_database_url.parse(
+        env(
+            'DATABASE_URL',
+            'postgres://libredrop:libredrop@localhost:5432/libredrop',
+        ),
+        conn_max_age=600,
+    )
 }
+DATABASES['default']['ENGINE'] = 'django_tenants.postgresql_backend'
 
 
 # Password validation
