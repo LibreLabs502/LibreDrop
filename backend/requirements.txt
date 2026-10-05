@@ -8,9 +8,12 @@ django-cloudinary-storage==0.3.0
 django-stubs==6.1.2
 django-stubs-ext==6.1.2
 djangorestframework==3.18.1
+djangorestframework_simplejwt==5.5.1
 idna==3.20
 pillow==12.3.0
 psycopg==3.3.6
+PyJWT==2.15.1
+python-dotenv==1.2.4
 requests==2.34.2
 six==1.17.0
 sqlparse==0.6.0
