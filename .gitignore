@@ -1,0 +1,40 @@
+# Entorno virtual / Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Django
+*.log
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+
+# Variables de entorno
+.env
+.env.local
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+dist/
+*.local
+
+# Certificados
+certs/
+
+# IDE / SO
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
