@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOST")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOST", "").split(",")
 
 
 # Application definition
@@ -76,6 +76,8 @@ TEMPLATES = [
         },
     },
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
