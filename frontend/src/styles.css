@@ -586,6 +586,19 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 10px;
 }
 
+.landing-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+
+.landing-hero {
+  width: min(560px, 90vw);
+  border-radius: 16px;
+  margin: 10px 0 18px;
+}
+
 .landing h1 { margin: 0 0 8px; max-width: 560px; }
 .landing p { color: var(--muted); max-width: 520px; }
 .landing-actions { display: flex; gap: 12px; margin-top: 18px; }
