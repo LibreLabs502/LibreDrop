@@ -18,4 +18,4 @@ Pendiente:
 
 - Middleware/contexto de tenant actual por request.
 - Managers que filtren por `tenant_id`.
-- Modelos de dominio (catálogo, órdenes, clientes) con `tenant_id`.
+- Modelos de dominio (catálogo, órdenes, clientes) con `tenant_id` (`catalog` iniciado).
