@@ -2,7 +2,7 @@ from django.db import models
 from cloudinary.models import CloudinaryField
 from django.utils.text import slugify
 
-from backend.backend import settings
+from django.conf import settings
 
 class Tenant(models.Model):
     name = models.CharField(max_length=200)
