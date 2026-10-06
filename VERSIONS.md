@@ -7,20 +7,24 @@ Se rehizo desde cero por cambio de arquitectura en multitenancy:
 - Se abandona multitenancy por **schemas**.
 - Se adopta multitenancy **lineal por `tenant_id`**: mismas tablas, cada registro con su `tenant_id`.
 
-Arquitectura actual del backend:
+### Backend
 
-- `accounts`: usuarios y autenticación (serializers y vistas listas).
-- `tenants`: tenants, membresías y slug por tenant (serializers, urls y vistas listos).
-- Filtrado por `tenant_id` en consultas y permisos.
+- `accounts`: registro, login JWT (`/auth/register/`, `/auth/login/`, `/auth/token/refresh/`).
+- `tenants`: CRUD de tiendas (`/tenants/tenant/`) y miembros (`/tenants/tenants/:id/members/`).
+- `catalog`: categorías y productos por tenant (`/catalog/tenants/:id/categories/`, `.../products/`).
+- Filtrado por membresía del usuario en cada queryset.
 - Sin `django-tenants`, sin Docker ni nginx por ahora.
-- Landing de plataforma con branding propio (logo, hero y favicon en `frontend/public/images`).
-- Frontend adaptado al nuevo backend (en desarrollo, sin commitear):
-  - `/` redirige a `/admin` (login/registro si no hay sesión).
-  - Panel con Tiendas y Miembros.
-  - Pendiente: catálogo, storefront público y dominio por tenant.
 
-Pendiente:
+### Frontend
+
+- `/` redirige a `/admin` (login/registro si no hay sesión).
+- Panel: Tiendas, Miembros y Catálogo.
+- Vite proxy `/api` → `http://localhost:8000`.
+- Pendiente: catálogo público/storefront y dominio por tenant.
+
+### Pendiente
 
 - Middleware/contexto de tenant actual por request.
-- Managers que filtren por `tenant_id`.
-- Modelos de dominio (catálogo, órdenes, clientes) con `tenant_id` (`catalog` iniciado).
+- Endpoint `/me/` para obtener el usuario actual.
+- `MembershipSerializer`: exponer `user` y `role` como escribibles.
+- Storefront público por tenant.
