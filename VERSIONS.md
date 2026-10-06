@@ -13,3 +13,9 @@ Arquitectura actual del backend:
 - `tenants`: tenants, membresías y slug por tenant.
 - Filtrado por `tenant_id` en consultas y permisos.
 - Sin `django-tenants`, sin Docker ni nginx por ahora.
+
+Pendiente:
+
+- Middleware/contexto de tenant actual por request.
+- Managers que filtren por `tenant_id`.
+- Modelos de dominio (catálogo, órdenes, clientes) con `tenant_id`.
