@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from backend.accounts.serializers import UserSerializer
+from accounts.serializers import UserSerializer
 from .models import Tenant, Membership
 
 class TenantSerializer(serializers.ModelSerializer):

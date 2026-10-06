@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(blank=True, null=True, unique=True)),
                 ('description', models.TextField(blank=True)),
                 ('logo', cloudinary.models.CloudinaryField(max_length=255, verbose_name='logo')),
+                ('whatsapp', models.CharField(max_length=20))
             ],
             options={
                 'verbose_name': 'Tenant',
