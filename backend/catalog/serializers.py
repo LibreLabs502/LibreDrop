@@ -40,6 +40,12 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.image:
+            data["image"] = instance.image.url
+        return data
+
     def validate_category(self, category):
         tenant_id = self.context["view"].kwargs["tenant_id"]
 

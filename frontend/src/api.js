@@ -121,6 +121,10 @@ export const membershipsApi = {
   remove: (tenantId, id) => api(`/tenants/tenants/${tenantId}/members/${id}/`, { method: 'DELETE' }),
 }
 
+export const storefrontApi = {
+  getStore: (slug) => api(`/public/${slug}/`, { auth: false }),
+}
+
 const formDataFrom = (data, files = {}) => {
   const fd = new FormData()
   for (const [key, value] of Object.entries(data || {})) {
