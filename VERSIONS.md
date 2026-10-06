@@ -10,7 +10,7 @@ Se rehizo desde cero por cambio de arquitectura en multitenancy:
 Arquitectura actual del backend:
 
 - `accounts`: usuarios y autenticación (serializers y vistas listas).
-- `tenants`: tenants, membresías y slug por tenant.
+- `tenants`: tenants, membresías y slug por tenant (serializers, urls y vistas listos).
 - Filtrado por `tenant_id` en consultas y permisos.
 - Sin `django-tenants`, sin Docker ni nginx por ahora.
 
