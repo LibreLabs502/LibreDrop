@@ -14,6 +14,10 @@ Arquitectura actual del backend:
 - Filtrado por `tenant_id` en consultas y permisos.
 - Sin `django-tenants`, sin Docker ni nginx por ahora.
 - Landing de plataforma con branding propio (logo, hero y favicon en `frontend/public/images`).
+- Frontend adaptado al nuevo backend (en desarrollo, sin commitear):
+  - `/` redirige a `/admin` (login/registro si no hay sesión).
+  - Panel con Tiendas y Miembros.
+  - Pendiente: catálogo, storefront público y dominio por tenant.
 
 Pendiente:
 
