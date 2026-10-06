@@ -1,32 +1,42 @@
 import { useEffect, useState } from 'react'
-import { membershipsApi } from '../../api'
-import { Alert, Card, Field, Row, Spinner } from '../ui'
-
-const EMPTY = { user: '', role: 'STAFF' }
+import { membershipsApi, tenantsApi } from '../../api'
+import { Alert, Card, Field, Spinner } from '../ui'
 
 export default function MembershipsManager() {
+  const [stores, setStores] = useState(null)
+  const [tenantId, setTenantId] = useState('')
   const [list, setList] = useState(null)
-  const [form, setForm] = useState(EMPTY)
+  const [form, setForm] = useState({ user: '' })
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
-  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    tenantsApi
+      .list()
+      .then((s) => {
+        setStores(s)
+        if (s.length > 0) setTenantId(String(s[0].id))
+      })
+      .catch((e) => setError(e.message))
+  }, [])
 
   const load = () => {
+    if (!tenantId) return
     membershipsApi
-      .list()
+      .list(tenantId)
       .then(setList)
-      .catch(() => setFailed(true))
+      .catch((e) => setError(e.message))
   }
 
-  useEffect(load, [])
+  useEffect(load, [tenantId])
 
   const create = async (e) => {
     e.preventDefault()
     setError('')
     setOk('')
     try {
-      await membershipsApi.create({ user: Number(form.user), role: form.role })
-      setForm(EMPTY)
+      await membershipsApi.create(tenantId, { user: Number(form.user) })
+      setForm({ user: '' })
       setOk('Miembro agregado.')
       load()
     } catch (err) {
@@ -35,11 +45,11 @@ export default function MembershipsManager() {
   }
 
   const remove = async (m) => {
-    if (!window.confirm(`¿Eliminar la membresía del usuario #${m.user}?`)) return
+    if (!window.confirm(`¿Eliminar la membresía #${m.id}?`)) return
     setError('')
     setOk('')
     try {
-      await membershipsApi.remove(m.id)
+      await membershipsApi.remove(tenantId, m.id)
       setOk('Membresía eliminada.')
       load()
     } catch (err) {
@@ -47,36 +57,24 @@ export default function MembershipsManager() {
     }
   }
 
-  if (!failed && list === null) return <Spinner />
-
-  if (failed) {
-    return (
-      <Card title="Miembros de la tienda">
-        <Alert>
-          Solo puedes administrar los miembros del tenant de la petición (según el Host). Abre este panel
-          en el dominio de tu tienda.
-        </Alert>
-        <button className="btn" onClick={load}>Reintentar</button>
-      </Card>
-    )
-  }
+  if (stores === null) return <Spinner />
 
   return (
     <div className="stack">
+      <Card title="Tienda">
+        <Field label="Selecciona tienda">
+          <select value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
+            {stores.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </Field>
+      </Card>
+
       <Card title="Agregar miembro">
         <form onSubmit={create} className="row add-row">
           <Field label="ID de usuario *">
-            <input
-              type="number"
-              value={form.user}
-              onChange={(e) => setForm({ ...form, user: e.target.value })}
-            />
-          </Field>
-          <Field label="Rol">
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-              <option value="OWNER">OWNER</option>
-              <option value="STAFF">STAFF</option>
-            </select>
+            <input type="number" value={form.user} onChange={(e) => setForm({ user: e.target.value })} />
           </Field>
           <button className="btn">Agregar</button>
         </form>
@@ -86,13 +84,13 @@ export default function MembershipsManager() {
         </div>
       </Card>
 
-      <Card title={`Miembros (${list.length})`}>
-        {list.length === 0 && <p className="muted">No hay miembros.</p>}
-        {list.map((m) => (
+      <Card title={`Miembros (${(list || []).length})`}>
+        {list && list.length === 0 && <p className="muted">No hay miembros.</p>}
+        {(list || []).map((m) => (
           <div className="row-item" key={m.id}>
             <div className="row-item-main">
-              <b>Usuario #{m.user}</b>
-              <span className={m.role === 'OWNER' ? 'chip' : 'chip muted-span'}>{m.role}</span>
+              <b>{m.user?.username || `Usuario #${m.user?.id || m.user}`}</b>
+              <span className="muted">{m.tenant?.name}</span>
             </div>
             <span className="btn-group">
               <button className="btn small danger" onClick={() => remove(m)}>Eliminar</button>

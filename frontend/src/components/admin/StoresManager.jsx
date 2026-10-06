@@ -1,16 +1,28 @@
 import { useEffect, useState } from 'react'
 import { tenantsApi } from '../../api'
-import { useAdmin } from '../../store/AdminContext'
-import { Alert, Card, Field, Row, Spinner } from '../ui'
+import { Alert, Card, Field, Spinner } from '../ui'
 
-const EMPTY = { name: '', description: '', phone: '', email: '' }
+const EMPTY = { name: '', description: '', whatsapp: '' }
 
 export default function StoresManager() {
-  const { stores, reload, error: loadError } = useAdmin()
+  const [stores, setStores] = useState(null)
+  const [loadError, setLoadError] = useState('')
   const [form, setForm] = useState(EMPTY)
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
   const [busy, setBusy] = useState(false)
+
+  const load = () => {
+    tenantsApi
+      .list()
+      .then((list) => {
+        setStores(list)
+        setLoadError('')
+      })
+      .catch((e) => setLoadError(e.message))
+  }
+
+  useEffect(load, [])
 
   const create = async (e) => {
     e.preventDefault()
@@ -20,8 +32,8 @@ export default function StoresManager() {
     try {
       await tenantsApi.create(form)
       setForm(EMPTY)
-      setOk('Tienda creada (con su esquema propio) y asociada a tu usuario como OWNER.')
-      await reload()
+      setOk('Tienda creada.')
+      load()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -30,19 +42,19 @@ export default function StoresManager() {
   }
 
   const remove = async (t) => {
-    if (!window.confirm(`¿Eliminar la tienda "${t.name}"? Se eliminará todo su esquema.`)) return
+    if (!window.confirm(`¿Eliminar la tienda "${t.name}"?`)) return
     setError('')
     setOk('')
     try {
       await tenantsApi.remove(t.id)
       setOk('Tienda eliminada.')
-      await reload()
+      load()
     } catch (err) {
       setError(err.message)
     }
   }
 
-  if (!stores) return <Spinner />
+  if (stores === null && !loadError) return <Spinner />
 
   return (
     <div className="stack">
@@ -51,14 +63,11 @@ export default function StoresManager() {
           <Field label="Nombre *">
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
-          <Field label="Teléfono (WhatsApp)">
-            <input value={form.phone} placeholder="+502 1234 5678" onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Field label="WhatsApp">
+            <input value={form.whatsapp} placeholder="+502 1234 5678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
           </Field>
           <Field label="Descripción">
             <textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </Field>
-          <Field label="Email">
-            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </Field>
           <button className="btn" disabled={busy}>{busy ? 'Creando…' : 'Crear tienda'}</button>
         </form>
@@ -68,25 +77,18 @@ export default function StoresManager() {
         </div>
       </Card>
 
-      <Card title={`Tus tiendas (${stores.length})`}>
+      <Card title={`Tus tiendas (${(stores || []).length})`}>
         <Alert>{loadError}</Alert>
-        {stores.length === 0 && (
+        {stores && stores.length === 0 && (
           <p className="muted">No tienes tiendas. Crea una con el formulario de arriba.</p>
         )}
-        {stores.map((t) => (
+        {(stores || []).map((t) => (
           <div className="row-item" key={t.id}>
             <div className="row-item-main">
               <b>{t.name}</b>
               <span className="muted">
-                {[t.phone, t.email].filter(Boolean).join(' · ') || 'Sin contacto configurado'}
+                {[t.whatsapp, t.description].filter(Boolean).join(' · ') || 'Sin contacto configurado'}
               </span>
-              <div className="chips">
-                {(t.domains || []).map((d) => (
-                  <span className="chip" key={d.domain}>
-                    {d.domain} {d.is_primary ? '· principal' : ''}
-                  </span>
-                ))}
-              </div>
             </div>
             <span className="btn-group">
               <button className="btn small danger" onClick={() => remove(t)}>Eliminar</button>

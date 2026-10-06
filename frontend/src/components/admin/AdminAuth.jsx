@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { goToTenantAdmin } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 
 const EMPTY_LOGIN = { username: '', password: '' }
-const EMPTY_REG = { username: '', email: '', password: '', confirm_password: '', tenant_name: '' }
+const EMPTY_REG = {
+  username: '',
+  email: '',
+  first_name: '',
+  last_name: '',
+  password: '',
+  password_confirm: '',
+}
 
 export default function AdminAuth() {
   const { login, register } = useAuth()
@@ -21,8 +27,8 @@ export default function AdminAuth() {
     setError('')
     setBusy(true)
     try {
-      const tokens = await login(loginForm.username, loginForm.password)
-      if (tokens.domain && !goToTenantAdmin(tokens.domain)) navigate('/admin')
+      await login(loginForm.username, loginForm.password)
+      navigate('/admin')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -37,9 +43,8 @@ export default function AdminAuth() {
     setBusy(true)
     try {
       await register(regForm)
-      setOk('Cuenta creada. Iniciando sesión…')
-      const tokens = await login(regForm.username, regForm.password)
-      if (tokens.domain && !goToTenantAdmin(tokens.domain)) navigate('/admin', { replace: true })
+      setOk('Cuenta creada. Bienvenido…')
+      navigate('/admin', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -90,8 +95,12 @@ export default function AdminAuth() {
               <input type="email" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
             </label>
             <label className="field">
-              <span className="field-label">Nombre de tu tienda</span>
-              <input value={regForm.tenant_name} placeholder="p. ej. Mi Tienda" onChange={(e) => setRegForm({ ...regForm, tenant_name: e.target.value })} />
+              <span className="field-label">Nombre</span>
+              <input value={regForm.first_name} onChange={(e) => setRegForm({ ...regForm, first_name: e.target.value })} />
+            </label>
+            <label className="field">
+              <span className="field-label">Apellido</span>
+              <input value={regForm.last_name} onChange={(e) => setRegForm({ ...regForm, last_name: e.target.value })} />
             </label>
             <label className="field">
               <span className="field-label">Contraseña</span>
@@ -99,7 +108,7 @@ export default function AdminAuth() {
             </label>
             <label className="field">
               <span className="field-label">Confirmar contraseña</span>
-              <input type="password" value={regForm.confirm_password} onChange={(e) => setRegForm({ ...regForm, confirm_password: e.target.value })} />
+              <input type="password" value={regForm.password_confirm} onChange={(e) => setRegForm({ ...regForm, password_confirm: e.target.value })} />
             </label>
             <button className="btn block" disabled={busy}>{busy ? 'Creando…' : 'Crear cuenta'}</button>
             {error && <div className="alert">{error}</div>}

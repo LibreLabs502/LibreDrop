@@ -7,8 +7,7 @@ export default function PlatformLanding() {
       <h1>Tiendas online simples, sin comisiones.</h1>
       <img className="landing-hero" src="/images/libredrop-hero-soft.webp" alt="LibreDrop" />
       <p>
-        Este dominio no tiene una tienda publicada. Si eres el dueño de una tienda, entra al panel
-        de administración para gestionar tu catálogo.
+        Plataforma de tiendas online. Crea tu cuenta para gestionar tus tiendas y miembros.
       </p>
       <div className="landing-actions">
         <Link className="btn" to="/admin">Ir al panel de administración</Link>

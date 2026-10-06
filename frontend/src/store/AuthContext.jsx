@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { accountsApi, clearTokens, getAccessToken, setTokens } from '../api'
+import { accountsApi, clearTokens, getAccessToken, getStoredUser, setStoredUser, setTokens } from '../api'
 
 const AuthContext = createContext(null)
 
@@ -13,13 +13,9 @@ export function AuthProvider({ children }) {
       setLoading(false)
       return
     }
-    try {
-      setUser(await accountsApi.me())
-    } catch {
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
+    // El backend aún no tiene /me/; recuperamos el usuario guardado al login.
+    setUser(getStoredUser())
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -29,16 +25,15 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     const tokens = await accountsApi.login(username, password)
     setTokens(tokens)
-    await refresh()
+    const u = { username }
+    setStoredUser(u)
+    setUser(u)
     return tokens
   }
 
-  const register = (payload) => accountsApi.register(payload)
-
-  const updateUser = async (patch) => {
-    const updated = await accountsApi.update(patch)
-    setUser(updated)
-    return updated
+  const register = async (payload) => {
+    await accountsApi.register(payload)
+    return login(payload.username, payload.password)
   }
 
   const logout = () => {
@@ -47,7 +42,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )

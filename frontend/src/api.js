@@ -1,48 +1,37 @@
 const TOKEN_KEY = 'libredrop_access'
 const REFRESH_KEY = 'libredrop_refresh'
+const USER_KEY = 'libredrop_user'
 
 export const getAccessToken = () => localStorage.getItem(TOKEN_KEY)
 export const getRefreshToken = () => localStorage.getItem(REFRESH_KEY)
+export const getStoredUser = () => {
+  const raw = localStorage.getItem(USER_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
 
 export const setTokens = (tokens) => {
   if (tokens.access) localStorage.setItem(TOKEN_KEY, tokens.access)
   if (tokens.refresh) localStorage.setItem(REFRESH_KEY, tokens.refresh)
 }
 
+export const setStoredUser = (user) => {
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
+  else localStorage.removeItem(USER_KEY)
+}
+
 export const clearTokens = () => {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(REFRESH_KEY)
+  localStorage.removeItem(USER_KEY)
 }
 
-function restoreTokensFromHash() {
-  const hash = window.location.hash
-  if (!hash.startsWith('#t=')) return
-  const params = new URLSearchParams(hash.slice(1))
-  const access = params.get('t')
-  const refresh = params.get('r')
-  if (access) {
-    if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
-    localStorage.setItem(TOKEN_KEY, access)
-    window.location.replace(window.location.pathname + window.location.search)
-  }
-}
-
-restoreTokensFromHash()
-
-export const goToTenantAdmin = (domain) => {
-  if (!domain) return false
-  const port = window.location.port ? `:${window.location.port}` : ''
-  const access = getAccessToken()
-  const hash = access ? `#t=${encodeURIComponent(access)}&r=${encodeURIComponent(getRefreshToken() || '')}` : ''
-  window.location.href = `${window.location.protocol}//${domain}${port}/admin${hash}`
-  return true
-}
-
+// Vite proxy: /api -> http://localhost:8000 (ver vite.config.js)
 export const apiBase = () => `${window.location.protocol}//${window.location.host}/api`
-
-export const currentHost = () => window.location.hostname
-
-export const hostOfDomain = (domain) => String(domain).split(':')[0].toLowerCase()
 
 const flattenErrors = (data) => {
   if (!data) return 'Error desconocido'
@@ -103,41 +92,33 @@ export async function api(path, { method = 'GET', body, form = false, auth = tru
 }
 
 export const accountsApi = {
-  register: (payload) => api('/accounts/register/', { method: 'POST', body: payload, auth: false }),
+  register: (payload) => api('/auth/register/', { method: 'POST', body: payload, auth: false }),
   login: (username, password) =>
-    api('/accounts/login/', { method: 'POST', body: { username, password }, auth: false }),
-  me: () => api('/accounts/user/'),
-  update: (patch) => api('/accounts/user/', { method: 'PATCH', body: patch }),
-}
-
-export const storeApi = {
-  info: () => api('/store/', { auth: false }),
+    api('/auth/login/', { method: 'POST', body: { username, password }, auth: false }),
+  refresh: (refresh) =>
+    api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
 }
 
 export const tenantsApi = {
-  list: () => api('/tenants/'),
+  list: () => api('/tenants/tenant/'),
   create: (data, file) =>
     file
-      ? api('/tenants/', { method: 'POST', body: formDataFrom(data, { logo: file }), form: true })
-      : api('/tenants/', { method: 'POST', body: data }),
+      ? api('/tenants/tenant/', { method: 'POST', body: formDataFrom(data, { logo: file }), form: true })
+      : api('/tenants/tenant/', { method: 'POST', body: data }),
   update: (id, data, file) =>
     file
-      ? api(`/tenants/${id}/`, { method: 'PATCH', body: formDataFrom(data, { logo: file }), form: true })
-      : api(`/tenants/${id}/`, { method: 'PATCH', body: data }),
-  remove: (id) => api(`/tenants/${id}/`, { method: 'DELETE' }),
-}
-
-export const domainsApi = {
-  list: () => api('/domains/'),
-  create: (data) => api('/domains/', { method: 'POST', body: data }),
-  update: (id, data) => api(`/domains/${id}/`, { method: 'PATCH', body: data }),
-  remove: (id) => api(`/domains/${id}/`, { method: 'DELETE' }),
+      ? api(`/tenants/tenant/${id}/`, { method: 'PATCH', body: formDataFrom(data, { logo: file }), form: true })
+      : api(`/tenants/tenant/${id}/`, { method: 'PATCH', body: data }),
+  remove: (id) => api(`/tenants/tenant/${id}/`, { method: 'DELETE' }),
 }
 
 export const membershipsApi = {
-  list: () => api('/memberships/'),
-  create: (data) => api('/memberships/', { method: 'POST', body: data }),
-  remove: (id) => api(`/memberships/${id}/`, { method: 'DELETE' }),
+  list: (tenantId) => api(`/tenants/tenants/${tenantId}/members/`),
+  create: (tenantId, data) =>
+    api(`/tenants/tenants/${tenantId}/members/`, { method: 'POST', body: data }),
+  update: (tenantId, id, data) =>
+    api(`/tenants/tenants/${tenantId}/members/${id}/`, { method: 'PATCH', body: data }),
+  remove: (tenantId, id) => api(`/tenants/tenants/${tenantId}/members/${id}/`, { method: 'DELETE' }),
 }
 
 const formDataFrom = (data, files = {}) => {
@@ -153,26 +134,30 @@ const formDataFrom = (data, files = {}) => {
 
 export const catalogApi = {
   categories: {
-    list: () => api('/category/', { auth: false }),
-    create: (data) => api('/category/', { method: 'POST', body: data }),
-    update: (id, data) => api(`/category/${id}/`, { method: 'PATCH', body: data }),
-    remove: (id) => api(`/category/${id}/`, { method: 'DELETE' }),
+    list: (tenantId) => api(`/catalog/tenants/${tenantId}/categories/`, { auth: true }),
+    create: (tenantId, data) =>
+      api(`/catalog/tenants/${tenantId}/categories/`, { method: 'POST', body: data }),
+    update: (tenantId, id, data) =>
+      api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'PATCH', body: data }),
+    remove: (tenantId, id) =>
+      api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'DELETE' }),
   },
   products: {
-    list: () => api('/products/', { auth: false }),
-    create: (data, file) =>
-      api('/products/', {
+    list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),
+    create: (tenantId, data, file) =>
+      api(`/catalog/tenants/${tenantId}/products/`, {
         method: 'POST',
         body: file ? formDataFrom(data, { image: file }) : data,
         form: !!file,
       }),
-    update: (id, data, file) =>
-      api(`/products/${id}/`, {
+    update: (tenantId, id, data, file) =>
+      api(`/catalog/tenants/${tenantId}/products/${id}/`, {
         method: 'PATCH',
         body: file ? formDataFrom(data, { image: file }) : data,
         form: !!file,
       }),
-    remove: (id) => api(`/products/${id}/`, { method: 'DELETE' }),
+    remove: (tenantId, id) =>
+      api(`/catalog/tenants/${tenantId}/products/${id}/`, { method: 'DELETE' }),
   },
 }
 
