@@ -1,20 +1,15 @@
 # Versiones
 
-## v0.1 — Rehacer (descartada)
+## v0.1 — En progreso (rehecha)
 
-La versión 0.1 se rehara desde cero. El motivo principal es un cambio de arquitectura
-en el multitenancy:
+Se rehizo desde cero por cambio de arquitectura en multitenancy:
 
-- Se abandona el enfoque de **multitenancy por schemas** (un schema de base de datos
-  por tenant).
-- Se adopta **multitenancy lineal por ID**: todos los tenants comparten las mismas
-  tablas y cada registro lleva un `tenant_id` que identifica al tenant dueño.
+- Se abandona multitenancy por **schemas**.
+- Se adopta multitenancy **lineal por `tenant_id`**: mismas tablas, cada registro con su `tenant_id`.
 
-Consecuencias:
+Arquitectura actual del backend:
 
-- Se elimina todo el código de enrutamiento por schema (`django-tenants`,
-  middleware de schema, etc.).
-- Los modelos pasan a incluir `tenant_id` y las consultas/permisos se filtran por él.
-- El backend y las migraciones se reescriben para esta estrategia.
-
-La v0.1 con schemas queda obsoleta y no se continúa.
+- `accounts`: usuarios y autenticación.
+- `tenants`: tenants, membresías y slug por tenant.
+- Filtrado por `tenant_id` en consultas y permisos.
+- Sin `django-tenants`, sin Docker ni nginx por ahora.
