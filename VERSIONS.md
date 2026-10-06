@@ -13,6 +13,7 @@ Arquitectura actual del backend:
 - `tenants`: tenants, membresías y slug por tenant (serializers, urls y vistas listos).
 - Filtrado por `tenant_id` en consultas y permisos.
 - Sin `django-tenants`, sin Docker ni nginx por ahora.
+- Landing de plataforma con branding propio (logo, hero y favicon en `frontend/public/images`).
 
 Pendiente:
 
