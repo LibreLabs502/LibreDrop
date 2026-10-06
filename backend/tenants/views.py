@@ -8,7 +8,7 @@ class TenantViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self): # type: ignore
-        return Tenant.objects.all()
+        return Tenant.objects.filter(memberships__user=self.request.user).distinct()
 
 class TenantMemberView(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
