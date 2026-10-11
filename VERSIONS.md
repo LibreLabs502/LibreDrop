@@ -1,5 +1,31 @@
 # Versiones
 
+## v0.2 — Producción (Render + Neon + Vercel)
+
+Backend live en `https://libredrop.onrender.com`, frontend en
+`https://libredrop-app.vercel.app`.
+
+- Imagen Docker en la **raíz** del repo (solo backend; sin base de datos
+  empaquetada). Build: `docker build -t libredrop-api .` desde la raíz.
+- **Neon** como Postgres externo vía `DATABASE_URL` (endpoint pooled,
+  `?sslmode=require`).
+- **Migraciones automáticas** en cada deploy: `scripts/release.sh` llamada por
+  `entrypoint.sh` al arrancar y por el `preDeployCommand` de Render.
+- `SECRET_KEY` generada manualmente con `get_random_secret_key` (render.yaml
+  `sync: false`; no se commitea).
+- **Vercel**: `VITE_API_URL` horneada en el build (prefijo `VITE_` público a
+  propósito; no es un secreto). Rewrite de SPA en `frontend/vercel.json`.
+- **Imágenes comprimidas a WebP**: `public` 23 MB → 344 KB, `dist` 23 MB → 576 KB
+  (refs actualizadas en `AdminAuth.jsx`/`AdminApp.jsx`; eliminadas
+  `libredrop_cloud*.jpg` y `libredrop_icon.png` sin uso).
+- **Cloudinary con entrega optimizada** `f_auto,q_auto` en tenants/catalog/
+  storefront (+ helper `images.optimized()` y 5 tests).
+- CORS/CSRF para el origen de Vercel; WhiteNoise sirve los estáticos;
+  `SECURE_SSL_REDIRECT` en prod.
+- Pendiente: arreglar el slug de la tienda que se regenera al renombrarla, y
+  opcionales (límites de ancho `w_...` en Cloudinary, limpieza de imágenes
+  pequeñas sin uso).
+
 ## v0.1 — En progreso (rehecha)
 
 Se rehizo desde cero por cambio de arquitectura en multitenancy:

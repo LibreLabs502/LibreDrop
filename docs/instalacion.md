@@ -20,6 +20,7 @@ Crear `backend/.env`:
 SECRET_KEY=...
 DEBUG=True
 ALLOWED_HOST=localhost,127.0.0.1
+DB_SSL_REQUIRE=False
 
 DB_NAME=...
 DB_USER=...
@@ -27,10 +28,18 @@ DB_PASSWORD=...
 DB_HOST=localhost
 DB_PORT=5432
 
+# Frontend en dev (Vite en :5173):
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+CSRF_TRUSTED_ORIGINS=http://localhost:5173
+
 CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 ```
+
+> Si preferís usar la base remota de Neon también en local, usá `DATABASE_URL`
+> (sin `&channel_binding=require`) con `DB_SSL_REQUIRE=True` y dejá las `DB_*`
+> vacías.
 
 ```bash
 python manage.py migrate

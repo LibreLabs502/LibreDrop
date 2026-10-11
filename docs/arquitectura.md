@@ -16,7 +16,9 @@ Django 6.1 + DRF. Apps:
 - `storefront` — API pública de la tienda (sin auth).
 
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
-URL completa. Config vía variables de entorno `CLOUDINARY_*`.
+URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad
+automática) vía el helper `backend/backend/images.py::optimized()`.
+Config vía variables de entorno `CLOUDINARY_*`.
 
 ## Frontend
 
@@ -29,3 +31,14 @@ React SPA (Vite). Páginas:
   botón "Comprar por WhatsApp". Responsive.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`.
+
+## Despliegue
+
+- **Backend**: imagen Docker (Dockerfile en la raíz) en Render; Gunicorn +
+  WhiteNoise (estáticos). Sin base de datos en el contenedor.
+- **DB**: Neon por `DATABASE_URL` (Postgres externo).
+- **Frontend**: build estático en Vercel; `VITE_API_URL` apunta al backend.
+- **Migraciones**: automáticas en cada deploy (`scripts/release.sh`, llamado por
+  `entrypoint.sh` al arrancar y por el pre-deploy de Render).
+
+Detalle en [despliegue.md](despliegue.md).

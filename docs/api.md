@@ -12,7 +12,22 @@ Swagger UI: `/docs/` — Schema: `/schema/`
 | POST | `/auth/login/` | Login → `access` + `refresh` |
 | POST | `/auth/token/refresh/` | Renovar access token |
 
-JWT: access 1 día, refresh 30 días.
+Registro (`POST /auth/register/`):
+
+```json
+{
+  "username": "...",
+  "email": "a@b.com",
+  "password": "...",
+  "password_confirm": "...",
+  "first_name": "...",
+  "last_name": "..."
+}
+```
+
+El registro crea el usuario **y su tienda automáticamente**. JWT: access 1 día,
+refresh 30 días. Nota: las URLs de imágenes (logo, producto) que devuelven los
+serializers son de Cloudinary con `f_auto,q_auto`.
 
 ## Tenants (`/tenants/`)
 
@@ -40,5 +55,5 @@ JWT: access 1 día, refresh 30 días.
 
 ## Otros
 
-- `GET /health/` → `{"status": "ok"}`
+- `GET /health/` → `{"status": "ok"}` (alias legacy: `/healt/`)
 - `/admin/` panel Django
