@@ -205,4 +205,10 @@ curl $B/public/no-existe/                            # 404
 - **Cambié `VITE_API_URL` pero la app no cambia**: redeployá en Vercel (el
   valor se hornea en el build).
 - **No sube imágenes**: faltan las credenciales `CLOUDINARY_*`.
+- **`PATCH` con logo da 500** (y el cloud no acumula assets): la API key de
+  Cloudinary tiene rol de solo entrega. Requiere permiso de subida — en la
+  consola de Cloudinary: **Settings → Access / API keys**, dar rol **Uploader**
+  (permiso `create`) a la key usada. `ping` funciona aunque falle `upload`
+  (`NotAllowed: missing permissions (actions=["create"])`), así que no confundas
+  "la key responde" con "la key puede subir".
 - **Cold starts**: el plan `free` de Render duerme; usá `starter` para producción.
