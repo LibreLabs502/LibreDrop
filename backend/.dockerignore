@@ -1,4 +1,4 @@
-# Entorno / secretos (se inyectan desde docker-compose)
+# Entorno / secretos (se inyectan como variables de entorno, no van en la imagen)
 .env
 .env.*
 

@@ -1,10 +1,9 @@
 #!/bin/sh
+# Arranque del proceso web. Las migraciones NO se corren acá: se ejecutan en el
+# pre-deploy (`scripts/release.sh`) para que cada deploy las aplique una sola vez.
 set -e
 
 PORT="${PORT:-8000}"
-
-echo "→ Migrando base de datos..."
-python manage.py migrate --noinput
 
 echo "→ Recolectando archivos estáticos..."
 python manage.py collectstatic --noinput

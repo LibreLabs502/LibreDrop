@@ -56,7 +56,14 @@ marcadas `sync: false` en el dashboard:
 - Root Directory: `backend`
 - Dockerfile Path: `Dockerfile`
 - Health Check Path: `/health/`
+- **Pre-Deploy Command**: `sh scripts/release.sh`
 - Environment: las mismas variables de arriba.
+
+### Migraciones en cada deploy
+`backend/scripts/release.sh` corre `python manage.py migrate`. Render lo ejecuta
+como **Pre-Deploy Command** (`preDeployCommand` en `render.yaml`) en **cada
+deploy**, antes de que la nueva versión reciba tráfico. Si una migración falla,
+el deploy se aborta y sigue viva la versión anterior.
 
 ### Dominio propio (opcional)
 En Render: **Settings → Custom Domain**, agregá `api.tudominio.com` y creá el
@@ -92,18 +99,26 @@ CORS_ALLOWED_ORIGIN_REGEXES=^https://.*\.vercel\.app$
 
 ## 4. Probar la imagen en local (opcional)
 
-No hay DB en el compose: apuntá `DATABASE_URL` a tu Neon.
+La imagen contiene **solo el backend**. No hay base de datos empaquetada:
+apuntá `DATABASE_URL` a tu Neon.
 
 ```bash
-cp .env.production.example .env   # completá DATABASE_URL y secretos
-docker compose up --build
-curl http://localhost:8000/health/
+cd backend
+docker build -t libredrop-api .
+
+cd ..
+docker run --rm -p 8000:8000 --env-file .env --entrypoint sh libredrop-api \
+  -c "sh scripts/release.sh && exec ./entrypoint.sh"
+
+curl http://localhost:8000/health/     # {"status": "ok"}
 ```
+
+(`cp .env.production.example .env` y completá `DATABASE_URL` + secretos.)
 
 ## 5. Operación
 
-- **Migraciones**: corren solas en cada arranque (`entrypoint.sh`).
-- **Estáticos**: `collectstatic` corre en el arranque; los sirve WhiteNoise.
+- **Migraciones**: `scripts/release.sh` en cada deploy (Pre-Deploy Command).
+- **Estáticos**: `collectstatic` corre al arrancar; los sirve WhiteNoise.
 - **Backups**: los maneja Neon (tiene su propio historial/restore).
 - **Variables**: se cambian en el dashboard de Render → redeploy.
 
