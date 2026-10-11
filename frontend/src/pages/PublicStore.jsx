@@ -15,6 +15,7 @@ export default function PublicStore() {
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
+  const [infoOpen, setInfoOpen] = useState(false)
 
   useEffect(() => {
     storefrontApi
@@ -63,8 +64,22 @@ export default function PublicStore() {
             <div className="store-logo-lg store-logo-fallback">{String(store.name || 'T')[0].toUpperCase()}</div>
           )}
           <div className="store-hero-info">
-            <h1>{store.name}</h1>
-            {store.description && <p>{store.description}</p>}
+            <h1
+              className="store-name-link"
+              role="button"
+              tabIndex={0}
+              title="Ver descripción completa"
+              onClick={() => setInfoOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setInfoOpen(true)
+                }
+              }}
+            >
+              {store.name}
+            </h1>
+            {store.description && <p className="store-hero-desc">{store.description}</p>}
           </div>
           {store.whatsapp && (
             <a
@@ -112,7 +127,7 @@ export default function PublicStore() {
               {p.image && <img src={p.image} alt={p.name} />}
               <div className="product-body">
                 <h3 className="product-name-link" onClick={() => setSelected(p)}>{p.name}</h3>
-                {p.description && <p>{p.description}</p>}
+                {p.description && <p className="store-product-desc">{p.description}</p>}
                 <span className="product-price">{formatPrice(p.price)}</span>
                 {buyUrl && (
                   <a className="btn-whatsapp" href={buyUrl} target="_blank" rel="noreferrer">
@@ -147,6 +162,18 @@ export default function PublicStore() {
                   Comprar por WhatsApp
                 </a>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {infoOpen && (
+        <div className="product-modal-overlay" onClick={() => setInfoOpen(false)}>
+          <div className="product-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="product-modal-close" onClick={() => setInfoOpen(false)} aria-label="Cerrar">×</button>
+            <div className="product-modal-body">
+              <h2>{store.name}</h2>
+              {store.description && <p>{store.description}</p>}
             </div>
           </div>
         </div>
