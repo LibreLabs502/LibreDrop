@@ -213,7 +213,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
-    SECURE_REDIRECT_EXEMPT = [r"^healt/?$"]  # healthcheck interno, sin TLS
+    SECURE_REDIRECT_EXEMPT = [r"^health/?$", r"^healt/?$"]  # healthcheck interno, sin TLS
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000

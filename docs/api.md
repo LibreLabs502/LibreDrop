@@ -40,5 +40,5 @@ JWT: access 1 día, refresh 30 días.
 
 ## Otros
 
-- `GET /healt/` → `{"status": "ok"}`
+- `GET /health/` → `{"status": "ok"}`
 - `/admin/` panel Django

@@ -85,7 +85,7 @@ docker compose logs -f backend   # ver migraciones y arranque de Gunicorn
 
 ### 2.5 Verificar
 ```bash
-curl https://api.mitienda.com/healt/     # {"status": "ok"}
+curl https://api.mitienda.com/health/     # {"status": "ok"}
 ```
 Si el certificado todavía no está listo, mirá `docker compose logs caddy`
 (puede tardar ~30 s la primera vez).

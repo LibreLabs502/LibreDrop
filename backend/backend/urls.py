@@ -22,7 +22,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-def healt(request):
+def health(request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [
@@ -30,12 +30,10 @@ urlpatterns = [
     path('tenants/', include("tenants.urls")),
     path('auth/', include("accounts.urls")),
     path('catalog/', include("catalog.urls")),
-    path('healt/', healt),
+    path('health/', health, name="health"),
+    path('healt/', health),  # alias legado
     path("public/", include("storefront.urls")),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "docs/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui",
+    path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui",
     ),
 ]
