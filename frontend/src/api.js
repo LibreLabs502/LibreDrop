@@ -106,16 +106,24 @@ export const accountsApi = {
     api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
 }
 
+// WhatsApp es blank=False en el backend: un string vacío da 400.
+// En JSON mandamos null (el modelo permite NULL) para poder limpiarlo.
+const cleanTenantPayload = (data) => {
+  const clean = { ...(data || {}) }
+  if (clean.whatsapp === '') clean.whatsapp = null
+  return clean
+}
+
 export const tenantsApi = {
   list: () => api('/tenants/tenant/'),
   create: (data, file) =>
     file
       ? api('/tenants/tenant/', { method: 'POST', body: formDataFrom(data, { logo: file }), form: true })
-      : api('/tenants/tenant/', { method: 'POST', body: data }),
+      : api('/tenants/tenant/', { method: 'POST', body: cleanTenantPayload(data) }),
   update: (id, data, file) =>
     file
       ? api(`/tenants/tenant/${id}/`, { method: 'PATCH', body: formDataFrom(data, { logo: file }), form: true })
-      : api(`/tenants/tenant/${id}/`, { method: 'PATCH', body: data }),
+      : api(`/tenants/tenant/${id}/`, { method: 'PATCH', body: cleanTenantPayload(data) }),
   remove: (id) => api(`/tenants/tenant/${id}/`, { method: 'DELETE' }),
 }
 
