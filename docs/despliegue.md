@@ -62,10 +62,16 @@ marcadas `sync: false` en el dashboard:
 - Environment: las mismas variables de arriba.
 
 ### Migraciones en cada deploy
-`backend/scripts/release.sh` corre `python manage.py migrate`. Render lo ejecuta
-como **Pre-Deploy Command** (`preDeployCommand` en `render.yaml`) en **cada
-deploy**, antes de que la nueva versión reciba tráfico. Si una migración falla,
-el deploy se aborta y sigue viva la versión anterior.
+`backend/scripts/release.sh` corre `python manage.py migrate`. Se ejecuta en dos
+puntos, para que nunca falten:
+
+- **Al arrancar el contenedor** (`entrypoint.sh` lo llama): funciona siempre,
+  aunque el servicio se haya creado manual sin pre-deploy.
+- **Pre-Deploy Command** de Render (`preDeployCommand` en `render.yaml`), si el
+  blueprint está aplicado: corre antes de que la nueva versión reciba tráfico;
+  si una migración falla, el deploy se aborta y sigue viva la versión anterior.
+
+`migrate` es idempotente, así que correrlo en ambos lados no molesta.
 
 ### Dominio propio (opcional)
 En Render: **Settings → Custom Domain**, agregá `api.tudominio.com` y creá el
@@ -118,7 +124,7 @@ curl http://localhost:8000/health/     # {"status": "ok"}
 
 ## 5. Operación
 
-- **Migraciones**: `scripts/release.sh` en cada deploy (Pre-Deploy Command).
+- **Migraciones**: `entrypoint.sh` (al arrancar) y, si hay pre-deploy, también ahí.
 - **Estáticos**: `collectstatic` corre al arrancar; los sirve WhiteNoise.
 - **Backups**: los maneja Neon (tiene su propio historial/restore).
 - **Variables**: se cambian en el dashboard de Render → redeploy.
