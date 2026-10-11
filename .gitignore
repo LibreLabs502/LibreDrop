@@ -23,7 +23,7 @@ media/
 .env.local
 .env.*
 !.env.example
-!.env.docker.example
+!.env.production.example
 
 # Node / frontend
 node_modules/

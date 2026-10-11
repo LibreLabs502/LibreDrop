@@ -50,7 +50,6 @@ Tokens JWT se guardan en `localStorage` (`libredrop_access`, `libredrop_refresh`
 
 ## Producción
 
-El despliegue real (backend + base de datos en Docker para una VPS y frontend
-en Vercel) está documentado paso a paso en [despliegue.md](despliegue.md).
-
-Resumen: `cp .env.docker.example .env`, completar valores y `docker compose up -d --build`.
+El despliegue real (backend en **Render** con Docker, base de datos **Neon** por
+`DATABASE_URL`, frontend en **Vercel**) está documentado paso a paso en
+[despliegue.md](despliegue.md).

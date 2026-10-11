@@ -1,0 +1,36 @@
+# Blueprint de Render para el backend (Docker) + Neon (DB externa).
+# https://render.com/docs/blueprint-spec
+#
+# Los valores con `sync: false` los completás en el dashboard de Render
+# (son secretos y no quedan en el repo).
+
+services:
+  - type: web
+    name: libredrop-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter          # cambiá a "free" si querés el plan gratuito (se duerme)
+    healthCheckPath: /health/
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true        # Render genera un valor seguro solo
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        sync: false                # connection string de Neon (sslmode=require)
+      - key: DB_SSL_REQUIRE
+        value: "True"
+      - key: ALLOWED_HOST
+        sync: false                # ej: api.tudominio.com (o vacío si usás el .onrender.com)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false                # ej: https://tu-app.vercel.app
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false                # ej: https://tu-app.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

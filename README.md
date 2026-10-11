@@ -41,6 +41,6 @@ API docs (Swagger): `http://localhost:8000/docs/`
 ## Documentación
 
 - [Instalación y configuración](docs/instalacion.md)
-- [Despliegue (VPS + Vercel)](docs/despliegue.md)
+- [Despliegue (Render + Neon + Vercel)](docs/despliegue.md)
 - [API / Endpoints](docs/api.md)
 - [Arquitectura y multitenancy](docs/arquitectura.md)

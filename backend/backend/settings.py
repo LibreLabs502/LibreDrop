@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +44,11 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = env_bool("DEBUG", False)
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOST")
+
+# Render expone el hostname público en esta variable; lo agregamos solo.
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -126,6 +132,19 @@ DATABASES = {
     }
 }
 
+# Producción (Render + Neon): si hay DATABASE_URL, se usa esa.
+# Neon exige SSL; incluye ?sslmode=require en la URL o dejá DB_SSL_REQUIRE=True.
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=env_bool("DB_SSL_REQUIRE", True),
+        )
+    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
@@ -208,7 +227,7 @@ CLOUDINARY_STORAGE = {
 }
 
 
-# Seguridad (backend detrás de proxy con TLS: Caddy en la VPS)
+# Seguridad (el backend va detrás de un proxy con TLS: Render)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if not DEBUG:

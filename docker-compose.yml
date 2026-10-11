@@ -1,39 +1,19 @@
-# Backend Django + Postgres para una VPS. El frontend se despliega aparte (Vercel).
+# Docker Compose SOLO con el backend (para probar la imagen de producción en
+# local). La base de datos NO va acá: en producción es Neon y se configura con
+# la variable DATABASE_URL.
 #
 # Uso:
-#   cp .env.docker.example .env      # y completá los valores
-#   docker compose up -d --build
-#
-# Caddy publica 80/443 y pide el certificado TLS del dominio en $DOMAIN.
+#   cp .env.production.example .env   # y completá DATABASE_URL (Neon) + secretos
+#   docker compose up --build
+#   curl http://localhost:8000/health/
 
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   backend:
     build: ./backend
     restart: unless-stopped
     env_file: .env
-    environment:
-      DB_HOST: db
-      DB_PORT: "5432"
-    expose:
-      - "8000"
-    depends_on:
-      db:
-        condition: service_healthy
+    ports:
+      - "8000:8000"
     healthcheck:
       test:
         [
@@ -45,24 +25,3 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment:
-      DOMAIN: ${DOMAIN}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      backend:
-        condition: service_healthy
-
-volumes:
-  pgdata:
-  caddy_data:
-  caddy_config:
