@@ -47,7 +47,7 @@ function Shell() {
 
       <aside className={`admin-side ${open ? 'open' : ''}`}>
         <div className="admin-brand">
-          <img className="admin-logo" src="/images/libredrop.jpg" alt="LibreDrop" />
+          <img className="admin-logo" src="/images/libredrop.webp" alt="LibreDrop" />
           <span className="muted">Panel de tiendas</span>
         </div>
         <nav className="admin-nav">

@@ -56,17 +56,17 @@ export default function AdminAuth() {
     <div className="admin-auth">
       <div className="auth-card">
         <div className="auth-brand">
-          <img className="auth-logo" src="/images/libredrop.jpg" alt="LibreDrop" />
+          <img className="auth-logo" src="/images/libredrop.webp" alt="LibreDrop" />
           <span>panel de tiendas</span>
         </div>
 
         <div className="auth-tabs">
           <button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>
-            <img className="auth-tab-icon" src="/images/libredrop_icon.jpg" alt="" />
+            <img className="auth-tab-icon" src="/images/libredrop_icon.webp" alt="" />
             Iniciar sesión
           </button>
           <button className={mode === 'register' ? 'active' : ''} onClick={() => setMode('register')}>
-            <img className="auth-tab-icon" src="/images/libredrop_icon.jpg" alt="" />
+            <img className="auth-tab-icon" src="/images/libredrop_icon.webp" alt="" />
             Crear cuenta
           </button>
         </div>
