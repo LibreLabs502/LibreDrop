@@ -30,8 +30,15 @@ export const clearTokens = () => {
   localStorage.removeItem(USER_KEY)
 }
 
-// Vite proxy: /api -> http://localhost:8000 (ver vite.config.js)
-export const apiBase = () => `${window.location.protocol}//${window.location.host}/api`
+// URL base del API.
+// - En dev: /api (Vite proxya a http://localhost:8000, ver vite.config.js).
+// - En prod (Vercel): definí VITE_API_URL=https://api.tudominio.com en las
+//   variables de entorno del proyecto en Vercel.
+export const apiBase = () => {
+  const configured = import.meta.env.VITE_API_URL
+  if (configured) return configured.replace(/\/+$/, '')
+  return `${window.location.protocol}//${window.location.host}/api`
+}
 
 const flattenErrors = (data) => {
   if (!data) return 'Error desconocido'

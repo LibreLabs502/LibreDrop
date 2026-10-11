@@ -22,7 +22,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-def healt():
+def healt(request):
     return JsonResponse({"status": "ok"})
 
 urlpatterns = [

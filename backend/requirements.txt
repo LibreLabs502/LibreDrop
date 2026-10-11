@@ -4,6 +4,7 @@ certifi==2026.7.22
 charset-normalizer==3.5.2
 cloudinary==1.46.3
 Django==6.1.1
+django-cors-headers>=4.7.0
 django-cleanup==9.0.0
 django-cloudinary-storage==0.3.0
 django-stubs==6.1.2
@@ -11,6 +12,7 @@ django-stubs-ext==6.1.2
 djangorestframework==3.18.1
 djangorestframework_simplejwt==5.5.1
 drf-spectacular==0.30.0
+gunicorn>=23.0.0
 idna==3.20
 inflection==0.5.1
 jsonschema==4.26.0
@@ -29,3 +31,4 @@ types-PyYAML==6.0.12.20260906
 typing_extensions==4.16.0
 uritemplate==4.2.0
 urllib3==2.8.0
+whitenoise>=6.7.0

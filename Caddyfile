@@ -1,0 +1,6 @@
+# Frontend en Vercel → el backend necesita su propio dominio con HTTPS.
+# Caddy obtiene y renueva el certificado (Let's Encrypt) automáticamente.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy backend:8000
+}

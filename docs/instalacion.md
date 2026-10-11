@@ -48,7 +48,9 @@ npm run dev   # http://127.0.0.1:5173
 Vite proxya `/api/*` al backend en `:8000` (ver `frontend/vite.config.js`).
 Tokens JWT se guardan en `localStorage` (`libredrop_access`, `libredrop_refresh`).
 
-## Producción (pendiente)
+## Producción
 
-Sin Docker/nginx por ahora. Para producción: `npm run build`, `DEBUG=False`,
-ALLOWED_HOSTS real y servir el build detrás de un reverse proxy.
+El despliegue real (backend + base de datos en Docker para una VPS y frontend
+en Vercel) está documentado paso a paso en [despliegue.md](despliegue.md).
+
+Resumen: `cp .env.docker.example .env`, completar valores y `docker compose up -d --build`.

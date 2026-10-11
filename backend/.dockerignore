@@ -1,0 +1,22 @@
+# Entorno / secretos (se inyectan desde docker-compose)
+.env
+.env.*
+
+# Entorno virtual y cachés
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Estáticos generados
+staticfiles/
+media/
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.vscode/
+.idea/

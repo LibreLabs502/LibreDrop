@@ -14,10 +14,23 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
+
+
+def env_bool(name, default=False):
+    """Lee una variable de entorno booleana de forma segura."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_list(name):
+    """Lee una variable de entorno separada por comas."""
+    return [item.strip() for item in os.getenv(name, "").split(",") if item.strip()]
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,14 +40,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG")
+DEBUG = env_bool("DEBUG", False)
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOST", "").split(",")
+ALLOWED_HOSTS = env_list("ALLOWED_HOST")
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "drf_spectacular",
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,7 +67,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,6 +84,11 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+# CORS / CSRF: el frontend vive en otro origen (p. ej. Vercel).
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
+CORS_ALLOWED_ORIGIN_REGEXES = env_list("CORS_ALLOWED_ORIGIN_REGEXES")
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -141,6 +162,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Email
@@ -176,7 +198,7 @@ cloudinary.config(
 
 STORAGES = {
     "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 
 CLOUDINARY_STORAGE = {
@@ -184,3 +206,16 @@ CLOUDINARY_STORAGE = {
     "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
     "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
 }
+
+
+# Seguridad (backend detrás de proxy con TLS: Caddy en la VPS)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
+    SECURE_REDIRECT_EXEMPT = [r"^healt/?$"]  # healthcheck interno, sin TLS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
