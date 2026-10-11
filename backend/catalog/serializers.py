@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from backend.images import optimized
 from .models import Category, Product
 
 
@@ -43,7 +44,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.image:
-            data["image"] = instance.image.url
+            data["image"] = optimized(instance.image.url)
         return data
 
     def validate_category(self, category):

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from backend.images import optimized
 from tenants.models import Tenant
 from catalog.models import Category, Product
 
@@ -29,7 +30,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.image:
-            data["image"] = instance.image.url
+            data["image"] = optimized(instance.image.url)
         return data
 
 
@@ -64,5 +65,5 @@ class PublicTenantSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
-            data["logo"] = instance.logo.url
+            data["logo"] = optimized(instance.logo.url)
         return data

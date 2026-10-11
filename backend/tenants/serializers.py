@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from accounts.serializers import UserSerializer
+from backend.images import optimized
 from .models import Tenant, Membership
 
 class TenantSerializer(serializers.ModelSerializer):
@@ -12,7 +13,7 @@ class TenantSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
-            data["logo"] = instance.logo.url
+            data["logo"] = optimized(instance.logo.url)
         return data
 
 class MembershipSerializer(serializers.ModelSerializer):
