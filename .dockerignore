@@ -1,0 +1,34 @@
+# El contexto de build es la RAÍZ del repositorio.
+# Acá excluimos todo lo que no forma parte de la imagen del backend.
+
+# Frontend (no entra en la imagen)
+frontend/
+
+# Entorno / secretos (se inyectan como variables de entorno, no van en la imagen)
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Entorno virtual y cachés
+.venv/
+**/.venv/
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+
+# Estáticos generados
+**/staticfiles/
+**/media/
+
+# Git / editor / docs
+.git/
+.gitignore
+.vscode/
+.idea/
+docs/
+*.md

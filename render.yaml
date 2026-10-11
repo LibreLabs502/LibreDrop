@@ -8,8 +8,7 @@ services:
   - type: web
     name: libredrop-api
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # Dockerfile en la raíz del repo (Render lo toma por defecto).
     plan: starter          # cambiá a "free" si querés el plan gratuito (se duerme)
     healthCheckPath: /health/
     # Migraciones en cada deploy, antes de que la nueva versión reciba tráfico.

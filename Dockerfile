@@ -11,10 +11,11 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY requirements.txt .
+# El contexto de build es la raíz del repo (ver .dockerignore).
+COPY backend/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY backend/ .
 
 RUN chmod +x entrypoint.sh scripts/release.sh
 

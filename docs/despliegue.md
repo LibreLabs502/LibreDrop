@@ -11,7 +11,7 @@ Navegador
                                   └── Postgres → Neon (DB externa, por URL)
 ```
 
-- **Backend**: Render, construido desde `backend/Dockerfile`.
+- **Backend**: Render, construido desde el `Dockerfile` de la raíz.
 - **Base de datos**: Neon (Postgres serverless), configurada con `DATABASE_URL`.
 - **Frontend**: Vercel (build estático de Vite).
 - **Imágenes**: Cloudinary.
@@ -33,8 +33,8 @@ TLS y envía `X-Forwarded-Proto`, que Django reconoce. Los estáticos los sirve
    ```
 4. Guardala: es el `DATABASE_URL`.
 
-Las migraciones y tablas se crean solas al arrancar el contenedor
-(`entrypoint.sh` corre `migrate`).
+Las migraciones se aplican solas en **cada deploy** (ver
+"Migraciones en cada deploy").
 
 ## 2. Backend en Render
 
@@ -49,11 +49,13 @@ marcadas `sync: false` en el dashboard:
 - `CORS_ALLOWED_ORIGINS` y `CSRF_TRUSTED_ORIGINS` → la URL de Vercel.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
 
-`SECRET_KEY` se genera solo, `DEBUG=False` y `DB_SSL_REQUIRE=True` ya vienen seteados.
+`SECRET_KEY` la **generás vos** y la pegás acá:
+`python -c "from django.core.management.utils import get_random_secret_key as g; print(g())"`.
+`DEBUG=False` y `DB_SSL_REQUIRE=True` ya vienen seteados por el blueprint.
 
 ### Opción B: manual
 **New → Web Service → Docker**:
-- Root Directory: `backend`
+- Root Directory: *(dejar vacío: es la raíz del repo)*
 - Dockerfile Path: `Dockerfile`
 - Health Check Path: `/health/`
 - **Pre-Deploy Command**: `sh scripts/release.sh`
@@ -103,17 +105,16 @@ La imagen contiene **solo el backend**. No hay base de datos empaquetada:
 apuntá `DATABASE_URL` a tu Neon.
 
 ```bash
-cd backend
+# El build se hace desde la RAÍZ del repo (contexto = raíz).
 docker build -t libredrop-api .
 
-cd ..
-docker run --rm -p 8000:8000 --env-file .env --entrypoint sh libredrop-api \
+docker run --rm -p 8000:8000 --env-file .env.render --entrypoint sh libredrop-api \
   -c "sh scripts/release.sh && exec ./entrypoint.sh"
 
 curl http://localhost:8000/health/     # {"status": "ok"}
 ```
 
-(`cp .env.production.example .env` y completá `DATABASE_URL` + secretos.)
+(`cp .env.production.example .env.render` y completá `DATABASE_URL` + secretos.)
 
 ## 5. Operación
 
@@ -130,4 +131,7 @@ curl http://localhost:8000/health/     # {"status": "ok"}
 - **No conecta a Neon**: revisá que la URL tenga `?sslmode=require` (o
   `DB_SSL_REQUIRE=True`) y que sea la cadena *pooled*.
 - **No sube imágenes**: faltan las credenciales `CLOUDINARY_*`.
+- **`failed to read dockerfile: open Dockerfile`**: el Dockerfile debe estar en
+  la **raíz del repo** (Render lo busca ahí por defecto). Si lo movés, ajustá
+  `Dockerfile Path` / `Root Directory` en Render.
 - **Cold starts**: el plan `free` de Render duerme; usá `starter` para producción.
