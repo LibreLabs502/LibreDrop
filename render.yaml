@@ -17,7 +17,7 @@ services:
     autoDeploy: true
     envVars:
       - key: SECRET_KEY
-        generateValue: true        # Render genera un valor seguro solo
+        sync: false                # la generás vos (secrets) y la pegás en el dashboard
       - key: DEBUG
         value: "False"
       - key: DATABASE_URL
