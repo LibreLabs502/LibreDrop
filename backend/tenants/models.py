@@ -20,13 +20,16 @@ class Tenant(models.Model):
         return f"Tenant {self.name}"
 
     def save(self, *args, **kwargs):
-        base_slug = slugify(self.name)
-        slug = base_slug
-        counter = 2
-        while Tenant.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-        self.slug = slug
+        # El slug se genera UNA vez, al crear la tienda. Renombrar no debe
+        # cambiarlo: los links públicos /tienda/<slug> quedan estables.
+        if not self.slug:
+            base_slug = slugify(self.name) or "tienda"
+            slug = base_slug
+            counter = 2
+            while Tenant.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         return super().save(*args, **kwargs)
 
 class Membership(models.Model):

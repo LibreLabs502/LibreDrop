@@ -22,9 +22,10 @@ Backend live en `https://libredrop.onrender.com`, frontend en
   storefront (+ helper `images.optimized()` y 5 tests).
 - CORS/CSRF para el origen de Vercel; WhiteNoise sirve los estáticos;
   `SECURE_SSL_REDIRECT` en prod.
-- Pendiente: arreglar el slug de la tienda que se regenera al renombrarla, y
-  opcionales (límites de ancho `w_...` en Cloudinary, limpieza de imágenes
-  pequeñas sin uso).
+- Slug de tienda **estable**: se genera una vez al crear y renombrarla ya no lo
+  cambia (antes se regeneraba y rompía los links públicos).
+- Pendiente (opcionales): límites de ancho `w_...` en Cloudinary y limpieza de
+  imágenes pequeñas sin uso.
 
 ## v0.1 — En progreso (rehecha)
 
