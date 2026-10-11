@@ -68,6 +68,18 @@ input:focus, select:focus, textarea:focus {
 .row .field { flex: 1 1 160px; }
 .add-row { margin-bottom: 14px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.form-section {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .align-end { align-items: flex-end; }
 .check { display: flex; align-items: center; gap: 7px; font-size: 13px; white-space: nowrap; }
 .check input { width: auto; }
@@ -875,6 +887,29 @@ input:focus, select:focus, textarea:focus {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+
+/* Redes sociales de la tienda (hero). */
+.store-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.store-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  transition: background 0.15s ease;
+}
+.store-social-link:hover { background: rgba(255, 255, 255, 0.28); }
 
 .btn-store-contact {
   margin-left: auto;

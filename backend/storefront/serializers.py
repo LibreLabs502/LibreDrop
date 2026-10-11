@@ -47,6 +47,10 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "description",
             "logo",
             "whatsapp",
+            "instragram_url",
+            "facebook_url",
+            "tiktok_url",
+            "linkedin_url",
             "categories",
             "products",
         ]

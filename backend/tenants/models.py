@@ -10,6 +10,10 @@ class Tenant(models.Model):
     description = models.TextField(blank=True)
     logo = CloudinaryField("logo")
     whatsapp = models.CharField(max_length=20, blank=False, null=True)
+    instragram_url = models.URLField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    tiktok_url = models.URLField(blank=True, null=True)
+    linkedin_url = models.URLField(blank=True, null=True)
 
     class Meta:
         ordering = ["id"]

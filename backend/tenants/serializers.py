@@ -7,7 +7,18 @@ from .models import Tenant, Membership
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
-        fields = ["id", "name", "description", "logo", "whatsapp", "slug"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "logo",
+            "whatsapp",
+            "slug",
+            "instragram_url",
+            "facebook_url",
+            "tiktok_url",
+            "linkedin_url",
+        ]
         read_only_fields = ["id"]
 
     def to_representation(self, instance):

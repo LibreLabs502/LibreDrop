@@ -1,5 +1,16 @@
 # Versiones
 
+## v0.1.1 — Redes sociales en la tienda
+
+- `Tenant` suma redes sociales **opcionales**: Instagram, Facebook, TikTok y
+  LinkedIn (`URLField(blank=True, null=True)`; migración `tenants/0003`).
+- Los serializers (panel de tiendas y tienda pública) exponen las URLs.
+- Frontend: campos de edición en el panel y **enlaces en la tienda pública**
+  (`/tienda/<slug>`) bajo la descripción.
+- Nota interna: el campo del modelo quedó como `instragram_url` (typo de
+  "instagram"); funciona igual, renombrar a `instagram_url` queda como
+  limpieza futura si se quiere.
+
 ## v0.2 — Producción (Render + Neon + Vercel)
 
 Backend live en `https://libredrop.onrender.com`, frontend en

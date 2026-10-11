@@ -8,6 +8,13 @@ const waLink = (phone, message) => {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
+const SOCIAL_LINKS = [
+  { key: 'instragram_url', label: 'Instagram' },
+  { key: 'facebook_url', label: 'Facebook' },
+  { key: 'tiktok_url', label: 'TikTok' },
+  { key: 'linkedin_url', label: 'LinkedIn' },
+]
+
 export default function PublicStore() {
   const { slug } = useParams()
   const [store, setStore] = useState(null)
@@ -54,6 +61,8 @@ export default function PublicStore() {
     return <div className="store-page"><p className="store-loading">Cargando tienda…</p></div>
   }
 
+  const socials = SOCIAL_LINKS.filter((s) => store[s.key])
+
   return (
     <div className="store-page">
       <header className="store-hero store-hero-brand">
@@ -80,6 +89,16 @@ export default function PublicStore() {
               {store.name}
             </h1>
             {store.description && <p className="store-hero-desc">{store.description}</p>}
+            {socials.length > 0 && (
+              <div className="store-socials">
+                {socials.map((s) => (
+                  <a key={s.key} className="store-social-link" href={store[s.key]} target="_blank" rel="noreferrer">
+                    {s.label}
+                    <span aria-hidden="true"> ↗</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           {store.whatsapp && (
             <a

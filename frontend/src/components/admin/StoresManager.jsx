@@ -20,7 +20,15 @@ export default function StoresManager() {
 
   const startEdit = (t) => {
     setEditing(t.id)
-    setForm({ name: t.name, description: t.description || '', whatsapp: t.whatsapp || '' })
+    setForm({
+      name: t.name,
+      description: t.description || '',
+      whatsapp: t.whatsapp || '',
+      instragram_url: t.instragram_url || '',
+      facebook_url: t.facebook_url || '',
+      tiktok_url: t.tiktok_url || '',
+      linkedin_url: t.linkedin_url || '',
+    })
     setLogoFile(null)
     setError('')
     setOk('')
@@ -82,6 +90,39 @@ export default function StoresManager() {
             </Field>
             <Field label="Logo">
               <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+            </Field>
+            <h4 className="form-section">Redes sociales (opcional)</h4>
+            <Field label="Instagram">
+              <input
+                type="url"
+                value={form.instragram_url}
+                placeholder="https://instagram.com/tu-cuenta"
+                onChange={(e) => setForm({ ...form, instragram_url: e.target.value })}
+              />
+            </Field>
+            <Field label="Facebook">
+              <input
+                type="url"
+                value={form.facebook_url}
+                placeholder="https://facebook.com/tu-pagina"
+                onChange={(e) => setForm({ ...form, facebook_url: e.target.value })}
+              />
+            </Field>
+            <Field label="TikTok">
+              <input
+                type="url"
+                value={form.tiktok_url}
+                placeholder="https://tiktok.com/@tu-cuenta"
+                onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })}
+              />
+            </Field>
+            <Field label="LinkedIn">
+              <input
+                type="url"
+                value={form.linkedin_url}
+                placeholder="https://linkedin.com/in/tu-perfil"
+                onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
+              />
             </Field>
             {stores.find((t) => t.id === editing)?.logo && (
               <div className="stack small">

@@ -106,11 +106,14 @@ export const accountsApi = {
     api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
 }
 
-// WhatsApp es blank=False en el backend: un string vacío da 400.
-// En JSON mandamos null (el modelo permite NULL) para poder limpiarlo.
+// Estos campos son blank=False/nullable en el backend: un string vacío da 400.
+// En JSON mandamos null (permite limpiarlos).
+const OPTIONAL_BLANK_FIELDS = ['whatsapp', 'instragram_url', 'facebook_url', 'tiktok_url', 'linkedin_url']
 const cleanTenantPayload = (data) => {
   const clean = { ...(data || {}) }
-  if (clean.whatsapp === '') clean.whatsapp = null
+  for (const key of OPTIONAL_BLANK_FIELDS) {
+    if (clean[key] === '') clean[key] = null
+  }
   return clean
 }
 
