@@ -4,6 +4,7 @@ from drf_spectacular.utils import extend_schema_field
 from accounts.serializers import UserSerializer
 from backend.images import optimized
 from .models import Tenant, Membership
+from .services import subscription_payload
 from .theme import PALETTES, palette_choices, theme_payload, validate_hex_color
 
 class ThemeSerializer(serializers.Serializer):
@@ -35,6 +36,8 @@ class TenantSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     theme = serializers.SerializerMethodField()
+    # Estado del plan (calculado en vivo). None si la tienda no tiene suscripción.
+    subscription = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -55,6 +58,7 @@ class TenantSerializer(serializers.ModelSerializer):
             "theme_text",
             "theme_palette",
             "theme",
+            "subscription",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
@@ -68,6 +72,10 @@ class TenantSerializer(serializers.ModelSerializer):
         return theme_payload(instance)
 
     get_theme = extend_schema_field(ThemeSerializer)(get_theme)
+
+    def get_subscription(self, instance):
+        # getattr captura el RelatedObjectDoesNotExist de la OneToOne inversa.
+        return subscription_payload(getattr(instance, "subscription", None))
 
     def validate_theme_primary(self, value):
         return validate_hex_color(value)

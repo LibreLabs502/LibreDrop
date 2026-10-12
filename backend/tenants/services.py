@@ -125,3 +125,23 @@ def renew_subscription(subscription, months=1):
     )
 
     return subscription
+
+
+def subscription_payload(subscription):
+    """Datos de suscripción para el panel (estado calculado en vivo)."""
+    if subscription is None:
+        return None
+    return {
+        "status": get_subscription_status(subscription),
+        "current_period_end": subscription.current_period_end,
+        "grace_days_remaining": get_grace_days_remaining(subscription),
+    }
+
+
+def activate_subscription(tenant, months=1):
+    """Activa/renueva el plan de una tienda. Crea la suscripción si no existe."""
+    subscription, _ = Subscription.objects.get_or_create(
+        tenant=tenant,
+        defaults={"current_period_end": timezone.now()},
+    )
+    return renew_subscription(subscription, months=months)

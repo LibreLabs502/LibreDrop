@@ -13,8 +13,15 @@ export function AuthProvider({ children }) {
       setLoading(false)
       return
     }
-    // El backend aún no tiene /me/; recuperamos el usuario guardado al login.
-    setUser(getStoredUser())
+    try {
+      // Trae el usuario real (incluye is_superuser) desde /auth/me/.
+      const me = await accountsApi.me()
+      setStoredUser(me)
+      setUser(me)
+    } catch {
+      // Si falla (p. ej. backend viejo sin /me/), usamos lo guardado al login.
+      setUser(getStoredUser())
+    }
     setLoading(false)
   }, [])
 
@@ -28,6 +35,7 @@ export function AuthProvider({ children }) {
     const u = { username }
     setStoredUser(u)
     setUser(u)
+    refresh()
     return tokens
   }
 

@@ -63,3 +63,11 @@ export const PaletteIcon = () => (
     <circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
   </svg>
 )
+
+export const PaymentIcon = () => (
+  <svg {...base}>
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M2 10h20" />
+    <path d="M6 15h4" />
+  </svg>
+)

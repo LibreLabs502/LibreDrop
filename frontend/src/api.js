@@ -104,6 +104,7 @@ export const accountsApi = {
     api('/auth/login/', { method: 'POST', body: { username, password }, auth: false }),
   refresh: (refresh) =>
     api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
+  me: () => api('/auth/me/'),
 }
 
 // Estos campos son blank=False/nullable en el backend: un string vacío da 400.
@@ -153,6 +154,19 @@ const formDataFrom = (data, files = {}) => {
     if (file) fd.append(key, file)
   }
   return fd
+}
+
+export const paymentsApi = {
+  list: () => api('/payments/'),
+  create: (tenantId, data, file) =>
+    api('/payments/', {
+      method: 'POST',
+      body: file
+        ? formDataFrom({ ...data, tenant: tenantId }, { image: file })
+        : { ...data, tenant: tenantId },
+      form: !!file,
+    }),
+  activate: (id) => api(`/payments/${id}/activate/`, { method: 'POST' }),
 }
 
 export const catalogApi = {

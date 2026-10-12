@@ -1277,3 +1277,86 @@ input:focus, select:focus, textarea:focus {
   font-size: 12px;
   font-weight: 600;
 }
+
+/* ---------- pagos / suscripción ---------- */
+
+.notice.warn {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.notice-text { margin: 0 0 10px; }
+.notice .btn-group { margin: 0; }
+.notice .btn.ghost { border-color: currentColor; color: inherit; }
+.notice .btn.ghost:hover { background: rgba(146, 64, 14, 0.08); }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: #fafbfc;
+}
+
+.table.clickable tbody tr { cursor: pointer; }
+.table.clickable tbody tr:hover { background: #f8fafc; }
+.table.clickable tbody tr.selected { background: #eff6ff; }
+
+.chip.status { border: none; }
+.chip.status.pending { background: #fef3c7; color: #92400e; }
+.chip.status.approved { background: #dcfce7; color: #166534; }
+.chip.status.rejected { background: #fee2e2; color: #991b1b; }
+.chip.status.past_due { background: #fef3c7; color: #92400e; }
+.chip.status.suspended { background: #fee2e2; color: #991b1b; }
+
+.payment-form { margin-top: 12px; }
+.receipt-actions { margin-top: 12px; }
+
+.payment-detail {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.payment-detail h4 { margin: 0 0 10px; }
+
+.payment-receipt {
+  display: block;
+  max-width: 320px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 4px;
+}
+
+.receipt-title { margin: 0 0 2px; }
+.receipt-table { margin-top: 14px; }
+.receipt-table th { width: 45%; color: var(--muted); font-weight: 600; }
+
+@media print {
+  body * { visibility: hidden; }
+  .receipt-print,
+  .receipt-print * { visibility: visible; }
+  .receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none;
+  }
+}
