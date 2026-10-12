@@ -1085,8 +1085,9 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #25d366;
-  color: #fff;
+  background: var(--store-primary);
+  color: var(--store-on-primary);
+  border: 1px solid var(--store-primary);
   border-radius: 12px;
   padding: 10px 14px;
   font-weight: 700;
@@ -1095,9 +1096,10 @@ input:focus, select:focus, textarea:focus {
   margin-top: auto;
   width: 100%;
   white-space: nowrap;
+  transition: filter 0.15s ease;
 }
 
-.btn-whatsapp:hover { background: #1ebe5d; }
+.btn-whatsapp:hover { filter: brightness(0.9); }
 
 .store-loading, .store-error { text-align: center; padding: 80px 16px; }
 .store-error h1 { margin-bottom: 8px; }
