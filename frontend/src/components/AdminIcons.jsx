@@ -54,3 +54,12 @@ export const StoresIcon = () => (
     <path d="M10 18h4" />
   </svg>
 )
+
+export const PaletteIcon = () => (
+  <svg {...base}>
+    <path d="M12 22a10 10 0 1 1 0-20c5.52 0 10 3.58 10 8 0 2.76-2.24 5-5 5h-1.5a2 2 0 0 0-1.41 3.41A2 2 0 0 1 12 22Z" />
+    <circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none" />
+    <circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+)

@@ -1,7 +1,10 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 
 from backend.images import optimized
 from tenants.models import Tenant
+from tenants.serializers import ThemeSerializer
+from tenants.theme import theme_payload
 from catalog.models import Category, Product
 
 
@@ -37,6 +40,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
 class PublicTenantSerializer(serializers.ModelSerializer):
     categories = PublicCategorySerializer(many=True, read_only=True)
     products = serializers.SerializerMethodField()
+    theme = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -53,7 +57,14 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "linkedin_url",
             "categories",
             "products",
+            "theme",
         ]
+
+    def get_theme(self, tenant):
+        # Solo datos visuales: colores y clave de paleta. Nada privado.
+        return theme_payload(tenant)
+
+    get_theme = extend_schema_field(ThemeSerializer)(get_theme)
 
     def get_products(self, tenant):
         products = tenant.products.filter(
@@ -65,6 +76,8 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context,
         ).data
+
+    get_products = extend_schema_field(PublicProductSerializer(many=True))(get_products)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

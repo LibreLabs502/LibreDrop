@@ -1,7 +1,9 @@
-from rest_framework import viewsets
-from .serializers import MembershipSerializer, TenantSerializer
+from rest_framework import generics, viewsets
+from .serializers import MembershipSerializer, PaletteSerializer, TenantSerializer
 from .models import Tenant, Membership
 from rest_framework.permissions import IsAuthenticated
+
+from .theme import palette_catalog
 
 class TenantViewSet(viewsets.ModelViewSet):
     serializer_class = TenantSerializer
@@ -9,6 +11,16 @@ class TenantViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self): # type: ignore
         return Tenant.objects.filter(memberships__user=self.request.user).distinct()
+
+
+class PaletteListView(generics.ListAPIView):
+    """Catálogo de paletas para el panel. Requiere sesión de administrador."""
+
+    serializer_class = PaletteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):  # type: ignore
+        return palette_catalog()
 
 class TenantMemberView(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer

@@ -4,6 +4,8 @@ from django.utils.text import slugify
 
 from django.conf import settings
 
+from .theme import DEFAULT_PALETTE, validate_hex_color
+
 class Tenant(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, null=True)
@@ -14,6 +16,29 @@ class Tenant(models.Model):
     facebook_url = models.URLField(blank=True, null=True)
     tiktok_url = models.URLField(blank=True, null=True)
     linkedin_url = models.URLField(blank=True, null=True)
+
+    # Configuración visual propia de cada tienda. Los valores por defecto son
+    # la paleta azul, así que las tiendas existentes no cambian de apariencia.
+    theme_primary = models.CharField(
+        max_length=7,
+        default=DEFAULT_PALETTE["primary"],
+        validators=[validate_hex_color],
+    )
+    theme_secondary = models.CharField(
+        max_length=7,
+        default=DEFAULT_PALETTE["secondary"],
+        validators=[validate_hex_color],
+    )
+    theme_background = models.CharField(
+        max_length=7,
+        default=DEFAULT_PALETTE["background"],
+        validators=[validate_hex_color],
+    )
+    theme_text = models.CharField(
+        max_length=7,
+        default=DEFAULT_PALETTE["text"],
+        validators=[validate_hex_color],
+    )
 
     class Meta:
         ordering = ["id"]
