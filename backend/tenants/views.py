@@ -10,7 +10,11 @@ class TenantViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self): # type: ignore
-        return Tenant.objects.filter(memberships__user=self.request.user).distinct()
+        return (
+            Tenant.objects.filter(memberships__user=self.request.user)
+            .select_related("subscription")
+            .distinct()
+        )
 
 
 class PaletteListView(generics.ListAPIView):
