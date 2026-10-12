@@ -66,6 +66,18 @@ export default function PublicStore() {
 
   const themeVars = useMemo(() => themeStyle(store?.theme), [store])
 
+  // Colorea el fondo del body para que toda la página comparta el tema.
+  useEffect(() => {
+    const body = document.body
+    if (!body) return
+    const bg = themeVars['--store-bg'] || '#f6f7f9'
+    const prev = body.style.background
+    body.style.background = bg
+    return () => {
+      body.style.background = prev
+    }
+  }, [themeVars])
+
   const products = useMemo(() => {
     if (!store) return []
     return store.products.filter((p) => {
