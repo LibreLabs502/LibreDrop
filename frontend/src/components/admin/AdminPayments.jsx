@@ -107,6 +107,10 @@ function SubscriptionPanel() {
     e.preventDefault()
     setError('')
     setOk('')
+    if (!file) {
+      setError('Adjuntá la foto del comprobante (obligatorio).')
+      return
+    }
     setBusy(true)
     try {
       const payment = await paymentsApi.create(tenant.id, { description }, file)
@@ -170,8 +174,8 @@ function SubscriptionPanel() {
             <Field label="Descripción del pago">
               <input value={description} onChange={(e) => setDescription(e.target.value)} />
             </Field>
-            <Field label="Foto del comprobante" hint="Transferencia o depósito (imagen).">
-              <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Field label="Foto del comprobante (Obligatorio)" hint="Transferencia o depósito (imagen).">
+              <input type="file" accept="image/*" required onChange={(e) => setFile(e.target.files?.[0] || null)} />
             </Field>
             <div className="btn-group">
               <button className="btn" disabled={busy}>{busy ? 'Enviando…' : 'Enviar'}</button>

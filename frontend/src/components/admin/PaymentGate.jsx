@@ -26,6 +26,10 @@ export default function PaymentGate() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!file) {
+      setError('Adjuntá la foto del comprobante (obligatorio).')
+      return
+    }
     setBusy(true)
     try {
       // POST del pago con comprobante.
@@ -88,8 +92,8 @@ export default function PaymentGate() {
               <Field label="Descripción del pago">
                 <input value={description} onChange={(e) => setDescription(e.target.value)} />
               </Field>
-              <Field label="Foto del comprobante" hint="Transferencia o depósito (imagen).">
-                <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              <Field label="Foto del comprobante (Obligatorio)" hint="Transferencia o depósito (imagen).">
+                <input type="file" accept="image/*" required onChange={(e) => setFile(e.target.files?.[0] || null)} />
               </Field>
               {error && <Alert>{error}</Alert>}
               <div className="btn-group">
