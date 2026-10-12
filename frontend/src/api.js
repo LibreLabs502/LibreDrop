@@ -198,6 +198,9 @@ export const catalogApi = {
   },
 }
 
+// Teléfono temporal de soporte (el de LibreLabs está roto por ahora).
+export const SUPPORT_WHATSAPP = '+50239085258'
+
 export const formatPrice = (value) => {
   const amount = Number(value)
   if (Number.isNaN(amount)) return `Q ${value}`

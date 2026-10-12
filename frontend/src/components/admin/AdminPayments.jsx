@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { formatPrice, paymentsApi, waLink } from '../../api'
+import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
-// Teléfono temporal de soporte (el de LibreLabs está roto por ahora).
-const WHATSAPP_SUPPORT = '+50239085258'
 const SUBSCRIPTION_PRICE = 100
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
 // Cuenta a la que se paga por transferencia/depósito. Reemplazar por los datos reales.
@@ -15,7 +13,7 @@ const STATUS_LABELS = {
   active: 'Activo',
   past_due: 'Vencido',
   suspended: 'Suspendido',
-  pending: 'Pendiente',
+  pending: 'En espera',
   approved: 'Pagado',
   rejected: 'Rechazado',
 }
@@ -29,7 +27,7 @@ const formatDate = (value) => {
     : date.toLocaleString('es-GT', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-const supportLink = (message) => waLink(WHATSAPP_SUPPORT, message)
+const supportLink = (message) => waLink(SUPPORT_WHATSAPP, message)
 
 export default function AdminPayments() {
   const { user } = useAuth()
@@ -68,14 +66,41 @@ function SubscriptionPanel() {
 
   const tenant = currentTenant
   const sub = tenant.subscription
+
+  // Cuenta recién registrada: el registro dejó el pago en espera y el dueño
+  // avisa por WhatsApp para que la activen. Sin formulario de pago.
+  if (!sub) {
+    return (
+      <Card title="Mi plan">
+        <div className="kv">
+          <span>Estado</span>
+          <span><span className="chip status pending">En espera de activación</span></span>
+        </div>
+        <div className="notice warn">
+          <p className="notice-text">
+            Tu cuenta está en espera de activación. Mandanos un WhatsApp y la activamos de inmediato.
+          </p>
+          <div className="btn-group">
+            <a
+              className="btn small"
+              href={supportLink('Hola LibreLabs, me gustaría activar mi cuenta.')}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Me gustaría activar mi cuenta
+            </a>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
   const status = sub?.status
   const days = sub?.grace_days_remaining ?? 0
-  const needsPayment = !sub || status !== 'active'
+  const needsPayment = status !== 'active'
 
   let warning = ''
-  if (!sub) {
-    warning = `Tu tienda todavía no tiene un plan activo. Paga por transferencia o depósito a ${PAYMENT_ACCOUNT}. Más información al WhatsApp.`
-  } else if (status === 'past_due') {
+  if (status === 'past_due') {
     warning = `Tu plan finalizó. Tienes ${days} ${days === 1 ? 'día' : 'días'} para pagar por transferencia o depósito a ${PAYMENT_ACCOUNT}. Más información al WhatsApp.`
   } else if (status === 'suspended') {
     warning = `Tu plan venció y la tienda quedó suspendida. Paga por transferencia o depósito a ${PAYMENT_ACCOUNT} para reactivarla. Más información al WhatsApp.`
@@ -105,25 +130,18 @@ function SubscriptionPanel() {
   return (
     <>
       <Card title="Mi plan">
-        {sub ? (
-          <div className="kv">
-            <span>Estado</span>
-            <span><span className={`chip status ${status}`}>{statusLabel(status)}</span></span>
-            <span>Vence</span>
-            <span>{formatDate(sub.current_period_end)}</span>
-            {status !== 'active' && (
-              <>
-                <span>Días de gracia</span>
-                <span>{days}</span>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="kv">
-            <span>Estado</span>
-            <span><span className="chip status pending">Sin plan</span></span>
-          </div>
-        )}
+        <div className="kv">
+          <span>Estado</span>
+          <span><span className={`chip status ${status}`}>{statusLabel(status)}</span></span>
+          <span>Vence</span>
+          <span>{formatDate(sub.current_period_end)}</span>
+          {status !== 'active' && (
+            <>
+              <span>Días de gracia</span>
+              <span>{days}</span>
+            </>
+          )}
+        </div>
 
         {warning && (
           <div className="notice warn">

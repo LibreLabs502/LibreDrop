@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { tenantsApi } from '../../api'
+import { tenantsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
+import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 export default function StoresManager() {
-  const { stores, current, select, reload, loading, error: loadError } = useTenant()
+  const { user } = useAuth()
+  const { stores, current, currentTenant, select, reload, loading, error: loadError } = useTenant()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(null)
   const [logoFile, setLogoFile] = useState(null)
@@ -136,6 +138,24 @@ export default function StoresManager() {
             </div>
           </form>
         </Card>
+      )}
+
+      {!user?.is_superuser && currentTenant && !currentTenant.subscription && (
+        <div className="notice warn">
+          <p className="notice-text">
+            Tu tienda <b>{currentTenant.name}</b> está en espera de activación. Mandanos un WhatsApp y la activamos de inmediato.
+          </p>
+          <div className="btn-group">
+            <a
+              className="btn small"
+              href={waLink(SUPPORT_WHATSAPP, `Hola LibreLabs, soy ${currentTenant.name}. Me gustaría activar mi cuenta.`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Me gustaría activar mi cuenta
+            </a>
+          </div>
+        </div>
       )}
 
       <Card title={`Tus tiendas (${stores.length})`}>

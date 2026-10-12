@@ -35,6 +35,10 @@ function Shell() {
 
   const close = () => setOpen(false)
 
+  // Pagos aparece solo cuando la tienda ya tiene plan; el superusuario lo ve
+  // siempre porque gestiona los pagos en espera de todas las tiendas.
+  const showPayments = !!user?.is_superuser || !!currentTenant?.subscription
+
   return (
     <div className="admin">
       <header className="admin-topbar">
@@ -53,7 +57,7 @@ function Shell() {
           <span className="muted">Panel de tiendas</span>
         </div>
         <nav className="admin-nav">
-          {LINKS.map((l) => (
+          {LINKS.filter((l) => l.to !== '/admin/pagos' || showPayments).map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
