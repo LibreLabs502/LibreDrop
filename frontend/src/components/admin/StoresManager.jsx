@@ -82,11 +82,11 @@ export default function StoresManager() {
             <Field label="Nombre *">
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </Field>
-            <Field label="WhatsApp">
-              <input value={form.whatsapp} placeholder="+50212345678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-            </Field>
             <Field label="Descripción">
               <textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </Field>
+            <Field label="Número de WhatsApp">
+              <input value={form.whatsapp} placeholder="+50212345678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
             </Field>
             <Field label="Logo">
               <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
@@ -144,12 +144,48 @@ export default function StoresManager() {
         <Alert>{error}</Alert>
         {stores.length === 0 && <p className="muted">No tienes tiendas.</p>}
         {stores.map((t) => (
-          <div className="row-item" key={t.id}>
+          <div className="row-item store-row" key={t.id}>
             <div className="row-item-main">
-              <b>{t.name}</b>
-              <span className="muted">
-                {[t.whatsapp, t.description].filter(Boolean).join(' · ') || 'Sin contacto configurado'}
-              </span>
+              <div className="store-fields">
+                <span className="store-field-label">Nombre</span>
+                <b>{t.name}</b>
+                {t.description && (
+                  <>
+                    <span className="store-field-label">Descripción</span>
+                    <span>{t.description}</span>
+                  </>
+                )}
+                {t.whatsapp && (
+                  <>
+                    <span className="store-field-label">Número de WhatsApp</span>
+                    <span>{t.whatsapp}</span>
+                  </>
+                )}
+                {t.instagram_url && (
+                  <>
+                    <span className="store-field-label">Instagram</span>
+                    <a href={t.instagram_url} target="_blank" rel="noreferrer">{t.instagram_url}</a>
+                  </>
+                )}
+                {t.facebook_url && (
+                  <>
+                    <span className="store-field-label">Facebook</span>
+                    <a href={t.facebook_url} target="_blank" rel="noreferrer">{t.facebook_url}</a>
+                  </>
+                )}
+                {t.tiktok_url && (
+                  <>
+                    <span className="store-field-label">TikTok</span>
+                    <a href={t.tiktok_url} target="_blank" rel="noreferrer">{t.tiktok_url}</a>
+                  </>
+                )}
+                {t.linkedin_url && (
+                  <>
+                    <span className="store-field-label">LinkedIn</span>
+                    <a href={t.linkedin_url} target="_blank" rel="noreferrer">{t.linkedin_url}</a>
+                  </>
+                )}
+              </div>
               {t.id === current && <span className="chip">Tienda actual</span>}
             </div>
             <span className="btn-group">

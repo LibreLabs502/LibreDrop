@@ -229,7 +229,22 @@ input:focus, select:focus, textarea:focus {
 }
 
 .row-item:last-child { border-bottom: none; }
-.row-item-main { display: flex; flex-direction: column; gap: 3px; }
+.row-item-main { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; flex: 1; min-width: 0; }
+
+/* Campos de la tienda en el panel (nombre, descripción, redes…) */
+.store-fields {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 3px 12px;
+  align-items: baseline;
+  width: 100%;
+}
+.store-field-label { color: var(--muted); font-weight: 600; }
+.store-fields a { overflow-wrap: anywhere; }
+.row-item-main .chip { align-self: flex-start; }
+
+.row-item.store-row { flex-direction: column; align-items: stretch; gap: 10px; }
+.row-item.store-row .btn-group { justify-content: flex-start; }
 
 .kv {
   display: grid;
@@ -824,6 +839,7 @@ input:focus, select:focus, textarea:focus {
   .admin-side-foot { display: flex; flex-direction: column; gap: 8px; }
   .admin-main { padding: 14px; }
   .row-item { flex-direction: column; align-items: stretch; gap: 8px; }
+  .store-fields { grid-template-columns: 1fr; gap: 1px 0; }
   .btn-group { flex-wrap: wrap; }
   .grid2 { grid-template-columns: 1fr; }
   .admin-side-foot .tenant-switcher { max-width: none; }
