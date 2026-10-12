@@ -5,6 +5,7 @@ import AdminApp from './pages/AdminApp'
 import StoresManager from './components/admin/StoresManager'
 import AdminCatalog from './components/admin/AdminCatalog'
 import AdminAppearance from './components/admin/AdminAppearance'
+import AdminPayments from './components/admin/AdminPayments'
 import PublicStore from './pages/PublicStore'
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
             <Route index element={<StoresManager />} />
             <Route path="catalogo" element={<AdminCatalog />} />
             <Route path="apariencia" element={<AdminAppearance />} />
+            <Route path="pagos" element={<AdminPayments />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -44,7 +44,8 @@ export default function AdminAuth() {
     try {
       await register(regForm)
       setOk('Cuenta creada. Bienvenido…')
-      navigate('/admin', { replace: true })
+      // La tienda queda pendiente de pago: vamos directo al flujo de pagos.
+      navigate('/admin/pagos', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {

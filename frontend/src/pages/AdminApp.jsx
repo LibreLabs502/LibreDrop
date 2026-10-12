@@ -3,12 +3,13 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
 import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
-import { CatalogIcon, PaletteIcon, StoresIcon } from '../components/AdminIcons'
+import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
 
 const LINKS = [
   { to: '/admin', end: true, label: 'Tiendas', Icon: StoresIcon },
   { to: '/admin/catalogo', label: 'Catálogo', Icon: CatalogIcon },
   { to: '/admin/apariencia', label: 'Apariencia', Icon: PaletteIcon },
+  { to: '/admin/pagos', label: 'Pagos', Icon: PaymentIcon },
 ]
 
 function TenantSwitcher() {
