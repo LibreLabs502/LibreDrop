@@ -201,6 +201,12 @@ export const catalogApi = {
 // Teléfono temporal de soporte (el de LibreLabs está roto por ahora).
 export const SUPPORT_WHATSAPP = '+50239085258'
 
+// Cuenta a la que se paga por transferencia/depósito. Reemplazar por los datos reales.
+export const PAYMENT_ACCOUNT = 'la cuenta inicial de LibreLabs'
+
+// Precio de la suscripción mensual en quetzales.
+export const SUBSCRIPTION_PRICE = 100
+
 export const formatPrice = (value) => {
   const amount = Number(value)
   if (Number.isNaN(amount)) return `Q ${value}`
