@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
+import { themeStyle } from '../theme'
 
 const waLink = (phone, message) => {
   const digits = String(phone || '').replace(/[^\d]/g, '')
@@ -42,17 +43,28 @@ export default function PublicStore() {
   const [infoOpen, setInfoOpen] = useState(false)
 
   useEffect(() => {
+    let alive = true
+    // Al cambiar de tienda, no mostramos la anterior mientras carga: así el
+    // tema nuevo no se aplica sobre datos viejos.
+    setStore(null)
+    setError('')
     storefrontApi
       .getStore(slug)
       .then((s) => {
+        if (!alive) return
         setStore(s)
         if (s?.name) document.title = s.name
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        if (alive) setError(e.message)
+      })
     return () => {
+      alive = false
       document.title = 'LibreDrop'
     }
   }, [slug])
+
+  const themeVars = useMemo(() => themeStyle(store?.theme), [store])
 
   const products = useMemo(() => {
     if (!store) return []
@@ -81,7 +93,7 @@ export default function PublicStore() {
   const socials = SOCIAL_LINKS.filter((s) => store[s.key])
 
   return (
-    <div className="store-page">
+    <div className="store-page" style={themeVars}>
       <header className="store-hero store-hero-brand">
         <div className="store-hero-row">
           {store.logo ? (

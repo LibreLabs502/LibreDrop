@@ -4,6 +4,7 @@ import IndexPage from './pages/IndexPage'
 import AdminApp from './pages/AdminApp'
 import StoresManager from './components/admin/StoresManager'
 import AdminCatalog from './components/admin/AdminCatalog'
+import AdminAppearance from './components/admin/AdminAppearance'
 import PublicStore from './pages/PublicStore'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/admin" element={<AdminApp />}>
             <Route index element={<StoresManager />} />
             <Route path="catalogo" element={<AdminCatalog />} />
+            <Route path="apariencia" element={<AdminAppearance />} />
           </Route>
         </Routes>
       </BrowserRouter>

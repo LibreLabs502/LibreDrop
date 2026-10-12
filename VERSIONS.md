@@ -1,5 +1,22 @@
 # Versiones
 
+## v0.3 — Paletas de color por tienda
+
+- `Tenant` guarda su configuración visual: `theme_primary`, `theme_secondary`,
+  `theme_background` y `theme_text` (hexadecimales validados; migración
+  `tenants/0006`). El valor por defecto es la paleta **Azul**, por lo que las
+  tiendas existentes no cambian de apariencia.
+- Catálogo de paletas con **una única definición** en `tenants/theme.py`
+  (Azul, Rosa, Verde, Morado, Café, Oscuro) expuesto en `GET /tenants/palettes/`.
+- `PATCH /tenants/tenant/<id>/` acepta `theme_palette` (clave de paleta) o
+  colores hexadecimales sueltos; la lectura se expone en `theme`.
+- El storefront público devuelve los colores en `theme` y el frontend los aplica
+  como variables CSS por tienda (`frontend/src/theme.js`). Aislamiento por
+  membresía en el backend; fallback a Azul si falta la configuración.
+- Panel: nueva sección **Apariencia** (`/admin/apariencia`) con muestras de cada
+  paleta, selección, estado de guardado y errores.
+- Pruebas: `tenants/tests.py`, `storefront/tests.py` y `frontend/src/theme.test.js`.
+
 ## v0.1.1 — Redes sociales en la tienda
 
 - `Tenant` suma redes sociales **opcionales**: Instagram, Facebook, TikTok y

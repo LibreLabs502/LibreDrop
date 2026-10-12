@@ -11,9 +11,14 @@ Los querysets filtran por membresía del usuario autenticado.
 Django 6.1 + DRF. Apps:
 
 - `accounts` — modelo `User` propio y autenticación JWT.
-- `tenants` — tiendas y miembros (roles).
+- `tenants` — tiendas y miembros (roles) + paletas de color por tienda.
 - `catalog` — categorías y productos por tienda.
 - `storefront` — API pública de la tienda (sin auth).
+
+Las paletas viven en `tenants/theme.py` (única definición) y cada `Tenant`
+guarda sus colores en `theme_*`. El panel los edita vía `PATCH /tenants/tenant/`
+y la tienda pública los recibe en el campo `theme` para aplicarlos como
+variables CSS aisladas por tienda.
 
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
 URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad

@@ -119,6 +119,7 @@ const cleanTenantPayload = (data) => {
 
 export const tenantsApi = {
   list: () => api('/tenants/tenant/'),
+  palettes: () => api('/tenants/palettes/'),
   create: (data, file) =>
     file
       ? api('/tenants/tenant/', { method: 'POST', body: formDataFrom(data, { logo: file }), form: true })
