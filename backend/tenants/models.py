@@ -74,3 +74,26 @@ class Membership(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["tenant", "user"], name="unique_tenant_user")
         ]
+
+
+class Subscription(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Activa"
+        PAST_DUE = "past_due", "Vencida"
+        SUSPENDED = "suspended", "Suspendida"
+
+    tenant = models.OneToOneField(
+        Tenant,
+        on_delete=models.PROTECT,
+        related_name="subscription",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+    current_period_end = models.DateTimeField()
+    suspended_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
