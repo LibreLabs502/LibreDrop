@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.db import transaction
 
 from tenants.models import Membership, Tenant
 
@@ -32,6 +32,9 @@ class RegisterSerializers(serializers.ModelSerializer):
 
         Membership.objects.create(user=user, tenant=tenant, role=Membership.Role.owner)
 
+        # Sin plan de prueba: la tienda queda pendiente de pago y el flujo de
+        # pagos le aparece desde el primer ingreso (se crea la suscripción recién
+        # cuando el superusuario activa un pago).
         return user
 
 class LoginSerializer(TokenObtainPairSerializer):
@@ -40,5 +43,5 @@ class LoginSerializer(TokenObtainPairSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name"]
+        fields = ["id", "username", "email", "first_name", "last_name", "is_superuser"]
         read_only_fields = fields
