@@ -14,7 +14,6 @@ class PublicCategorySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description",
         ]
 
 
