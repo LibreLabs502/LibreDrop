@@ -14,7 +14,7 @@ class TenantSerializer(serializers.ModelSerializer):
             "logo",
             "whatsapp",
             "slug",
-            "instragram_url",
+            "instagram_url",
             "facebook_url",
             "tiktok_url",
             "linkedin_url",

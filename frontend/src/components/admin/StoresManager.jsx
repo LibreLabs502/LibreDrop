@@ -24,7 +24,7 @@ export default function StoresManager() {
       name: t.name,
       description: t.description || '',
       whatsapp: t.whatsapp || '',
-      instragram_url: t.instragram_url || '',
+      instagram_url: t.instagram_url || '',
       facebook_url: t.facebook_url || '',
       tiktok_url: t.tiktok_url || '',
       linkedin_url: t.linkedin_url || '',
@@ -95,9 +95,9 @@ export default function StoresManager() {
             <Field label="Instagram">
               <input
                 type="url"
-                value={form.instragram_url}
+                value={form.instagram_url}
                 placeholder="https://instagram.com/tu-cuenta"
-                onChange={(e) => setForm({ ...form, instragram_url: e.target.value })}
+                onChange={(e) => setForm({ ...form, instagram_url: e.target.value })}
               />
             </Field>
             <Field label="Facebook">

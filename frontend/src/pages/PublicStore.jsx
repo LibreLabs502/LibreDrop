@@ -9,7 +9,7 @@ const waLink = (phone, message) => {
 }
 
 const SOCIAL_LINKS = [
-  { key: 'instragram_url', label: 'Instagram' },
+  { key: 'instagram_url', label: 'Instagram' },
   { key: 'facebook_url', label: 'Facebook' },
   { key: 'tiktok_url', label: 'TikTok' },
   { key: 'linkedin_url', label: 'LinkedIn' },

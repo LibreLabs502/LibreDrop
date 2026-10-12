@@ -108,7 +108,7 @@ export const accountsApi = {
 
 // Estos campos son blank=False/nullable en el backend: un string vacío da 400.
 // En JSON mandamos null (permite limpiarlos).
-const OPTIONAL_BLANK_FIELDS = ['whatsapp', 'instragram_url', 'facebook_url', 'tiktok_url', 'linkedin_url']
+const OPTIONAL_BLANK_FIELDS = ['whatsapp', 'instagram_url', 'facebook_url', 'tiktok_url', 'linkedin_url']
 const cleanTenantPayload = (data) => {
   const clean = { ...(data || {}) }
   for (const key of OPTIONAL_BLANK_FIELDS) {

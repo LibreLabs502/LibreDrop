@@ -7,9 +7,8 @@
 - Los serializers (panel de tiendas y tienda pública) exponen las URLs.
 - Frontend: campos de edición en el panel y **enlaces en la tienda pública**
   (`/tienda/<slug>`) bajo la descripción.
-- Nota interna: el campo del modelo quedó como `instragram_url` (typo de
-  "instagram"); funciona igual, renombrar a `instagram_url` queda como
-  limpieza futura si se quiere.
+- Nota: el campo se normalizó a `instagram_url` (el typo inicial
+  `instragram_url` se renombró con las migraciones `tenants/0004` + `0005`).
 
 ## v0.2 — Producción (Render + Neon + Vercel)
 
