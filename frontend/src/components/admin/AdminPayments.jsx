@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
+import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, PAYMENT_ACCOUNT, SUBSCRIPTION_PRICE } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
-const SUBSCRIPTION_PRICE = 100
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
-// Cuenta a la que se paga por transferencia/depósito. Reemplazar por los datos reales.
-const PAYMENT_ACCOUNT = 'la cuenta inicial de LibreLabs'
 
 const STATUS_LABELS = {
   active: 'Activo',
