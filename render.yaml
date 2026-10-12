@@ -9,6 +9,10 @@ services:
     name: libredrop-api
     runtime: docker
     # Dockerfile en la raíz del repo (Render lo toma por defecto).
+    dockerfilePath: ./Dockerfile
+    # Fuerza a ejecutar nuestro entrypoint (aplica migraciones + levanta Gunicorn),
+    # aunque en el dashboard haya quedado un "Start Command" distinto.
+    dockerCommand: "./entrypoint.sh"
     plan: starter          # cambiá a "free" si querés el plan gratuito (se duerme)
     healthCheckPath: /health/
     # Migraciones en cada deploy, antes de que la nueva versión reciba tráfico.

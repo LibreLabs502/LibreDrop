@@ -82,6 +82,7 @@ con `sync: false` (`SECRET_KEY`, `DATABASE_URL`, `CORS_*`, `CLOUDINARY_*`);
 - Root Directory: *(vacío: raíz del repo)*
 - Dockerfile Path: `Dockerfile`
 - Health Check Path: `/health/`
+- **Start Command**: *(vacío: deja el `ENTRYPOINT` del Dockerfile, que aplica las migraciones)*
 - **Pre-Deploy Command**: `sh scripts/release.sh`
 - Environment: la tabla de variables de arriba.
 
@@ -96,7 +97,22 @@ con `sync: false` (`SECRET_KEY`, `DATABASE_URL`, `CORS_*`, `CLOUDINARY_*`);
   antes de que la nueva versión reciba tráfico; si falla, el deploy se aborta y
   sigue viva la versión anterior.
 
-`migrate` es idempotente: correrlo en ambos lados no molesta.
+`migrate` es idempotente: correrlo en ambos lados no molesta. El script
+imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
+(buscalo en los logs de Render).
+
+> **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
+> **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr
+> (y con él las migraciones). Dejá el **Start Command vacío** para que use el
+> `ENTRYPOINT` de la imagen, o configurá el **Pre-Deploy Command**
+> (`sh scripts/release.sh`).
+
+Para verificar qué migraciones están aplicadas en producción:
+
+```bash
+# Reemplazá por tu DATABASE_URL de Neon:
+psql "$DATABASE_URL" -c "SELECT app, name, applied FROM django_migrations ORDER BY id DESC LIMIT 10;"
+```
 
 ### Dominio propio (opcional)
 
