@@ -853,6 +853,7 @@ input:focus, select:focus, textarea:focus {
   --store-primary: #2563eb;
   --store-primary-dark: #1d4ed8;
   --store-primary-soft: #eaf0fd;
+  --store-primary-ink: #1f2430;
   --store-secondary: #dbeafe;
   --store-bg: #f6f7f9;
   --store-surface: #ffffff;
