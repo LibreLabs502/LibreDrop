@@ -3,7 +3,7 @@ import { catalogApi, formatPrice } from '../../api'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
-const EMPTY_CAT = { name: '', description: '' }
+const EMPTY_CAT = { name: '' }
 const EMPTY_PROD = { name: '', description: '', price: '', category: '', is_active: true }
 
 export default function AdminCatalog() {
@@ -138,9 +138,6 @@ export default function AdminCatalog() {
           <Field label="Nombre *">
             <input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
           </Field>
-          <Field label="Descripción">
-            <input value={catForm.description} onChange={(e) => setCatForm({ ...catForm, description: e.target.value })} />
-          </Field>
           <button className="btn">Agregar</button>
         </form>
         {(categories || []).map((c) => (
@@ -148,7 +145,6 @@ export default function AdminCatalog() {
             {editingCat === c.id ? (
               <div className="row-item-main">
                 <input value={catEdit.name} onChange={(e) => setCatEdit({ ...catEdit, name: e.target.value })} />
-                <input value={catEdit.description} onChange={(e) => setCatEdit({ ...catEdit, description: e.target.value })} />
                 <span className="btn-group">
                   <button className="btn small" onClick={saveCategory}>Guardar</button>
                   <button className="btn small ghost" onClick={() => setEditingCat(null)}>Cancelar</button>
@@ -158,10 +154,9 @@ export default function AdminCatalog() {
               <>
                 <div className="row-item-main">
                   <b>{c.name}</b>
-                  <span className="muted">{c.description}</span>
                 </div>
                 <span className="btn-group">
-                  <button className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name, description: c.description || '' }) }}>Editar</button>
+                  <button className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name }) }}>Editar</button>
                   <button className="btn small danger" onClick={() => removeCategory(c)}>Eliminar</button>
                 </span>
               </>
