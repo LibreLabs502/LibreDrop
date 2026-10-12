@@ -44,8 +44,9 @@ export default function AdminAuth() {
     try {
       await register(regForm)
       setOk('Cuenta creada. Bienvenido…')
-      // La tienda queda pendiente de pago: vamos directo al flujo de pagos.
-      navigate('/admin/pagos', { replace: true })
+      // La tienda queda en espera de activación: el aviso con el WhatsApp para
+      // activarla aparece en Tiendas (Pagos solo se muestra cuando hay plan).
+      navigate('/admin', { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -113,7 +114,6 @@ export default function AdminAuth() {
             </label>
             <button className="btn block" disabled={busy}>{busy ? 'Creando…' : 'Crear cuenta'}</button>
             {error && <div className="alert">{error}</div>}
-            {ok && <div className="alert ok">{ok}</div>}
           </form>
         )}
       </div>

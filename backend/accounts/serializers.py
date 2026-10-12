@@ -3,6 +3,7 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from payments.models import Payment
 from tenants.models import Membership, Tenant
 
 User = get_user_model()
@@ -32,9 +33,15 @@ class RegisterSerializers(serializers.ModelSerializer):
 
         Membership.objects.create(user=user, tenant=tenant, role=Membership.Role.owner)
 
-        # Sin plan de prueba: la tienda queda pendiente de pago y el flujo de
-        # pagos le aparece desde el primer ingreso (se crea la suscripción recién
-        # cuando el superusuario activa un pago).
+        # Sin plan de prueba: el registro deja la tienda pendiente de pago.
+        # Se crea un pago en espera (sin comprobante) para que el superusuario
+        # lo vea en su tabla y active la cuenta; la suscripción recién nace
+        # cuando se activa. El dueño avisa por WhatsApp para que la activen.
+        Payment.objects.create(
+            tenant=tenant,
+            description="Registro: activación de cuenta",
+        )
+
         return user
 
 class LoginSerializer(TokenObtainPairSerializer):
