@@ -1360,3 +1360,14 @@ input:focus, select:focus, textarea:focus {
     border: none;
   }
 }
+
+/* ---------- Gate de pago (cuenta sin plan activo) ---------- */
+.admin-gate {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.gate-topbar {
+  justify-content: space-between;
+}
