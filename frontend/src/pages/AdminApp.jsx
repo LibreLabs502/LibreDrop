@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
 import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
+import PaymentGate from '../components/admin/PaymentGate'
 import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
 
 const LINKS = [
@@ -92,7 +93,22 @@ export default function AdminApp() {
 
   return (
     <TenantProvider>
-      <Shell />
+      <GateOrShell />
     </TenantProvider>
   )
+}
+
+function GateOrShell() {
+  const { user } = useAuth()
+  const { currentTenant, loading } = useTenant()
+
+  if (loading) return <div className="page-load">Cargando tiendas…</div>
+
+  // Hasta que la tienda esté activada (plan activo), el dueño no entra al panel:
+  // solo ve el formulario de pago. El superusuario siempre entra.
+  const blocked =
+    !user?.is_superuser && currentTenant && currentTenant.subscription?.status !== 'active'
+  if (blocked) return <PaymentGate />
+
+  return <Shell />
 }
