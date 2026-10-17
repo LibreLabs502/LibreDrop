@@ -210,8 +210,12 @@ export const catalogApi = {
 // dueños para activar su cuenta), no un secreto. Formato internacional: +502 3623 7067.
 export const SUPPORT_WHATSAPP = '+50236237067'
 
-// Cuenta a la que se paga por transferencia/depósito. Reemplazar por los datos reales.
-export const PAYMENT_ACCOUNT = 'la cuenta inicial de LibreLabs'
+// Datos bancarios de LibreDrop: la cuenta (fija) donde los dueños de tiendas
+// depositan la suscripción mensual. Por ser un dato que no cambia, vive acá.
+export const PAYMENT_BANK = 'Banrural'
+export const PAYMENT_ACCOUNT_TYPE = 'Monetaria'
+export const PAYMENT_ACCOUNT_NUMBER = '3397043618'
+export const PAYMENT_ACCOUNT_HOLDER = 'Angel Sebastián Rodas Rodriguez'
 
 // Precio de la suscripción mensual en quetzales.
 export const SUBSCRIPTION_PRICE = 100

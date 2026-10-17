@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, PAYMENT_ACCOUNT, SUBSCRIPTION_PRICE } from '../../api'
+import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field } from '../ui'
+import BankDetails from './BankDetails'
 
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
 
@@ -82,9 +83,10 @@ export default function PaymentGate() {
           <Card title="Activa tu cuenta">
             <p>
               Para usar tu panel pagá la suscripción de <b>{formatPrice(SUBSCRIPTION_PRICE)}</b>{' '}
-              (30 días) por transferencia o depósito a <b>{PAYMENT_ACCOUNT}</b> y mandanos el
-              comprobante.
+              (30 días) por transferencia o depósito a esta cuenta:
             </p>
+            <BankDetails />
+            <p className="muted">Después adjuntá la foto del comprobante acá abajo.</p>
             <form className="form payment-form" onSubmit={submit}>
               <Field label="Nombre de la empresa">
                 <input value={tenant.name} readOnly />
