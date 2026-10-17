@@ -208,7 +208,7 @@ export const catalogApi = {
 
 // Número de WhatsApp de soporte de LibreDrop. Es un dato público (se muestra a los
 // dueños para activar su cuenta), no un secreto. Formato internacional: +502 3908 5258.
-export const SUPPORT_WHATSAPP = '+50239085258'
+export const SUPPORT_WHATSAPP = '+50236237067'
 
 // Cuenta a la que se paga por transferencia/depósito. Reemplazar por los datos reales.
 export const PAYMENT_ACCOUNT = 'la cuenta inicial de LibreLabs'
