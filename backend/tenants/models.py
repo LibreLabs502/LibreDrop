@@ -11,11 +11,11 @@ class Tenant(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     description = models.TextField(blank=True)
     logo = CloudinaryField("logo")
-    whatsapp = models.CharField(max_length=20, blank=False, null=True)
-    instagram_url = models.URLField(blank=True, null=True)
-    facebook_url = models.URLField(blank=True, null=True)
-    tiktok_url = models.URLField(blank=True, null=True)
-    linkedin_url = models.URLField(blank=True, null=True)
+    whatsapp = models.CharField(max_length=20, blank=True, null=True, default="")
+    instagram_url = models.URLField(blank=True, null=True, default="")
+    facebook_url = models.URLField(blank=True, null=True, default="")
+    tiktok_url = models.URLField(blank=True, null=True, default="")
+    linkedin_url = models.URLField(blank=True, null=True, default="")
 
     # Configuración visual propia de cada tienda. Los valores por defecto son
     # la paleta azul, así que las tiendas existentes no cambian de apariencia.
