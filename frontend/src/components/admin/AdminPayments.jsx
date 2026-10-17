@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, PAYMENT_ACCOUNT, SUBSCRIPTION_PRICE } from '../../api'
+import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
+import BankDetails from './BankDetails'
 
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
 
@@ -98,9 +99,9 @@ function SubscriptionPanel() {
 
   let warning = ''
   if (status === 'past_due') {
-    warning = `Tu plan finalizó. Tienes ${days} ${days === 1 ? 'día' : 'días'} para pagar por transferencia o depósito a ${PAYMENT_ACCOUNT}. Más información al WhatsApp.`
+    warning = `Tu plan finalizó. Tienes ${days} ${days === 1 ? 'día' : 'días'} para pagar la suscripción. Más información al WhatsApp.`
   } else if (status === 'suspended') {
-    warning = `Tu plan venció y la tienda quedó suspendida. Paga por transferencia o depósito a ${PAYMENT_ACCOUNT} para reactivarla. Más información al WhatsApp.`
+    warning = `Tu plan venció y la tienda quedó suspendida. Pagá la suscripción para reactivarla. Más información al WhatsApp.`
   }
 
   const submit = async (e) => {
@@ -162,6 +163,8 @@ function SubscriptionPanel() {
             </div>
           </div>
         )}
+
+        {needsPayment && <BankDetails />}
 
         {ok && <Alert kind="ok">{ok}</Alert>}
         {error && <Alert>{error}</Alert>}
