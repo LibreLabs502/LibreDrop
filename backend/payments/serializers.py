@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from backend.images import optimized
-from .models import Payment
+from .models import BillingInfo, Payment
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -29,3 +29,18 @@ class PaymentSerializer(serializers.ModelSerializer):
         if instance.image:
             data["image"] = optimized(instance.image.url)
         return data
+
+
+class BillingInfoSerializer(serializers.ModelSerializer):
+    """Datos de la cuenta bancaria de LibreDrop (fila única)."""
+
+    class Meta:
+        model = BillingInfo
+        fields = ["bank", "account_type", "account_number", "holder", "updated_at"]
+        read_only_fields = ["updated_at"]
+        extra_kwargs = {
+            "bank": {"required": True, "allow_blank": False},
+            "account_type": {"required": True, "allow_blank": False},
+            "account_number": {"required": True, "allow_blank": False},
+            "holder": {"required": True, "allow_blank": False},
+        }

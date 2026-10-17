@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
+import { useEffect, useState } from 'react'
+import { billingApi, formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field } from '../ui'
@@ -19,6 +19,14 @@ export default function PaymentGate() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
+  const [billing, setBilling] = useState(null)
+
+  useEffect(() => {
+    billingApi
+      .get()
+      .then(setBilling)
+      .catch(() => setBilling(null))
+  }, [])
 
   if (!currentTenant) return null
 
@@ -85,7 +93,11 @@ export default function PaymentGate() {
               Para usar tu panel pagá la suscripción de <b>{formatPrice(SUBSCRIPTION_PRICE)}</b>{' '}
               (30 días) por transferencia o depósito a esta cuenta:
             </p>
-            <BankDetails />
+            {billing ? (
+              <BankDetails billing={billing} />
+            ) : (
+              <p className="muted">Pedí los datos de la cuenta por WhatsApp (botón abajo).</p>
+            )}
             <p className="muted">Después adjuntá la foto del comprobante acá abajo.</p>
             <form className="form payment-form" onSubmit={submit}>
               <Field label="Nombre de la empresa">

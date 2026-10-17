@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
+import { billingApi, formatPrice, paymentsApi, waLink, SUPPORT_WHATSAPP, SUBSCRIPTION_PRICE } from '../../api'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
@@ -38,6 +38,7 @@ export default function AdminPayments() {
     <div className="stack">
       <SubscriptionPanel />
       {isSuperuser && <PaymentsTable />}
+      {isSuperuser && <BillingSettings />}
     </div>
   )
 }
@@ -53,6 +54,14 @@ function SubscriptionPanel() {
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
   const [sent, setSent] = useState(null)
+  const [billing, setBilling] = useState(null)
+
+  useEffect(() => {
+    billingApi
+      .get()
+      .then(setBilling)
+      .catch(() => setBilling(null))
+  }, [])
 
   if (!currentTenant) {
     return (
@@ -164,7 +173,7 @@ function SubscriptionPanel() {
           </div>
         )}
 
-        {needsPayment && <BankDetails />}
+        {needsPayment && <BankDetails billing={billing} />}
 
         {ok && <Alert kind="ok">{ok}</Alert>}
         {error && <Alert>{error}</Alert>}
@@ -322,6 +331,83 @@ function PaymentsTable() {
           </div>
         </div>
       )}
+    </Card>
+  )
+}
+
+/* ---------- Datos de pago (superusuario) ---------- */
+
+function BillingSettings() {
+  const [form, setForm] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [ok, setOk] = useState('')
+
+  useEffect(() => {
+    billingApi
+      .get()
+      .then(setForm)
+      .catch((err) => setError(err.message))
+  }, [])
+
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
+
+  const save = async (e) => {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    setOk('')
+    try {
+      const updated = await billingApi.update({
+        bank: form.bank,
+        account_type: form.account_type,
+        account_number: form.account_number,
+        holder: form.holder,
+      })
+      setForm(updated)
+      setOk('Datos de pago guardados.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!form) {
+    return (
+      <Card title="Datos de pago (cuenta bancaria)">
+        {error ? <Alert>{error}</Alert> : <Spinner />}
+      </Card>
+    )
+  }
+
+  return (
+    <Card title="Datos de pago (cuenta bancaria)">
+      <p className="muted">
+        Es la cuenta que ven los dueños para depositar la suscripción. Se muestra en
+        el paso de activación y en el panel de pagos.
+      </p>
+      <form className="form" onSubmit={save}>
+        <Field label="Banco">
+          <input value={form.bank} onChange={set('bank')} />
+        </Field>
+        <Field label="Tipo de cuenta">
+          <input value={form.account_type} onChange={set('account_type')} />
+        </Field>
+        <Field label="Número de cuenta">
+          <input value={form.account_number} onChange={set('account_number')} />
+        </Field>
+        <Field label="Titular">
+          <input value={form.holder} onChange={set('holder')} />
+        </Field>
+        {error && <Alert>{error}</Alert>}
+        {ok && <Alert kind="ok">{ok}</Alert>}
+        <div className="btn-group">
+          <button className="btn" disabled={busy}>
+            {busy ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </form>
     </Card>
   )
 }
