@@ -203,7 +203,7 @@ export default function PublicStore() {
                         <svg viewBox={c.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
                           <path d={c.icon} />
                         </svg>
-                        Comprar por {c.label}
+                        {c.action} {c.label}
                       </a>
                     ))}
                   </div>
@@ -231,7 +231,7 @@ export default function PublicStore() {
                   <svg viewBox={c.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
                     <path d={c.icon} />
                   </svg>
-                  Comprar por {c.label}
+                  {c.action} {c.label}
                 </a>
               ))}
             </div>

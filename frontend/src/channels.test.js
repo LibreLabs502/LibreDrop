@@ -27,6 +27,7 @@ test('construye solo los canales activados y con destino válido', () => {
   assert.equal(links.length, 1)
   assert.equal(links[0].key, 'whatsapp')
   assert.equal(links[0].label, 'WhatsApp')
+  assert.equal(links[0].action, 'Comprar por')
   assert.match(links[0].href, /wa\.me\/50212345678/)
 })
 
@@ -68,6 +69,22 @@ test('respeta el orden canónico de los canales', () => {
 test('usa el enlace configurado para las redes', () => {
   const store = { purchase_channels: ['instagram'], instagram_url: 'https://instagram.com/tienda' }
   assert.equal(channelLink('instagram', store, 'Hola'), 'https://instagram.com/tienda')
+})
+
+test('en las redes sociales el botón invita a preguntar, no a comprar', () => {
+  const store = {
+    purchase_channels: ['whatsapp', 'instagram', 'facebook', 'tiktok'],
+    whatsapp: '50212345678',
+    instagram_url: 'https://instagram.com/tienda',
+    facebook_url: 'https://facebook.com/tienda',
+    tiktok_url: 'https://tiktok.com/@tienda',
+  }
+  const links = buildPurchaseLinks(store, 'Hola')
+  const action = Object.fromEntries(links.map((l) => [l.key, l.action]))
+  assert.equal(action.whatsapp, 'Comprar por')
+  assert.equal(action.instagram, 'Preguntar por')
+  assert.equal(action.facebook, 'Preguntar por')
+  assert.equal(action.tiktok, 'Preguntar por')
 })
 
 test('channelIsReady refleja si falta el dato', () => {
