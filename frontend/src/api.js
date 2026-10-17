@@ -177,6 +177,13 @@ export const paymentsApi = {
   activate: (id) => api(`/payments/${id}/activate/`, { method: 'POST' }),
 }
 
+// Datos de la cuenta bancaria de LibreDrop (fila única, editable por el
+// superusuario desde el panel). Los dueños autenticados pueden leerlos.
+export const billingApi = {
+  get: () => api('/payments/billing/'),
+  update: (data) => api('/payments/billing/', { method: 'PUT', body: data }),
+}
+
 export const catalogApi = {
   categories: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/categories/`, { auth: true }),
@@ -209,13 +216,6 @@ export const catalogApi = {
 // Número de WhatsApp de soporte de LibreDrop. Es un dato público (se muestra a los
 // dueños para activar su cuenta), no un secreto. Formato internacional: +502 3623 7067.
 export const SUPPORT_WHATSAPP = '+50236237067'
-
-// Datos bancarios de LibreDrop: la cuenta (fija) donde los dueños de tiendas
-// depositan la suscripción mensual. Por ser un dato que no cambia, vive acá.
-export const PAYMENT_BANK = 'Banrural'
-export const PAYMENT_ACCOUNT_TYPE = 'Monetaria'
-export const PAYMENT_ACCOUNT_NUMBER = '3397043618'
-export const PAYMENT_ACCOUNT_HOLDER = 'Angel Sebastián Rodas Rodriguez'
 
 // Precio de la suscripción mensual en quetzales.
 export const SUBSCRIPTION_PRICE = 100

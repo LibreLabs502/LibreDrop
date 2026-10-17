@@ -1,12 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from tenants.services import activate_subscription
 
-from .models import Payment
-from .serializers import PaymentSerializer
+from .models import BillingInfo, Payment
+from .serializers import BillingInfoSerializer, PaymentSerializer
 
 
 class IsSuperUser(BasePermission):
@@ -39,3 +40,34 @@ class PaymentViewSet(viewsets.ModelViewSet):
         payment.save(update_fields=["status", "updated_at"])
 
         return Response(self.get_serializer(payment).data)
+
+
+class BillingInfoView(APIView):
+    """Datos de la cuenta bancaria de LibreDrop (fila única).
+
+    - GET: cualquier usuario autenticado (los dueños los necesitan para pagar).
+    - PUT/PATCH: solo el superusuario de LibreDrop.
+    """
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [IsAuthenticated()]
+        return [IsSuperUser()]
+
+    def get(self, request):
+        serializer = BillingInfoSerializer(BillingInfo.load())
+        return Response(serializer.data)
+
+    def put(self, request):
+        return self._update(request, partial=False)
+
+    def patch(self, request):
+        return self._update(request, partial=True)
+
+    def _update(self, request, partial):
+        serializer = BillingInfoSerializer(
+            BillingInfo.load(), data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
