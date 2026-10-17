@@ -54,7 +54,7 @@ const flattenErrors = (data) => {
   return parts.join(' · ')
 }
 
-export async function api(path, { method = 'GET', body, form = false, auth = true } = {}) {
+export async function api(path, { method = 'GET', body, form = false, auth = true, retry = true } = {}) {
   const headers = {}
   if (auth) {
     const token = getAccessToken()
@@ -72,6 +72,12 @@ export async function api(path, { method = 'GET', body, form = false, auth = tru
   const res = await fetch(apiBase() + path, { method, headers, body: payload })
 
   if (res.status === 401 && auth) {
+    // El access token caducó: probamos renovarlo con el refresh token y
+    // repetimos la petición una sola vez. Así la sesión se mantiene (p. ej.
+    // el dueño puede ir a depositar y volver después a subir el comprobante).
+    if (retry && (await renewAccessToken())) {
+      return api(path, { method, body, form, auth, retry: false })
+    }
     clearTokens()
     const err = new Error('Sesión expirada o token inválido. Vuelve a iniciar sesión.')
     err.status = 401
@@ -105,6 +111,28 @@ export const accountsApi = {
   refresh: (refresh) =>
     api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
   me: () => api('/auth/me/'),
+}
+
+// Renueva el access token con el refresh token (sin pedir credenciales de nuevo).
+// Devuelve true si lo logró. Una sola petición compartida entre llamadas
+// simultáneas para no renovar de más.
+let renewPromise = null
+const renewAccessToken = () => {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return Promise.resolve(false)
+  if (!renewPromise) {
+    renewPromise = accountsApi
+      .refresh(refreshToken)
+      .then((tokens) => {
+        setTokens(tokens)
+        return Boolean(tokens?.access)
+      })
+      .catch(() => false)
+      .finally(() => {
+        renewPromise = null
+      })
+  }
+  return renewPromise
 }
 
 // Estos campos son blank=False/nullable en el backend: un string vacío da 400.
