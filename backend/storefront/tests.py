@@ -41,3 +41,40 @@ class PublicStoreThemeTests(TestCase):
         self.assertNotIn("members", data)
         self.assertNotIn("theme_primary", data)
         self.assertEqual(set(data["theme"].keys()), {"palette", "primary", "secondary", "background", "text"})
+
+
+class PublicStoreChannelsTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username="ana", password="clave-segura-123")
+        self.tenant = Tenant.objects.create(name="Tienda Canales")
+        Membership.objects.create(user=self.user, tenant=self.tenant, role=Membership.Role.owner)
+
+    def test_sin_canales_no_expone_botones(self):
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["purchase_channels"], [])
+
+    def test_expone_canal_activo_con_destino_valido(self):
+        self.tenant.whatsapp = "+50212345678"
+        self.tenant.purchase_channels = ["whatsapp"]
+        self.tenant.save()
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.json()["purchase_channels"], ["whatsapp"])
+
+    def test_no_expone_canal_activo_sin_destino(self):
+        self.tenant.whatsapp = ""
+        self.tenant.instagram_url = "https://instagram.com/tienda"
+        self.tenant.purchase_channels = ["whatsapp", "instagram"]
+        self.tenant.save()
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.json()["purchase_channels"], ["instagram"])
+
+    def test_no_expone_canal_con_datos_pero_inactivo(self):
+        self.tenant.whatsapp = "+50212345678"
+        self.tenant.instagram_url = "https://instagram.com/tienda"
+        self.tenant.purchase_channels = ["whatsapp"]
+        self.tenant.save()
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        # Instagram tiene datos, pero el dueño no lo activó: no se muestra.
+        self.assertEqual(res.json()["purchase_channels"], ["whatsapp"])

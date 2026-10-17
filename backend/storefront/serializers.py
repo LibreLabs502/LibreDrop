@@ -2,6 +2,7 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
 from backend.images import optimized
+from tenants.channels import effective_channels
 from tenants.models import Tenant
 from tenants.serializers import ThemeSerializer
 from tenants.theme import theme_payload
@@ -40,6 +41,9 @@ class PublicTenantSerializer(serializers.ModelSerializer):
     categories = PublicCategorySerializer(many=True, read_only=True)
     products = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
+    # Solo los canales activados que además tienen un destino válido: nunca
+    # exponemos un botón de compra que no pueda abrir un enlace.
+    purchase_channels = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -54,10 +58,14 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "facebook_url",
             "tiktok_url",
             "linkedin_url",
+            "purchase_channels",
             "categories",
             "products",
             "theme",
         ]
+
+    def get_purchase_channels(self, tenant):
+        return effective_channels(tenant)
 
     def get_theme(self, tenant):
         # Solo datos visuales: colores y clave de paleta. Nada privado.

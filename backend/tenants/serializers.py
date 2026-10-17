@@ -3,6 +3,12 @@ from drf_spectacular.utils import extend_schema_field
 
 from accounts.serializers import UserSerializer
 from backend.images import optimized
+from .channels import (
+    CHANNEL_KEYS,
+    PURCHASE_CHANNELS,
+    is_valid_destination,
+    normalize_channels,
+)
 from .models import Tenant, Membership
 from .services import subscription_payload
 from .theme import PALETTES, palette_choices, theme_payload, validate_hex_color
@@ -36,6 +42,11 @@ class TenantSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     theme = serializers.SerializerMethodField()
+    # Canales de compra activados (lista de claves, ver channels.py).
+    purchase_channels = serializers.ListField(
+        child=serializers.CharField(allow_blank=True),
+        required=False,
+    )
     # Estado del plan (calculado en vivo). None si la tienda no tiene suscripción.
     subscription = serializers.SerializerMethodField()
 
@@ -52,6 +63,7 @@ class TenantSerializer(serializers.ModelSerializer):
             "facebook_url",
             "tiktok_url",
             "linkedin_url",
+            "purchase_channels",
             "theme_primary",
             "theme_secondary",
             "theme_background",
@@ -89,6 +101,17 @@ class TenantSerializer(serializers.ModelSerializer):
     def validate_theme_text(self, value):
         return validate_hex_color(value)
 
+    def validate_purchase_channels(self, value):
+        # Ignoramos los valores vacíos: el panel manda un "" para "sin canales"
+        # cuando el logo viaja en un formulario multipart (no hay listas vacías).
+        items = [v for v in value if isinstance(v, str) and v.strip()]
+        desconocidos = [v for v in items if v not in CHANNEL_KEYS]
+        if desconocidos:
+            raise serializers.ValidationError(
+                "Canal de compra inválido: " + ", ".join(desconocidos) + "."
+            )
+        return normalize_channels(items)
+
     def validate(self, attrs):
         # Si viene una paleta predefinida, sus colores mandan sobre los sueltos.
         palette = attrs.pop("theme_palette", None)
@@ -98,6 +121,38 @@ class TenantSerializer(serializers.ModelSerializer):
             attrs["theme_secondary"] = spec["secondary"]
             attrs["theme_background"] = spec["background"]
             attrs["theme_text"] = spec["text"]
+
+        # No permitimos activar un canal si su destino no puede generar un enlace.
+        # En un PATCH parcial combinamos lo que llega con lo ya guardado.
+        explicit = "purchase_channels" in attrs
+        if explicit:
+            canales = attrs["purchase_channels"]
+        elif self.instance is not None:
+            canales = normalize_channels(self.instance.purchase_channels or [])
+        else:
+            canales = []
+        for key in canales:
+            spec = PURCHASE_CHANNELS[key]
+            field = spec["field"]
+            # Si no estamos reescribiendo la lista, solo revisamos los canales
+            # cuyo dato viene en este cambio (evita bloquear ediciones ajenas).
+            if not explicit and field not in attrs:
+                continue
+            if field in attrs:
+                value = attrs[field]
+            elif self.instance is not None:
+                value = getattr(self.instance, field, None)
+            else:
+                value = None
+            if not is_valid_destination(key, value):
+                raise serializers.ValidationError(
+                    {
+                        "purchase_channels": (
+                            f"Para activar {spec['label']} primero configurá "
+                            f"{spec['hint']}."
+                        )
+                    }
+                )
         return attrs
 
     def to_representation(self, instance):
