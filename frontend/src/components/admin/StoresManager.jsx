@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tenantsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
+import { PURCHASE_CHANNELS, channelIsReady } from '../../channels'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
@@ -30,6 +31,7 @@ export default function StoresManager() {
       facebook_url: t.facebook_url || '',
       tiktok_url: t.tiktok_url || '',
       linkedin_url: t.linkedin_url || '',
+      purchase_channels: Array.isArray(t.purchase_channels) ? t.purchase_channels : [],
     })
     setLogoFile(null)
     setError('')
@@ -42,13 +44,30 @@ export default function StoresManager() {
     setLogoFile(null)
   }
 
+  const toggleChannel = (key) => {
+    if (!channelIsReady(key, form)) return
+    setForm((f) => {
+      const current = f.purchase_channels || []
+      const next = current.includes(key)
+        ? current.filter((k) => k !== key)
+        : [...current, key]
+      return { ...f, purchase_channels: next }
+    })
+  }
+
   const save = async (e) => {
     e.preventDefault()
     setError('')
     setOk('')
     setBusy(true)
     try {
-      await tenantsApi.update(editing, form, logoFile)
+      // Solo guardamos canales que hoy tengan un destino válido (por si el
+      // usuario borró el número o el enlace sin desactivar el interruptor).
+      const payload = {
+        ...form,
+        purchase_channels: (form.purchase_channels || []).filter((k) => channelIsReady(k, form)),
+      }
+      await tenantsApi.update(editing, payload, logoFile)
       setOk('Tienda actualizada.')
       setEditing(null)
       setForm(null)
@@ -132,6 +151,37 @@ export default function StoresManager() {
                 <img src={stores.find((t) => t.id === editing).logo} alt="Logo" style={{ width: 96, borderRadius: 12 }} />
               </div>
             )}
+            <h4 className="form-section">Canales de compra</h4>
+            <div className="channels-block">
+              <p className="field-hint">
+                Seleccione las plataformas por las que sus clientes pueden realizar pedidos.
+              </p>
+              <div className="channel-list">
+                {PURCHASE_CHANNELS.map((c) => {
+                  const ready = channelIsReady(c.key, form)
+                  const active = ready && (form.purchase_channels || []).includes(c.key)
+                  return (
+                    <div className="channel-row" key={c.key}>
+                      <div className="channel-info">
+                        <span className="channel-name">{c.label}</span>
+                        {!ready && (
+                          <span className="channel-note warn">Falta {c.hint} para activarlo.</span>
+                        )}
+                      </div>
+                      <label className={`switch${ready ? '' : ' disabled'}`}>
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          disabled={!ready}
+                          onChange={() => toggleChannel(c.key)}
+                        />
+                        <span className="switch-track"><span className="switch-thumb" /></span>
+                      </label>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
             <div className="btn-group">
               <button className="btn" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cambios'}</button>
               <button type="button" className="btn ghost" onClick={cancelEdit}>Cancelar</button>
@@ -203,6 +253,16 @@ export default function StoresManager() {
                   <>
                     <span className="store-field-label">LinkedIn</span>
                     <a href={t.linkedin_url} target="_blank" rel="noreferrer">{t.linkedin_url}</a>
+                  </>
+                )}
+                {t.purchase_channels?.length > 0 && (
+                  <>
+                    <span className="store-field-label">Canales de compra</span>
+                    <span>
+                      {PURCHASE_CHANNELS.filter((c) => t.purchase_channels.includes(c.key))
+                        .map((c) => c.label)
+                        .join(', ')}
+                    </span>
                   </>
                 )}
               </div>

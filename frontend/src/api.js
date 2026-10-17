@@ -148,7 +148,15 @@ export const storefrontApi = {
 const formDataFrom = (data, files = {}) => {
   const fd = new FormData()
   for (const [key, value] of Object.entries(data || {})) {
-    if (value !== undefined && value !== null && value !== '') fd.append(key, value)
+    if (value === undefined || value === null || value === '') continue
+    if (Array.isArray(value)) {
+      // Listas (ej. purchase_channels) viajan como claves repetidas. Un arreglo
+      // vacío necesita un valor para no confundirse con "sin cambios" en PATCH.
+      if (value.length === 0) fd.append(key, '')
+      else value.forEach((item) => fd.append(key, item))
+      continue
+    }
+    fd.append(key, value)
   }
   for (const [key, file] of Object.entries(files)) {
     if (file) fd.append(key, file)
