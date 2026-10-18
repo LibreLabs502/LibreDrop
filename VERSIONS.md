@@ -1,5 +1,29 @@
 # Versiones
 
+## v0.4 — Ventas y consultas por Instagram, Facebook y TikTok
+
+- Cada tienda elige **por qué canales recibe pedidos**. `Tenant.purchase_channels`
+  es una lista (`JSONField`, por defecto vacía); migraciones `tenants/0010`
+  (esquema) y `tenants/0011` (datos: las tiendas que ya tenían número conservan
+  **WhatsApp**, para no cambiar su comportamiento).
+- Canales disponibles: **WhatsApp, Instagram, Facebook y TikTok**. **LinkedIn
+  queda fuera a propósito**: es una red de contacto, no un canal de compra, y
+  sigue apareciendo solo como enlace en la tienda.
+- Fuente única de verdad: `backend/tenants/channels.py` (backend) y
+  `frontend/src/channels.js` (panel), con las mismas etiquetas, íconos y orden.
+- **No se puede activar un canal sin un destino válido**: WhatsApp necesita
+  dígitos (el resto lo arma `wa.me`) y las redes necesitan una URL `http(s)`
+  completa. La selección se normaliza, se ordena y se ignoran duplicados.
+- El storefront público (`/public/<slug>/`) expone solo los **canales efectivos**
+  (activados *y* con destino válido): nunca un botón sin enlace.
+- Panel: sección **Canales de compra** en Tiendas, con interruptores y aviso del
+  dato que falta para cada canal.
+- Tienda pública: un **botón por canal activo**. WhatsApp dice **"Comprar por
+  WhatsApp"**; Instagram, Facebook y TikTok dicen **"Preguntar por …"** (en redes
+  se escribe para consultar, no se compra directo).
+- Pruebas: `tenants/tests_channels.py`, `storefront/tests.py` y
+  `frontend/src/channels.test.js`.
+
 ## v0.3 — Paletas de color por tienda
 
 - `Tenant` guarda su configuración visual: `theme_primary`, `theme_secondary`,

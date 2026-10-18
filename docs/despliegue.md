@@ -187,8 +187,9 @@ Gunicorn en `$PORT`).
 1. Abrir `https://libredrop-app.vercel.app`.
 2. **Crear cuenta** (`/auth/register/` crea el usuario y su tienda automática).
 3. **Login** → panel de administración.
-4. Editar la tienda: nombre, WhatsApp, logo (prueba Cloudinary).
-5. Abrir la tienda pública en `/tienda/<slug>` y probar "Comprar por WhatsApp".
+4. Editar la tienda: nombre, WhatsApp, logo (prueba Cloudinary) y **canales de compra**.
+5. Abrir la tienda pública en `/tienda/<slug>` y probar los botones de compra
+   ("Comprar por WhatsApp" / "Preguntar por Instagram, Facebook o TikTok").
 
 Sanity de API (sin navegador):
 

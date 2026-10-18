@@ -68,6 +68,34 @@ Solo pueden modificarla usuarios autenticados con membresía en esa tienda; el
 queryset filtra por membresía (un usuario ajeno recibe `404`). Los colores se
 validan como hexadecimal `#RGB`/`#RRGGBB`.
 
+### Canales de compra
+
+Cada tienda elige por qué canales recibe pedidos con `purchase_channels`, una
+lista de claves. La definición vive en `tenants/channels.py` (única fuente):
+
+| Clave | Canal | Dato que usa |
+|---|---|---|
+| `whatsapp` | WhatsApp | `whatsapp` (número) |
+| `instagram` | Instagram | `instagram_url` |
+| `facebook` | Facebook | `facebook_url` |
+| `tiktok` | TikTok | `tiktok_url` |
+
+`GET` devuelve la lista normalizada (orden canónico, sin duplicados). Para
+actualizarla, `PATCH /tenants/tenant/<id>/`:
+
+```json
+{ "purchase_channels": ["whatsapp", "instagram"] }
+```
+
+Reglas:
+
+- Solo se aceptan claves conocidas; una clave inválida responde `400`.
+- **No se puede activar un canal sin un destino válido**: WhatsApp requiere
+  dígitos en `whatsapp` y las redes una URL `http(s)` completa. Si falta, la
+  respuesta es `400` con `"Para activar Instagram primero configurá el enlace de
+  Instagram."`.
+- LinkedIn no es un canal de compra (solo aparece como enlace).
+
 ## Catálogo (`/catalog/`)
 
 | Método | Ruta | Descripción |
@@ -81,7 +109,11 @@ validan como hexadecimal `#RGB`/`#RRGGBB`.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/public/<slug>/` | Tienda pública: logo, whatsapp, categorías, productos activos. Sin JWT. |
+| GET | `/public/<slug>/` | Tienda pública: logo, whatsapp, canales de compra (efectivos), categorías y productos activos. Sin JWT. |
+
+`purchase_channels` en el storefront son los **canales efectivos**: los activados
+que además tienen un destino válido. El frontend los convierte en los botones de
+compra ("Comprar por WhatsApp" / "Preguntar por Instagram, Facebook o TikTok").
 
 ## Otros
 
