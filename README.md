@@ -1,6 +1,6 @@
 # LibreDrop
 
-Plataforma multitenant para catálogos de tiendas públicas con carrito vía WhatsApp.
+Plataforma multitenant para catálogos de tiendas públicas con pedidos y consultas por WhatsApp, Instagram, Facebook y TikTok.
 
 ## Stack
 
