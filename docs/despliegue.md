@@ -5,7 +5,7 @@ Arquitectura de producción:
 ```
 Navegador
    │
-   ├── Frontend (React)      → Vercel           https://libredrop-app.vercel.app
+   ├── Frontend (React)      → Vercel           https://libredrop-cloud.vercel.app
    │
    └── API (Django/Gunicorn) → Render (Docker)  https://libredrop.onrender.com
                                     └── Postgres → Neon (DB externa, por URL)
@@ -53,8 +53,8 @@ En Render las variables van en **Dashboard → libredrop-api → Environment**
 | `DATABASE_URL` | connection string de Neon (pooled, `?sslmode=require`) |
 | `DB_SSL_REQUIRE` | `True` (lo pone el blueprint) |
 | `ALLOWED_HOST` | **vacío**. Render agrega el `.onrender.com` solo |
-| `CORS_ALLOWED_ORIGINS` | `https://libredrop-app.vercel.app` |
-| `CSRF_TRUSTED_ORIGINS` | `https://libredrop-app.vercel.app` |
+| `CORS_ALLOWED_ORIGINS` | `https://libredrop-cloud.vercel.app` |
+| `CSRF_TRUSTED_ORIGINS` | `https://libredrop-cloud.vercel.app` |
 | `CLOUDINARY_CLOUD_NAME` | tu cloud de Cloudinary |
 | `CLOUDINARY_API_KEY` | tu API key |
 | `CLOUDINARY_API_SECRET` | tu API secret |
@@ -151,7 +151,7 @@ curl https://libredrop.onrender.com/health/     # {"status": "ok"}
 Para que los deploy preview (ramas/PRs) también pasen CORS, agregá en Render:
 
 ```env
-CORS_ALLOWED_ORIGIN_REGEXES=^https://libredrop-app.*\.vercel\.app$
+CORS_ALLOWED_ORIGIN_REGEXES=^https://libredrop-cloud.*\.vercel\.app$
 ```
 
 (O una regex más amplia: `^https://.*\.vercel\.app$`.)
@@ -184,7 +184,7 @@ Gunicorn en `$PORT`).
 
 ## 6. Verificación end-to-end
 
-1. Abrir `https://libredrop-app.vercel.app`.
+1. Abrir `https://libredrop-cloud.vercel.app`.
 2. **Crear cuenta** (`/auth/register/` crea el usuario y su tienda automática).
 3. **Login** → panel de administración.
 4. Editar la tienda: nombre, WhatsApp, logo (prueba Cloudinary) y **canales de compra**.

@@ -56,6 +56,8 @@ npm run dev   # http://127.0.0.1:5173
 
 Vite proxya `/api/*` al backend en `:8000` (ver `frontend/vite.config.js`).
 Tokens JWT se guardan en `localStorage` (`libredrop_access`, `libredrop_refresh`).
+El access token (1 día) se renueva solo con el refresh token (30 días) cuando
+vence, así la sesión no se pierde.
 
 ## Producción
 

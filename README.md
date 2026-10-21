@@ -10,7 +10,7 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 ## Estructura
 
 ```
-backend/    API Django (accounts, tenants, catalog, storefront)
+backend/    API Django (accounts, tenants, catalog, storefront, payments)
 frontend/   SPA React (admin + tienda pública)
 docs/       Documentación
 ```
@@ -41,7 +41,7 @@ API docs (Swagger): `http://localhost:8000/docs/`
 ## Producción (live)
 
 - **API**: https://libredrop.onrender.com — Docker en Render + Postgres en Neon (`DATABASE_URL`), migraciones automáticas en cada deploy.
-- **App**: https://libredrop-app.vercel.app — SPA React; `VITE_API_URL` apunta al backend.
+- **App**: https://libredrop-cloud.vercel.app — SPA React; `VITE_API_URL` apunta al backend.
 
 > Detalle paso a paso en [docs/despliegue.md](docs/despliegue.md).
 
