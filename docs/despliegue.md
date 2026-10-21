@@ -122,7 +122,8 @@ que indique. Ahí sí agregá ese dominio a `ALLOWED_HOST`.
 ### Verificar el backend
 
 ```bash
-curl https://libredrop.onrender.com/health/     # {"status": "ok"}
+curl https://libredrop.onrender.com/health/      # {"status": "ok"}
+curl https://libredrop.onrender.com/version/     # commit desplegado (verificar deploy)
 ```
 
 ## 3. Frontend en Vercel
