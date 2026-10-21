@@ -165,4 +165,5 @@ tiene suscripción. El plan se cobra por períodos de 30 días.
 ## Otros
 
 - `GET /health/` → `{"status": "ok"}` (alias legacy: `/healt/`)
+- `GET /version/` → commit desplegado: `{"commit": "...", "short": "abc1234", "branch": "main"}` (desde `RENDER_GIT_COMMIT`/`RENDER_GIT_BRANCH`; útil para verificar deploys)
 - `/admin/` panel Django

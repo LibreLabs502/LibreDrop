@@ -1,6 +1,34 @@
+import os
+from unittest.mock import patch
+
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from backend.images import optimized
+
+
+class VersionViewTests(SimpleTestCase):
+    def test_expone_el_commit_del_entorno(self):
+        env = {"RENDER_GIT_COMMIT": "abcdef1234567890", "RENDER_GIT_BRANCH": "main"}
+        with patch.dict(os.environ, env):
+            res = self.client.get(reverse("version"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["commit"], "abcdef1234567890")
+        self.assertEqual(res.json()["short"], "abcdef1")
+        self.assertEqual(res.json()["branch"], "main")
+
+    def test_usa_git_commit_como_fallback(self):
+        with patch.dict(os.environ, {"GIT_COMMIT": "1234567"}):
+            res = self.client.get(reverse("version"))
+        self.assertEqual(res.json()["short"], "1234567")
+
+    def test_sin_commit_devuelve_none(self):
+        env = {"RENDER_GIT_COMMIT": "", "GIT_COMMIT": ""}
+        with patch.dict(os.environ, env):
+            res = self.client.get(reverse("version"))
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.json()["commit"])
+        self.assertIsNone(res.json()["short"])
 
 
 class OptimizedUrlTests(SimpleTestCase):

@@ -1,5 +1,42 @@
 # Versiones
 
+## v0.6 — Pagos manuales, cuenta bancaria y sesión persistente
+
+### Cobro de la suscripción (manual)
+
+- `Subscription` (app `tenants`) con estado calculado en vivo: `active`,
+  `past_due` (10 días de gracia) y `suspended`. El plan se cobra cada 30 días.
+- El panel exige un plan activo: sin suscripción muestra el **bloqueo de
+  activación** (`PaymentGate`) con los datos de la cuenta para depositar y el
+  formulario del comprobante (foto **obligatoria**).
+- `Payment` (app `payments`): el dueño solo puede **subir el comprobante**
+  (`POST /payments/`, queda `pending`); ver y gestionar pagos es exclusivo del
+  superusuario. `POST /payments/<id>/activate/` aprueba el pago y activa/renueva
+  la suscripción 1 mes.
+
+### Cuenta bancaria configurable
+
+- Los datos de la cuenta (`BillingInfo`, fila única) viven en la **base de
+  datos** —no en el código— y se editan desde el panel del superusuario, sin
+  redeploy. Migraciones `payments/0002` (tabla) y `0003` (siembra inicial).
+- `GET /payments/billing/` (autenticado) los devuelve; `PUT/PATCH` solo
+  superusuario.
+
+### Sesión persistente
+
+- El frontend **renueva el access token** con el refresh token ante un `401` y
+  repite la petición: la sesión dura hasta 30 días sin volver a loguearse (antes
+  se borraban los tokens al primer `401`, aun con refresh válido).
+
+### Verificación de deploy
+
+- `GET /version/` devuelve el commit desplegado (`commit`, `short`, `branch`) a
+  partir de `RENDER_GIT_COMMIT`/`RENDER_GIT_BRANCH` de Render.
+
+### Otros
+
+- WhatsApp de soporte actualizado a `+50236237067` (`SUPPORT_WHATSAPP`).
+
 ## v0.5 — El slug de la tienda sigue al nombre
 
 - Al **renombrar** una tienda, su `slug` se regenera a partir del nuevo nombre
