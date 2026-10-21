@@ -26,8 +26,10 @@ Registro (`POST /auth/register/`):
 ```
 
 El registro crea el usuario **y su tienda automáticamente**. JWT: access 1 día,
-refresh 30 días. Nota: las URLs de imágenes (logo, producto) que devuelven los
-serializers son de Cloudinary con `f_auto,q_auto`.
+refresh 30 días. Ante un `401`, el cliente renueva con `/auth/token/refresh/` y
+repite la petición (el frontend lo hace solo, así la sesión dura hasta 30 días).
+Nota: las URLs de imágenes (logo, producto) que devuelven los serializers son de
+Cloudinary con `f_auto,q_auto`.
 
 ## Tenants (`/tenants/`)
 
@@ -38,6 +40,16 @@ serializers son de Cloudinary con `f_auto,q_auto`.
 | GET | `/tenants/palettes/` | Catálogo de paletas disponibles (requiere sesión) |
 | GET/POST | `/tenants/tenants/<id>/members/` | Miembros de la tienda |
 | GET/PATCH/PUT/DELETE | `/tenants/tenants/<id>/members/<pk>/` | Detalle de miembro |
+
+### Slug de la tienda
+
+El `slug` se deriva del `name`: se genera al crear la tienda y se **regenera al
+renombrar**. Se mantiene único con sufijo `-2`, `-3`, … (excluyendo la propia
+tienda); si el nombre no cambia, el slug no se toca, y un nombre sin letras usa
+el fallback `tienda`.
+
+> ⚠️ Al renombrar cambia el enlace público `/tienda/<slug>`: los links
+> compartidos con el slug anterior dejan de funcionar.
 
 ### Configuración visual de la tienda
 
@@ -114,6 +126,41 @@ Reglas:
 `purchase_channels` en el storefront son los **canales efectivos**: los activados
 que además tienen un destino válido. El frontend los convierte en los botones de
 compra ("Comprar por WhatsApp" / "Preguntar por Instagram, Facebook o TikTok").
+
+## Pagos y suscripción (`/payments/`)
+
+Flujo manual: el dueño deposita/transfiere la suscripción a la cuenta de
+LibreDrop, sube el comprobante y el superusuario aprueba el pago, lo que
+activa/renueva el plan.
+
+| Método | Ruta | Permiso | Descripción |
+|---|---|---|---|
+| POST | `/payments/` | autenticado | Subir comprobante (`tenant`, `description`, `image` multipart). Queda `pending`. |
+| GET | `/payments/` | superusuario | Listar pagos |
+| GET/PATCH/PUT/DELETE | `/payments/<id>/` | superusuario | Detalle y gestión |
+| POST | `/payments/<id>/activate/` | superusuario | Aprueba el pago y activa/renueva 1 mes |
+| GET | `/payments/billing/` | autenticado | Datos de la cuenta bancaria de LibreDrop |
+| PUT/PATCH | `/payments/billing/` | superusuario | Editar la cuenta bancaria |
+
+`status`: `pending` | `approved` | `rejected` (solo lectura en el serializer).
+
+Datos de la cuenta (`billing`): `bank`, `account_type`, `account_number`,
+`holder`, `updated_at`. Viven en la base de datos (fila única) para poder
+cambiarlos desde el panel sin redeploy.
+
+Cada tienda expone su plan en `subscription`:
+
+```json
+"subscription": {
+  "status": "active",
+  "current_period_end": "2026-11-20T12:00:00Z",
+  "grace_days_remaining": 10
+}
+```
+
+`status` se calcula en vivo: `active` hasta `current_period_end`, `past_due`
+durante los 10 días de gracia y `suspended` después. Es `null` si la tienda no
+tiene suscripción. El plan se cobra por períodos de 30 días.
 
 ## Otros
 

@@ -14,6 +14,7 @@ Django 6.1 + DRF. Apps:
 - `tenants` — tiendas y miembros (roles) + paletas de color y canales de compra por tienda.
 - `catalog` — categorías y productos por tienda.
 - `storefront` — API pública de la tienda (sin auth).
+- `payments` — pagos manuales (comprobantes) y datos de la cuenta bancaria de LibreDrop.
 
 Las paletas viven en `tenants/theme.py` (única definición) y cada `Tenant`
 guarda sus colores en `theme_*`. El panel los edita vía `PATCH /tenants/tenant/`
@@ -28,6 +29,13 @@ canales **efectivos** (activados y con destino válido), que el frontend
 transforma en botones. El panel reutiliza las mismas etiquetas desde
 `frontend/src/channels.js`.
 
+El cobro es **manual**: el dueño sube un comprobante (`Payment`, estado
+`pending`) y el superusuario lo aprueba (`POST /payments/<id>/activate/`), lo que
+activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
+`tenants`) se calcula en vivo: `active`, `past_due` (10 días de gracia) y
+`suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
+datos (fila única) y se editan desde el panel del superusuario.
+
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
 URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad
 automática) vía el helper `backend/backend/images.py::optimized()`.
@@ -38,13 +46,17 @@ Config vía variables de entorno `CLOUDINARY_*`.
 React SPA (Vite). Páginas:
 
 - `/` → redirige a `/admin` (login/registro si no hay sesión).
-- `/admin` — panel: Tiendas (con **canales de compra**) y Catálogo.
+- `/admin` — panel: Tiendas (con **canales de compra**), Catálogo, Apariencia y
+  Pagos (suscripción; si el plan no está activo el panel muestra el bloqueo de
+  activación).
 - `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
   "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
   **botones de compra por canal**: "Comprar por WhatsApp" y "Preguntar por
   Instagram / Facebook / TikTok". Responsive.
 
-Estado de sesión en `AuthContext` + tokens en `localStorage`.
+Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
+(1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,
+así la sesión se mantiene sin volver a loguearse.
 
 ## Despliegue
 

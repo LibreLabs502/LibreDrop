@@ -67,7 +67,7 @@
 ## v0.2 — Producción (Render + Neon + Vercel)
 
 Backend live en `https://libredrop.onrender.com`, frontend en
-`https://libredrop-app.vercel.app`.
+`https://libredrop-cloud.vercel.app`.
 
 - Imagen Docker en la **raíz** del repo (solo backend; sin base de datos
   empaquetada). Build: `docker build -t libredrop-api .` desde la raíz.
@@ -87,7 +87,8 @@ Backend live en `https://libredrop.onrender.com`, frontend en
 - CORS/CSRF para el origen de Vercel; WhiteNoise sirve los estáticos;
   `SECURE_SSL_REDIRECT` en prod.
 - Slug de tienda **estable**: se genera una vez al crear y renombrarla ya no lo
-  cambia (antes se regeneraba y rompía los links públicos).
+  cambia (antes se regeneraba y rompía los links públicos). *(Revertido en v0.5:
+  ahora el slug sigue al nombre.)*
 - Pendiente (opcionales): límites de ancho `w_...` en Cloudinary y limpieza de
   imágenes pequeñas sin uso.
 
