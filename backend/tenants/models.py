@@ -55,17 +55,36 @@ class Tenant(models.Model):
         return f"Tenant {self.name}"
 
     def save(self, *args, **kwargs):
-        # El slug se genera UNA vez, al crear la tienda. Renombrar no debe
-        # cambiarlo: los links públicos /tienda/<slug> quedan estables.
-        if not self.slug:
-            base_slug = slugify(self.name) or "tienda"
-            slug = base_slug
-            counter = 2
-            while Tenant.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-            self.slug = slug
+        # El slug acompaña al nombre: se genera al crear la tienda y se
+        # regenera cuando cambia el nombre, manteniéndolo único (-2, -3, ...).
+        previous_name = None
+        if self.pk is not None:
+            previous_name = (
+                Tenant.objects.filter(pk=self.pk)
+                .values_list("name", flat=True)
+                .first()
+            )
+        name_changed = previous_name is not None and previous_name != self.name
+        if not self.slug or name_changed:
+            self.slug = self._unique_slug(self.name, exclude_pk=self.pk)
+            # Si el guardado es parcial, incluimos el slug para que persista.
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | {"slug"}
         return super().save(*args, **kwargs)
+
+    @classmethod
+    def _unique_slug(cls, name, exclude_pk=None):
+        """Slug del nombre, con sufijo -2, -3, ... si ya está ocupado."""
+        base_slug = slugify(name) or "tienda"
+        slug = base_slug
+        counter = 2
+        qs = cls.objects.all()
+        if exclude_pk is not None:
+            qs = qs.exclude(pk=exclude_pk)
+        while qs.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        return slug
 
 class Membership(models.Model):
     class Role(models.TextChoices):
