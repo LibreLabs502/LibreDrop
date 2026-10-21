@@ -1030,13 +1030,48 @@ input:focus, select:focus, textarea:focus {
   flex-wrap: wrap;
 }
 
+.store-cats-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
 .store-cats {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
   flex: 1;
+  min-width: 0;
+  scroll-behavior: smooth;
+  /* Sin barra de scroll: se navega con las flechitas. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.store-cats::-webkit-scrollbar { display: none; }
+
+.store-cats-arrow {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--store-border);
+  border-radius: 999px;
+  background: var(--store-surface);
+  color: var(--store-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.store-cats-arrow:hover:not(:disabled) {
+  border-color: var(--store-primary);
+  color: var(--store-primary);
+}
+
+.store-cats-arrow:disabled { opacity: 0.35; cursor: default; }
 
 .store-cats button {
   border: 1px solid var(--store-secondary);
