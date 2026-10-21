@@ -14,12 +14,36 @@ class TenantSlugTests(TestCase):
         t = Tenant.objects.create(name="Mi Tienda")
         self.assertEqual(t.slug, "mi-tienda")
 
-    def test_renombrar_no_cambia_el_slug(self):
+    def test_renombrar_actualiza_el_slug(self):
         t = Tenant.objects.create(name="Mi Tienda")
         t.name = "Otro Nombre"
         t.save()
+        self.assertEqual(t.slug, "otro-nombre")
+
+    def test_renombrar_a_un_slug_ocupado_agrega_sufijo(self):
+        Tenant.objects.create(name="Tienda A")
+        t = Tenant.objects.create(name="Tienda B")
+        t.name = "Tienda A"
+        t.save()
+        self.assertEqual(t.slug, "tienda-a-2")
+
+    def test_renombrar_al_mismo_slug_conserva_el_valor(self):
+        t = Tenant.objects.create(name="Mi Tienda")
+        t.name = "MI TIENDA"
+        t.save()
         self.assertEqual(t.slug, "mi-tienda")
-        self.assertNotEqual(t.name, t.slug)
+
+    def test_guardar_sin_cambiar_el_nombre_conserva_el_slug(self):
+        t = Tenant.objects.create(name="Mi Tienda")
+        t.description = "algo"
+        t.save()
+        self.assertEqual(t.slug, "mi-tienda")
+
+    def test_renombrar_sin_letras_usa_fallback(self):
+        t = Tenant.objects.create(name="Mi Tienda")
+        t.name = "!!!"
+        t.save()
+        self.assertEqual(t.slug, "tienda")
 
     def test_slug_unico_al_crear(self):
         Tenant.objects.create(name="Mi Tienda")
@@ -29,6 +53,34 @@ class TenantSlugTests(TestCase):
     def test_nombre_sin_letras_usa_fallback(self):
         t = Tenant.objects.create(name="!!!")
         self.assertEqual(t.slug, "tienda")
+
+
+class TenantSlugApiTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="ana", password="clave-segura-123")
+        self.tenant = Tenant.objects.create(name="Tienda A")
+        Membership.objects.create(user=self.user, tenant=self.tenant, role=Membership.Role.owner)
+        self.client.force_authenticate(self.user)
+
+    def test_patch_del_nombre_actualiza_el_slug(self):
+        res = self.client.patch(
+            f"/tenants/tenant/{self.tenant.id}/",
+            {"name": "Nueva Tienda"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.json()["slug"], "nueva-tienda")
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.slug, "nueva-tienda")
+
+    def test_patch_de_otro_campo_no_cambia_el_slug(self):
+        res = self.client.patch(
+            f"/tenants/tenant/{self.tenant.id}/",
+            {"description": "nueva descripción"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.json()["slug"], "tienda-a")
 
 
 class TenantThemeDefaultsTests(TestCase):

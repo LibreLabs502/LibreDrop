@@ -1,5 +1,18 @@
 # Versiones
 
+## v0.5 — El slug de la tienda sigue al nombre
+
+- Al **renombrar** una tienda, su `slug` se regenera a partir del nuevo nombre
+  (antes se generaba solo al crear y quedaba fijo).
+- Se mantiene la **unicidad**: si el slug ya existe, se agrega un sufijo
+  `-2`, `-3`, … (excluyendo la propia tienda).
+- Si el nombre se guarda sin cambios (u otra edición: canales, colores, etc.),
+  el slug **no cambia**. Un nombre sin letras usa el fallback `tienda`.
+- ⚠️ El enlace público `/tienda/<slug>` **cambia al renombrar**: los links
+  compartidos con el slug anterior dejan de funcionar (esto revierte la
+  decisión de "slug estable" de v0.2).
+- Pruebas: `tenants/tests.py` (modelo y API).
+
 ## v0.4 — Ventas y consultas por Instagram, Facebook y TikTok
 
 - Cada tienda elige **por qué canales recibe pedidos**. `Tenant.purchase_channels`
