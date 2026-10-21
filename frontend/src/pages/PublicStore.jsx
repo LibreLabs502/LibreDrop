@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, waLink, ICONS } from '../channels'
@@ -36,6 +36,48 @@ export default function PublicStore() {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
+
+  // Categorías: con muchas, se navegan con flechitas en vez de la barra de
+  // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
+  const catsRef = useRef(null)
+  const [catsNav, setCatsNav] = useState({ overflow: false, left: false, right: false })
+
+  const updateCatsNav = useCallback(() => {
+    const el = catsRef.current
+    if (!el) return
+    const maxScroll = el.scrollWidth - el.clientWidth
+    const next = {
+      overflow: maxScroll > 1,
+      left: el.scrollLeft > 1,
+      right: el.scrollLeft < maxScroll - 1,
+    }
+    // Si nada cambió devolvemos el estado anterior: evita renders/loops.
+    setCatsNav((prev) =>
+      prev.overflow === next.overflow && prev.left === next.left && prev.right === next.right
+        ? prev
+        : next,
+    )
+  }, [])
+
+  useEffect(() => {
+    const el = catsRef.current
+    if (!el) return
+    updateCatsNav()
+    el.addEventListener('scroll', updateCatsNav, { passive: true })
+    // Al montar las flechas o redimensionar, el ancho cambia: re-medimos.
+    const observer = new ResizeObserver(updateCatsNav)
+    observer.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateCatsNav)
+      observer.disconnect()
+    }
+  }, [updateCatsNav, store])
+
+  const scrollCats = (direction) => {
+    const el = catsRef.current
+    if (!el) return
+    el.scrollBy({ left: direction * Math.max(140, el.clientWidth * 0.7), behavior: 'smooth' })
+  }
 
   useEffect(() => {
     let alive = true
@@ -159,20 +201,62 @@ export default function PublicStore() {
       </header>
 
       <div className="store-toolbar">
-        <nav className="store-cats">
-          <button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>
-            Todos
-          </button>
-          {store.categories.map((c) => (
+        <div className="store-cats-wrap">
+          {catsNav.overflow && (
             <button
-              key={c.id}
-              className={String(category) === String(c.id) ? 'active' : ''}
-              onClick={() => setCategory(c.id)}
+              type="button"
+              className="store-cats-arrow"
+              onClick={() => scrollCats(-1)}
+              disabled={!catsNav.left}
+              aria-label="Categorías anteriores"
             >
-              {c.name}
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M15 6l-6 6 6 6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
-          ))}
-        </nav>
+          )}
+          <nav className="store-cats" ref={catsRef}>
+            <button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>
+              Todos
+            </button>
+            {store.categories.map((c) => (
+              <button
+                key={c.id}
+                className={String(category) === String(c.id) ? 'active' : ''}
+                onClick={() => setCategory(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </nav>
+          {catsNav.overflow && (
+            <button
+              type="button"
+              className="store-cats-arrow"
+              onClick={() => scrollCats(1)}
+              disabled={!catsNav.right}
+              aria-label="Ver más categorías"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M9 6l6 6-6 6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
         <input
           className="store-search"
           type="search"
