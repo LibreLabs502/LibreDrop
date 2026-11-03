@@ -8,6 +8,16 @@
 // todavía no la haya visto. Lo visto se guarda en localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v0.9',
+    date: 'Noviembre 2026',
+    title: 'Novedades en tu panel',
+    items: [
+      'Ahora podés personalizar el texto de los botones de compra de tu tienda.',
+      'Elegí por ejemplo “Pedir por” o “Comprar por”: se usa en WhatsApp, Instagram, Facebook y TikTok.',
+      'Si lo dejás vacío, tus botones vuelven a decir “Comprar por”.',
+    ],
+  },
+  {
     version: 'v0.8',
     date: 'Noviembre 2026',
     title: 'Novedades en tu panel',

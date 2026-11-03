@@ -108,6 +108,21 @@ Reglas:
   Instagram."`.
 - LinkedIn no es un canal de compra (solo aparece como enlace).
 
+### Texto de los botones de compra
+
+- `Tenant.purchase_button_text` (`CharField(max_length=40,
+  default="Comprar por")`) permite personalizar el texto que precede al nombre
+  del canal en los botones de la tienda (por ejemplo, **“Pedir por WhatsApp”**).
+- Se expone como `purchase_button_text` en el serializer del panel y en el
+  storefront público. Si viene vacío o no existe, el frontend usa siempre
+  **“Comprar por”** como respaldo.
+- El mismo texto se aplica a todos los canales activos.
+- `PATCH /tenants/tenant/<id>/`:
+
+```json
+{ "purchase_button_text": "Pedir por" }
+```
+
 ## Catálogo (`/catalog/`)
 
 | Método | Ruta | Descripción |

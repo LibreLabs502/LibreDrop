@@ -1,5 +1,20 @@
 # Versiones
 
+## v0.9 — Texto personalizado de los botones de compra
+
+- `Tenant.purchase_button_text` (`CharField(max_length=40,
+  default="Comprar por")`) permite que cada tienda escriba su propio texto para
+  los botones de compra, por ejemplo **“Pedir por WhatsApp”**.
+- El panel lo edita en **“Texto de los botones de compra”**, con contador de
+  caracteres (máximo 40) y vista previa del botón.
+- El mismo texto se usa en **todos** los canales activos (WhatsApp, Instagram,
+  Facebook y TikTok).
+- Si el campo está vacío o el backend todavía no lo expone, el frontend usa
+  **“Comprar por”** como respaldo. Al guardar un texto vacío se restablece el
+  valor predeterminado.
+- El backend debe exponer `purchase_button_text` en el serializer del panel y en
+  el storefront público.
+
 ## v0.8 — Novedades al entrar al panel
 
 - Al entrar al panel, cada usuario ve una ventana **“Novedades en tu panel”** con
