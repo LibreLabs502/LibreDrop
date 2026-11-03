@@ -36,16 +36,20 @@ function Shell() {
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
   const [updatesOpen, setUpdatesOpen] = useState(false)
+  const [hasNews, setHasNews] = useState(() => !hasSeenLatestUpdate(user))
 
   const close = () => setOpen(false)
 
   const userId = user?.id ?? user?.username
   useEffect(() => {
-    if (!hasSeenLatestUpdate(user)) setUpdatesOpen(true)
+    const unseen = !hasSeenLatestUpdate(user)
+    setHasNews(unseen)
+    if (unseen) setUpdatesOpen(true)
   }, [userId])
 
   const closeUpdates = () => {
     markLatestUpdateSeen(user)
+    setHasNews(false)
     setUpdatesOpen(false)
   }
 
@@ -87,15 +91,16 @@ function Shell() {
         <div className="admin-side-foot">
           <TenantSwitcher />
           {currentTenant && <div className="chip">{currentTenant.name}</div>}
-          <button className="btn ghost small block" onClick={() => setUpdatesOpen(true)}>
+          <button className="btn ghost small block updates-btn" onClick={() => setUpdatesOpen(true)}>
             Novedades
+            {hasNews && <span className="updates-tag">Nuevo</span>}
           </button>
           <button className="btn ghost small block" onClick={logout}>Cerrar sesión ({user.username})</button>
         </div>
       </aside>
 
       <main className="admin-main">
-        <Outlet />
+        <Outlet context={{ openUpdates: () => setUpdatesOpen(true), hasNews }} />
       </main>
 
       <WhatsNew open={updatesOpen} onClose={closeUpdates} />

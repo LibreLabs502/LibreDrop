@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { tenantsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
-import { PURCHASE_CHANNELS, channelIsReady } from '../../channels'
+import { PURCHASE_CHANNELS, channelIsReady, DEFAULT_PURCHASE_BUTTON_TEXT, purchaseButtonText } from '../../channels'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 export default function StoresManager() {
   const { user } = useAuth()
+  const { openUpdates, hasNews } = useOutletContext() || {}
   const { stores, current, currentTenant, select, reload, loading, error: loadError } = useTenant()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(null)
@@ -32,6 +33,7 @@ export default function StoresManager() {
       tiktok_url: t.tiktok_url || '',
       linkedin_url: t.linkedin_url || '',
       purchase_channels: Array.isArray(t.purchase_channels) ? t.purchase_channels : [],
+      purchase_button_text: t.purchase_button_text || '',
     })
     setLogoFile(null)
     setError('')
@@ -65,6 +67,7 @@ export default function StoresManager() {
       // usuario borró el número o el enlace sin desactivar el interruptor).
       const payload = {
         ...form,
+        purchase_button_text: String(form.purchase_button_text || '').trim() || DEFAULT_PURCHASE_BUTTON_TEXT,
         purchase_channels: (form.purchase_channels || []).filter((k) => channelIsReady(k, form)),
       }
       await tenantsApi.update(editing, payload, logoFile)
@@ -182,6 +185,26 @@ export default function StoresManager() {
                 })}
               </div>
             </div>
+            <div className="purchase-button-text-block">
+              <Field
+                label="Texto de los botones de compra"
+                hint="Elegí el texto que aparece antes del nombre de cada red. Se verá como: «Comprar por WhatsApp»."
+              >
+                <input
+                  value={form.purchase_button_text}
+                  maxLength={40}
+                  placeholder={DEFAULT_PURCHASE_BUTTON_TEXT}
+                  onChange={(e) => setForm({ ...form, purchase_button_text: e.target.value })}
+                />
+              </Field>
+              <p className="channel-preview">
+                Vista previa:{' '}
+                <b>
+                  {purchaseButtonText(form)}{' '}
+                  {PURCHASE_CHANNELS.find((c) => (form.purchase_channels || []).includes(c.key))?.label || 'WhatsApp'}
+                </b>
+              </p>
+            </div>
             <div className="btn-group">
               <button className="btn" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cambios'}</button>
               <button type="button" className="btn ghost" onClick={cancelEdit}>Cancelar</button>
@@ -208,7 +231,17 @@ export default function StoresManager() {
         </div>
       )}
 
-      <Card title={`Tus tiendas (${stores.length})`}>
+      <Card
+        title={`Tus tiendas (${stores.length})`}
+        actions={
+          openUpdates && (
+            <button type="button" className="btn small ghost updates-link" onClick={openUpdates}>
+              Ver Novedades
+              {hasNews && <span className="updates-tag">Nuevo</span>}
+            </button>
+          )
+        }
+      >
         <Alert>{loadError}</Alert>
         <Alert kind="ok">{ok}</Alert>
         <Alert>{error}</Alert>
@@ -263,6 +296,12 @@ export default function StoresManager() {
                         .map((c) => c.label)
                         .join(', ')}
                     </span>
+                  </>
+                )}
+                {t.purchase_button_text && (
+                  <>
+                    <span className="store-field-label">Texto de compra</span>
+                    <span>{t.purchase_button_text}</span>
                   </>
                 )}
               </div>

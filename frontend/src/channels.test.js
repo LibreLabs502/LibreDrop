@@ -2,10 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  DEFAULT_PURCHASE_BUTTON_TEXT,
   buildPurchaseLinks,
   channelIsReady,
   channelLink,
   productOrderMessage,
+  purchaseButtonText,
   waLink,
 } from './channels.js'
 
@@ -80,7 +82,7 @@ test('usa el enlace configurado para las redes', () => {
   assert.equal(channelLink('instagram', store, 'Hola'), 'https://instagram.com/tienda')
 })
 
-test('en las redes sociales el botón invita a preguntar, no a comprar', () => {
+test('usa el mismo texto de compra en todos los canales', () => {
   const store = {
     purchase_channels: ['whatsapp', 'instagram', 'facebook', 'tiktok'],
     whatsapp: '50212345678',
@@ -91,9 +93,31 @@ test('en las redes sociales el botón invita a preguntar, no a comprar', () => {
   const links = buildPurchaseLinks(store, 'Hola')
   const action = Object.fromEntries(links.map((l) => [l.key, l.action]))
   assert.equal(action.whatsapp, 'Comprar por')
-  assert.equal(action.instagram, 'Preguntar por')
-  assert.equal(action.facebook, 'Preguntar por')
-  assert.equal(action.tiktok, 'Preguntar por')
+  assert.equal(action.instagram, 'Comprar por')
+  assert.equal(action.facebook, 'Comprar por')
+  assert.equal(action.tiktok, 'Comprar por')
+})
+
+test('sin texto personalizado usa el default', () => {
+  assert.equal(DEFAULT_PURCHASE_BUTTON_TEXT, 'Comprar por')
+  assert.equal(purchaseButtonText({}), 'Comprar por')
+  assert.equal(purchaseButtonText({ purchase_button_text: '' }), 'Comprar por')
+  assert.equal(purchaseButtonText({ purchase_button_text: '   ' }), 'Comprar por')
+})
+
+test('usa el texto personalizado de la tienda en todos los canales', () => {
+  const store = {
+    purchase_button_text: '  Pedir por  ',
+    purchase_channels: ['whatsapp', 'instagram'],
+    whatsapp: '50212345678',
+    instagram_url: 'https://instagram.com/tienda',
+  }
+  assert.equal(purchaseButtonText(store), 'Pedir por')
+  const links = buildPurchaseLinks(store, 'Hola')
+  assert.deepEqual(
+    links.map((l) => l.action),
+    ['Pedir por', 'Pedir por'],
+  )
 })
 
 test('channelIsReady refleja si falta el dato', () => {

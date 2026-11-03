@@ -27,7 +27,9 @@ Facebook y TikTok; LinkedIn queda fuera por ser red de contacto). Un canal solo
 se activa si su destino es válido, y el storefront público expone únicamente los
 canales **efectivos** (activados y con destino válido), que el frontend
 transforma en botones. El panel reutiliza las mismas etiquetas desde
-`frontend/src/channels.js`.
+`frontend/src/channels.js`. El texto que precede al canal se personaliza por
+tienda con `Tenant.purchase_button_text` (por defecto **“Comprar por”**); si está
+vacío o el backend no lo expone, el frontend usa ese valor predeterminado.
 
 El cobro es **manual**: el dueño sube un comprobante (`Payment`, estado
 `pending`) y el superusuario lo aprueba (`POST /payments/<id>/activate/`), lo que
@@ -54,8 +56,9 @@ React SPA (Vite). Páginas:
   la barra lateral para reabrirla.
 - `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
   "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
-  **botones de compra por canal**: "Comprar por WhatsApp" y "Preguntar por
-  Instagram / Facebook / TikTok". En las redes sociales se abre una ventana con
+  **botones de compra por canal**: el texto es configurable por tienda
+  (`purchase_button_text`, por defecto "Comprar por"), así que puede verse "Comprar por
+  WhatsApp" o "Pedir por Instagram". En las redes sociales se abre una ventana con
   el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
   directo con el mensaje. Responsive.
 
