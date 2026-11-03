@@ -52,7 +52,9 @@ React SPA (Vite). Páginas:
 - `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
   "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
   **botones de compra por canal**: "Comprar por WhatsApp" y "Preguntar por
-  Instagram / Facebook / TikTok". Responsive.
+  Instagram / Facebook / TikTok". En las redes sociales se abre una ventana con
+  el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
+  directo con el mensaje. Responsive.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,
