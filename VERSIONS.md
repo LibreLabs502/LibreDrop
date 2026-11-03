@@ -14,6 +14,9 @@
 - El backend lo expone en el serializer del panel (`TenantSerializer`) y en el
   storefront público (`PublicTenantSerializer`); migración
   `tenants/0012_tenant_purchase_button_text.py`.
+- La pantalla de **Tiendas** incluye un botón **“Ver Novedades”** y la barra
+  lateral conserva **“Novedades”**. Mientras haya una actualización sin ver,
+  ambos muestran la etiqueta **“Nuevo”**; al cerrar la ventana desaparece.
 
 ## v0.8 — Novedades al entrar al panel
 

@@ -661,6 +661,25 @@ input:focus, select:focus, textarea:focus {
   gap: 8px;
 }
 
+/* Etiqueta "Nuevo" cuando hay una actualización sin ver. */
+.updates-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #fbbf24;
+  color: #422006;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.updates-btn .updates-tag { margin-left: 6px; }
+
+.updates-link { gap: 8px; }
+
 @media (max-width: 480px) {
   .updates-actions { grid-template-columns: 1fr; }
 }

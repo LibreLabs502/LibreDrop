@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { tenantsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
 import { PURCHASE_CHANNELS, channelIsReady, DEFAULT_PURCHASE_BUTTON_TEXT, purchaseButtonText } from '../../channels'
 import { useAuth } from '../../store/AuthContext'
@@ -8,6 +8,7 @@ import { Alert, Card, Field, Spinner } from '../ui'
 
 export default function StoresManager() {
   const { user } = useAuth()
+  const { openUpdates, hasNews } = useOutletContext() || {}
   const { stores, current, currentTenant, select, reload, loading, error: loadError } = useTenant()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(null)
@@ -230,7 +231,17 @@ export default function StoresManager() {
         </div>
       )}
 
-      <Card title={`Tus tiendas (${stores.length})`}>
+      <Card
+        title={`Tus tiendas (${stores.length})`}
+        actions={
+          openUpdates && (
+            <button type="button" className="btn small ghost updates-link" onClick={openUpdates}>
+              Ver Novedades
+              {hasNews && <span className="updates-tag">Nuevo</span>}
+            </button>
+          )
+        }
+      >
         <Alert>{loadError}</Alert>
         <Alert kind="ok">{ok}</Alert>
         <Alert>{error}</Alert>
