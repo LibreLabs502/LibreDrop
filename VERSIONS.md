@@ -11,6 +11,8 @@
   en `localStorage` con la clave `libredrop_updates_seen:<usuario>`.
 - El panel incluye un botón **“Novedades”** en la barra lateral para volver a
   abrir el resumen.
+- La ventana incluye un botón **“Más información en GitHub”** que abre
+  `VERSIONS.md` en el repositorio.
 - Se puede cerrar con el botón, tocando fuera de la ventana o con `Escape`.
 
 ## v0.7 — Marcas, precios opcionales y pedidos por redes sociales
