@@ -36,15 +36,26 @@ function Shell() {
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
   const [updatesOpen, setUpdatesOpen] = useState(false)
+  const [showAllUpdates, setShowAllUpdates] = useState(false)
   const [hasNews, setHasNews] = useState(() => !hasSeenLatestUpdate(user))
 
   const close = () => setOpen(false)
+
+  const openUpdates = (showAll = true) => {
+    setShowAllUpdates(showAll)
+    setUpdatesOpen(true)
+  }
 
   const userId = user?.id ?? user?.username
   useEffect(() => {
     const unseen = !hasSeenLatestUpdate(user)
     setHasNews(unseen)
-    if (unseen) setUpdatesOpen(true)
+    if (unseen) {
+      // Al entrar solo mostramos la última actualización; el historial completo
+      // se ve cuando el usuario toca “Novedades” o “Ver Novedades”.
+      setShowAllUpdates(false)
+      setUpdatesOpen(true)
+    }
   }, [userId])
 
   const closeUpdates = () => {
@@ -91,7 +102,7 @@ function Shell() {
         <div className="admin-side-foot">
           <TenantSwitcher />
           {currentTenant && <div className="chip">{currentTenant.name}</div>}
-          <button className="btn ghost small block updates-btn" onClick={() => setUpdatesOpen(true)}>
+          <button className="btn ghost small block updates-btn" onClick={() => openUpdates(true)}>
             Novedades
             {hasNews && <span className="updates-tag">Nuevo</span>}
           </button>
@@ -100,10 +111,10 @@ function Shell() {
       </aside>
 
       <main className="admin-main">
-        <Outlet context={{ openUpdates: () => setUpdatesOpen(true), hasNews }} />
+        <Outlet context={{ openUpdates: () => openUpdates(true), hasNews }} />
       </main>
 
-      <WhatsNew open={updatesOpen} onClose={closeUpdates} />
+      <WhatsNew open={updatesOpen} showAll={showAllUpdates} onClose={closeUpdates} />
     </div>
   )
 }

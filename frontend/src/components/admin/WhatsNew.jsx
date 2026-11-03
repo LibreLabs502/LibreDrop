@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { UPDATES, VERSIONS_URL } from '../../updates'
+import { LATEST_UPDATE, UPDATES, VERSIONS_URL } from '../../updates'
 
-export default function WhatsNew({ open, onClose }) {
+export default function WhatsNew({ open, onClose, showAll = false }) {
   useEffect(() => {
     if (!open) return
     const onKey = (event) => {
@@ -11,7 +11,12 @@ export default function WhatsNew({ open, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  if (!open || UPDATES.length === 0) return null
+  if (!open || !LATEST_UPDATE) return null
+
+  // Al abrirse solo (actualización sin ver) mostramos únicamente la última.
+  // El historial completo aparece cuando se entra desde “Novedades” o
+  // “Ver Novedades”.
+  const entries = showAll ? UPDATES : [LATEST_UPDATE]
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -26,18 +31,26 @@ export default function WhatsNew({ open, onClose }) {
           ×
         </button>
         <div className="updates-body">
-          <span className="updates-badge">Novedades</span>
-          <h2 id="updates-title">Novedades en tu panel</h2>
-          <p className="muted">Estos son los últimos cambios de LibreDrop.</p>
+          <span className="updates-badge">
+            {showAll ? 'Novedades' : `Novedades · ${LATEST_UPDATE.version}`}
+          </span>
+          <h2 id="updates-title">
+            {showAll ? 'Novedades en tu panel' : LATEST_UPDATE.title}
+          </h2>
+          <p className="muted">
+            {showAll ? 'Estos son los últimos cambios de LibreDrop.' : LATEST_UPDATE.date}
+          </p>
 
           <div className="updates-versions">
-            {UPDATES.map((update) => (
+            {entries.map((update) => (
               <section className="updates-entry" key={update.version}>
-                <div className="updates-entry-head">
-                  <span className="updates-version">{update.version}</span>
-                  <span className="updates-date">{update.date}</span>
-                </div>
-                <h3>{update.title}</h3>
+                {showAll && (
+                  <div className="updates-entry-head">
+                    <span className="updates-version">{update.version}</span>
+                    <span className="updates-date">{update.date}</span>
+                  </div>
+                )}
+                {showAll && <h3>{update.title}</h3>}
                 <ul className="updates-list">
                   {update.items.map((item) => (
                     <li key={item}>{item}</li>

@@ -57,10 +57,10 @@ React SPA (Vite). Páginas:
 - `/` → redirige a `/admin` (login/registro si no hay sesión).
 - `/admin` — panel: Tiendas (con **canales de compra**), Catálogo, Apariencia y
   Pagos (suscripción; si el plan no está activo el panel muestra el bloqueo de
-  activación). Al entrar se muestra una ventana de **Novedades** con las últimas
-  versiones separadas por número y fecha; se controla desde
-  `frontend/src/updates.js` y se recuerda por usuario con `localStorage`. También
-  hay un botón **Novedades** en la barra lateral para reabrirla.
+  activación). Al entrar se muestra una ventana de **Novedades** con la última
+  actualización; al abrirla desde el botón **Novedades** o **Ver Novedades** se
+  ve el historial completo separado por número y fecha. Se controla desde
+  `frontend/src/updates.js` y se recuerda por usuario con `localStorage`.
 - `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
   "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
   **botones de compra por canal**: el texto es configurable por tienda

@@ -23,8 +23,11 @@
 
 ### Historial de Novedades
 
-- La ventana de **Novedades** ahora muestra **todas** las versiones recientes
-  (`v0.10`, `v0.9`, `v0.8`, …) separadas por número y fecha, no solo la última.
+- Al entrar al panel con una actualización sin ver, la ventana muestra **solo la
+  última versión**, igual que antes.
+- Al abrirla desde **“Novedades”** (barra lateral) o **“Ver Novedades”**
+  (Tiendas), se muestra el **historial completo** (`v0.10`, `v0.9`, `v0.8`, …)
+  separado por número y fecha.
 - La fuente sigue siendo `frontend/src/updates.js` (`UPDATES`, con la más
   reciente primero); el seguimiento de “visto” continúa por usuario y por
   `LATEST_UPDATE.version`.
