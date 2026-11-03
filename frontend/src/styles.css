@@ -596,6 +596,50 @@ input:focus, select:focus, textarea:focus {
 .modal-info h2 { margin: 0; }
 .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 
+/* ---------- novedades del panel ---------- */
+
+.updates-modal { max-width: 520px; }
+
+.updates-body {
+  padding: 26px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.updates-badge {
+  align-self: flex-start;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.updates-body h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.updates-body > p { margin: 0; }
+
+.updates-list {
+  margin: 2px 0 8px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.updates-list li::marker {
+  color: var(--primary);
+  font-weight: 800;
+}
+
 .qty-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
 .qty-value { font-weight: 700; min-width: 24px; text-align: center; }
 

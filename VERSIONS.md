@@ -1,5 +1,18 @@
 # Versiones
 
+## v0.8 — Novedades al entrar al panel
+
+- Al entrar al panel, cada usuario ve una ventana **“Novedades en tu panel”** con
+  el resumen de la última actualización.
+- Las novedades se definen en `frontend/src/updates.js` (`UPDATES`, con la más
+  reciente primera). Para publicar una actualización nueva, agregá una entrada
+  con una `version` única y actualizá `VERSIONS.md`.
+- La ventana se muestra una sola vez por usuario y versión. Lo visto se guarda
+  en `localStorage` con la clave `libredrop_updates_seen:<usuario>`.
+- El panel incluye un botón **“Novedades”** en la barra lateral para volver a
+  abrir el resumen.
+- Se puede cerrar con el botón, tocando fuera de la ventana o con `Escape`.
+
 ## v0.7 — Marcas, precios opcionales y pedidos por redes sociales
 
 ### Marca de producto
