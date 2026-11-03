@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
 import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
 import PaymentGate from '../components/admin/PaymentGate'
+import WhatsNew from '../components/admin/WhatsNew'
 import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
+import { hasSeenLatestUpdate, markLatestUpdateSeen } from '../updates'
 
 const LINKS = [
   { to: '/admin', end: true, label: 'Tiendas', Icon: StoresIcon },
@@ -33,8 +35,19 @@ function Shell() {
   const { user, logout } = useAuth()
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
+  const [updatesOpen, setUpdatesOpen] = useState(false)
 
   const close = () => setOpen(false)
+
+  const userId = user?.id ?? user?.username
+  useEffect(() => {
+    if (!hasSeenLatestUpdate(user)) setUpdatesOpen(true)
+  }, [userId])
+
+  const closeUpdates = () => {
+    markLatestUpdateSeen(user)
+    setUpdatesOpen(false)
+  }
 
   // Pagos aparece solo cuando la tienda ya tiene plan; el superusuario lo ve
   // siempre porque gestiona los pagos en espera de todas las tiendas.
@@ -74,6 +87,9 @@ function Shell() {
         <div className="admin-side-foot">
           <TenantSwitcher />
           {currentTenant && <div className="chip">{currentTenant.name}</div>}
+          <button className="btn ghost small block" onClick={() => setUpdatesOpen(true)}>
+            Novedades
+          </button>
           <button className="btn ghost small block" onClick={logout}>Cerrar sesión ({user.username})</button>
         </div>
       </aside>
@@ -81,6 +97,8 @@ function Shell() {
       <main className="admin-main">
         <Outlet />
       </main>
+
+      <WhatsNew open={updatesOpen} onClose={closeUpdates} />
     </div>
   )
 }
