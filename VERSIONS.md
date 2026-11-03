@@ -9,11 +9,11 @@
   caracteres (máximo 40) y vista previa del botón.
 - El mismo texto se usa en **todos** los canales activos (WhatsApp, Instagram,
   Facebook y TikTok).
-- Si el campo está vacío o el backend todavía no lo expone, el frontend usa
-  **“Comprar por”** como respaldo. Al guardar un texto vacío se restablece el
-  valor predeterminado.
-- El backend debe exponer `purchase_button_text` en el serializer del panel y en
-  el storefront público.
+- Si el campo está vacío, el frontend usa **“Comprar por”** como respaldo. Al
+  guardar un texto vacío se restablece el valor predeterminado.
+- El backend lo expone en el serializer del panel (`TenantSerializer`) y en el
+  storefront público (`PublicTenantSerializer`); migración
+  `tenants/0012_tenant_purchase_button_text.py`.
 
 ## v0.8 — Novedades al entrar al panel
 

@@ -145,7 +145,9 @@ opcionales; la tienda pública también incluye `brand`.
 
 `purchase_channels` en el storefront son los **canales efectivos**: los activados
 que además tienen un destino válido. El frontend los convierte en los botones de
-compra ("Comprar por WhatsApp" / "Preguntar por Instagram, Facebook o TikTok").
+compra. El texto que precede al canal viene de `purchase_button_text` (por
+defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
+"Pedir por Instagram".
 
 ## Pagos y suscripción (`/payments/`)
 
