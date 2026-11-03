@@ -5,12 +5,21 @@ import {
   buildPurchaseLinks,
   channelIsReady,
   channelLink,
+  productOrderMessage,
   waLink,
 } from './channels.js'
 
 test('whatsapp arma un enlace wa.me con el mensaje', () => {
   const link = waLink('+502 1234-5678', 'Hola')
   assert.match(link, /^https:\/\/wa\.me\/50212345678\?text=Hola$/)
+})
+
+test('arma el mensaje de pedido con la tienda y el producto', () => {
+  const message = productOrderMessage({ name: 'Tienda Ana' }, { name: 'Camisa azul' })
+  assert.equal(
+    message,
+    'Hola Tienda Ana, me gustaria comprar este producto: Camisa azul. ¿Aun tienen a la venta?',
+  )
 })
 
 test('waLink devuelve null sin número', () => {

@@ -117,6 +117,11 @@ Reglas:
 | GET/POST | `/catalog/tenants/<id>/products/` | Productos |
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
 
+Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
+`brand`, `price` (puede ser `null` cuando no tiene precio), `image`, `is_active`,
+`created_at` y `updated_at`. El serializer del panel acepta `brand` y `price`
+opcionales; la tienda pública también incluye `brand`.
+
 ## Storefront público (`/public/`)
 
 | Método | Ruta | Descripción |

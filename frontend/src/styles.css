@@ -1287,6 +1287,80 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
 }
 
+/* Pedido para redes sociales: mensaje copiable + pasos para enviarlo. */
+.order-modal { max-width: 560px; }
+.order-modal-body { gap: 14px; }
+
+.order-channel {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--store-secondary);
+  color: var(--store-text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.order-message {
+  background: var(--store-bg);
+  border: 1px solid var(--store-border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.order-message p {
+  margin: 0;
+  color: var(--store-text);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.order-status { font-size: 12.5px; font-weight: 600; }
+.order-status.ok { color: var(--store-primary-ink, var(--store-primary)); }
+.order-status.error { color: var(--danger); }
+
+.order-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.order-actions .btn-buy {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.order-copy {
+  background: var(--store-surface);
+  color: var(--store-primary-ink, var(--store-primary));
+  border-color: var(--store-primary);
+}
+
+.order-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--store-muted);
+  font-size: 13px;
+}
+
+.order-steps li::marker {
+  color: var(--store-primary);
+  font-weight: 800;
+}
+
+@media (max-width: 480px) {
+  .order-actions { grid-template-columns: 1fr; }
+}
+
 /* ---------- apariencia (selector de paletas) ---------- */
 
 .palette-grid {

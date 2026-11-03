@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
-import { buildPurchaseLinks, waLink, ICONS } from '../channels'
+import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
 import { themeStyle } from '../theme'
 
 // Redes sociales de la tienda: cada una con su logo (ícono SVG).
@@ -28,6 +28,37 @@ const SOCIAL_LINKS = [
   },
 ]
 
+// Copia al portapapeles con respaldo para navegadores viejos o contextos donde
+// la API moderna no está disponible.
+const copyText = async (text) => {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // Seguimos con el respaldo de abajo.
+  }
+  try {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.top = '0'
+    area.style.left = '0'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.focus()
+    area.select()
+    area.setSelectionRange(0, text.length)
+    const copied = document.execCommand('copy')
+    document.body.removeChild(area)
+    return copied
+  } catch {
+    return false
+  }
+}
+
 export default function PublicStore() {
   const { slug } = useParams()
   const [store, setStore] = useState(null)
@@ -35,6 +66,7 @@ export default function PublicStore() {
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
+  const [order, setOrder] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
@@ -127,6 +159,55 @@ export default function PublicStore() {
       return inCategory && matches
     })
   }, [store, category, query])
+
+  const openOrder = (product, channel) => {
+    const message = productOrderMessage(store, product)
+    setSelected(null)
+    setOrder({ product, channel, message, copied: null })
+    // Aprovechamos el clic del usuario para copiar automáticamente. Si el
+    // navegador lo bloquea, el modal muestra el botón para copiar a mano.
+    copyText(message).then((copied) => {
+      setOrder((prev) =>
+        prev &&
+        prev.channel.key === channel.key &&
+        String(prev.product.id) === String(product.id)
+          ? { ...prev, copied }
+          : prev,
+      )
+    })
+  }
+
+  const copyOrder = () => {
+    if (!order) return
+    copyText(order.message).then((copied) => {
+      setOrder((prev) => (prev ? { ...prev, copied } : prev))
+    })
+  }
+
+  const renderPurchaseButton = (channel, product) => {
+    const content = (
+      <>
+        <svg viewBox={channel.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
+          <path d={channel.icon} />
+        </svg>
+        {channel.action} {channel.label}
+      </>
+    )
+    // WhatsApp sigue abriendo el chat con el mensaje ya escrito. Las redes
+    // sociales no permiten eso, así que abrimos la guía para copiar y pegar.
+    if (channel.key === 'whatsapp') {
+      return (
+        <a key={channel.key} className="btn-buy" href={channel.href} target="_blank" rel="noreferrer">
+          {content}
+        </a>
+      )
+    }
+    return (
+      <button key={channel.key} type="button" className="btn-buy" onClick={() => openOrder(product, channel)}>
+        {content}
+      </button>
+    )
+  }
 
   if (error) {
     return (
@@ -273,10 +354,7 @@ export default function PublicStore() {
       <section className="store-grid">
         {products.length === 0 && <p className="muted">No hay productos.</p>}
         {products.map((p) => {
-          const buyLinks = buildPurchaseLinks(
-            store,
-            `Hola ${store.name}, me gustaria comprar este producto: ${p.name}. ¿Aun tienen a la venta?`,
-          )
+          const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, p))
           return (
             <article className="product-card" key={p.id}>
               {p.image && <img src={p.image} alt={p.name} />}
@@ -289,14 +367,7 @@ export default function PublicStore() {
                 )}
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
-                    {buyLinks.map((c) => (
-                      <a key={c.key} className="btn-buy" href={c.href} target="_blank" rel="noreferrer">
-                        <svg viewBox={c.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
-                          <path d={c.icon} />
-                        </svg>
-                        {c.action} {c.label}
-                      </a>
-                    ))}
+                    {buyLinks.map((c) => renderPurchaseButton(c, p))}
                   </div>
                 )}
               </div>
@@ -317,17 +388,66 @@ export default function PublicStore() {
               {formatPrice(selected.price) && (
                 <span className="product-price">{formatPrice(selected.price)}</span>
               )}
-              {buildPurchaseLinks(
-                store,
-                `Hola ${store.name}, me gustaria comprar este producto: ${selected.name}. ¿Aun tienen a la venta?`,
-              ).map((c) => (
-                <a key={c.key} className="btn-buy" href={c.href} target="_blank" rel="noreferrer">
-                  <svg viewBox={c.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
-                    <path d={c.icon} />
-                  </svg>
-                  {c.action} {c.label}
+              {buildPurchaseLinks(store, productOrderMessage(store, selected)).map((c) =>
+                renderPurchaseButton(c, selected),
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {order && (
+        <div className="product-modal-overlay" onClick={() => setOrder(null)}>
+          <div
+            className="product-modal order-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="product-modal-close" onClick={() => setOrder(null)} aria-label="Cerrar">×</button>
+            <div className="product-modal-body order-modal-body">
+              <span className="order-channel">
+                <svg viewBox={order.channel.viewBox} width="16" height="16" fill="currentColor" aria-hidden="true">
+                  <path d={order.channel.icon} />
+                </svg>
+                {order.channel.label}
+              </span>
+              <h2 id="order-title">Hola, este es tu pedido</h2>
+              <p>Copiá el mensaje y envialo por {order.channel.label}.</p>
+
+              <div className="order-message">
+                <p>{order.message}</p>
+              </div>
+
+              <p
+                className={`order-status ${order.copied === false ? 'error' : order.copied ? 'ok' : ''}`}
+                role="status"
+                aria-live="polite"
+              >
+                {order.copied === null
+                  ? 'Copiando el pedido…'
+                  : order.copied
+                    ? '¡Pedido copiado!'
+                    : 'No se pudo copiar automáticamente. Tocá “Copiar pedido”.'}
+              </p>
+
+              <div className="order-actions">
+                <button type="button" className="btn-buy order-copy" onClick={copyOrder}>
+                  Copiar pedido
+                </button>
+                <a className="btn-buy" href={order.channel.href} target="_blank" rel="noreferrer">
+                  Continuar a {order.channel.label}
                 </a>
-              ))}
+              </div>
+
+              <ol className="order-steps">
+                <li>Copiá el pedido.</li>
+                <li>Dale a continuar.</li>
+                <li>Ve a enviar mensaje.</li>
+                <li>Pegá el pedido en el mensaje.</li>
+                <li>Listo, ya estarías pidiendo por {order.channel.label}.</li>
+              </ol>
             </div>
           </div>
         </div>

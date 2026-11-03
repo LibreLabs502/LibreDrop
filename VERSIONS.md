@@ -1,5 +1,40 @@
 # Versiones
 
+## v0.7 — Marcas, precios opcionales y pedidos por redes sociales
+
+### Marca de producto
+
+- `Product.brand` (`CharField`, opcional) guarda la marca; migración
+  `catalog/0006_product_brand.py`.
+- Los serializers del panel (`ProductSerializer`) y de la tienda pública
+  (`PublicProductSerializer`) exponen `brand`.
+- El panel permite crear y editar la marca; la tienda pública la muestra sobre
+  el nombre del producto y el buscador también filtra por marca.
+
+### Precio opcional
+
+- `Product.price` ahora admite `null`/vacío (migraciones `catalog/0004` y
+  `0005`). Un producto sin precio ya no muestra **Q 0.00** en el frontend.
+- El formulario de producto indica que el precio es opcional y permite dejarlo
+  vacío tanto al crear como al editar.
+
+### Edición completa de productos
+
+- Al editar un producto desde el panel se pueden cambiar **todos** los campos:
+  nombre, marca, precio, categoría, descripción, imagen y estado activo.
+
+### Pedidos por Instagram, Facebook y TikTok
+
+- WhatsApp mantiene el enlace directo `wa.me` con el mensaje ya escrito.
+- En Instagram, Facebook y TikTok el botón **“Preguntar por…”** abre una ventana
+  de pedido con el mismo mensaje de WhatsApp.
+- El mensaje se intenta copiar automáticamente al portapapeles (con respaldo
+  para navegadores sin la API moderna) y hay un botón **“Copiar pedido”**.
+- La ventana muestra los pasos para enviar el pedido y el botón **“Continuar”**
+  abre el perfil de la red en otra pestaña para pegar el mensaje.
+- El helper `productOrderMessage` centraliza el texto del pedido y tiene pruebas
+  en `frontend/src/channels.test.js`.
+
 ## v0.6 — Pagos manuales, cuenta bancaria y sesión persistente
 
 ### Cobro de la suscripción (manual)

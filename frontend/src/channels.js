@@ -32,6 +32,11 @@ export const PURCHASE_CHANNELS = [
 
 export const CHANNEL_BY_KEY = Object.fromEntries(PURCHASE_CHANNELS.map((c) => [c.key, c]))
 
+// Mensaje de pedido de un producto. Es el mismo que se envía por WhatsApp y el
+// que se copia para pegarlo en Instagram, Facebook o TikTok.
+export const productOrderMessage = (store, product) =>
+  `Hola ${store?.name || ''}, me gustaria comprar este producto: ${product?.name || ''}. ¿Aun tienen a la venta?`
+
 const digits = (phone) => String(phone || '').replace(/[^\d]/g, '')
 
 export const waLink = (phone, message) => {
