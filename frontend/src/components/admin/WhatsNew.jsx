@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { LATEST_UPDATE } from '../../updates'
+import { LATEST_UPDATE, VERSIONS_URL } from '../../updates'
 
 export default function WhatsNew({ open, onClose }) {
   useEffect(() => {
@@ -34,9 +34,14 @@ export default function WhatsNew({ open, onClose }) {
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <button type="button" className="btn block" onClick={onClose}>
-            Entendido, seguir
-          </button>
+          <div className="updates-actions">
+            <a className="btn ghost block" href={VERSIONS_URL} target="_blank" rel="noreferrer">
+              Más información en GitHub
+            </a>
+            <button type="button" className="btn block" onClick={onClose}>
+              Entendido, seguir
+            </button>
+          </div>
         </div>
       </div>
     </div>

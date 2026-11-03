@@ -1,13 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { LATEST_UPDATE, hasSeenLatestUpdate, markLatestUpdateSeen } from './updates.js'
+import { LATEST_UPDATE, VERSIONS_URL, hasSeenLatestUpdate, markLatestUpdateSeen } from './updates.js'
 
 test('la última novedad tiene versión, título y contenido', () => {
   assert.ok(LATEST_UPDATE)
   assert.match(LATEST_UPDATE.version, /^v\d/)
   assert.ok(LATEST_UPDATE.title)
   assert.ok(LATEST_UPDATE.items.length > 0)
+})
+
+test('el enlace de más información apunta a VERSIONS.md en GitHub', () => {
+  assert.match(VERSIONS_URL, /^https:\/\/github\.com\/LibreLabs502\/LibreDrop\/blob\/main\/VERSIONS\.md$/)
 })
 
 test('recuerda por usuario la última novedad vista', () => {

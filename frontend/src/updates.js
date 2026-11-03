@@ -22,6 +22,9 @@ export const UPDATES = [
 
 export const LATEST_UPDATE = UPDATES[0] || null
 
+// Documentación completa de versiones publicada en GitHub.
+export const VERSIONS_URL = 'https://github.com/LibreLabs502/LibreDrop/blob/main/VERSIONS.md'
+
 const seenKey = (user) => `libredrop_updates_seen:${user?.id ?? user?.username ?? 'anon'}`
 
 export const hasSeenLatestUpdate = (user) => {
