@@ -26,6 +26,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "category",
             "name",
             "description",
+            "brand",
             "price",
             "image",
         ]

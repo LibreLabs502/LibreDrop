@@ -277,6 +277,8 @@ input:focus, select:focus, textarea:focus {
 
 .row-item:last-child { border-bottom: none; }
 .row-item-main { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; flex: 1; min-width: 0; }
+.product-edit { width: 100%; align-items: stretch; }
+.product-edit .grid2 { width: 100%; }
 
 /* Campos de la tienda en el panel (nombre, descripción, redes…) */
 .store-fields {
@@ -1152,6 +1154,14 @@ input:focus, select:focus, textarea:focus {
 
 .product-body h3 { margin: 0; font-size: 16px; }
 .product-body p { margin: 0; color: var(--store-muted); font-size: 13px; }
+
+.product-brand {
+  color: var(--store-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* Descripción de producto en las tarjetas: 2 líneas iguales para ambas. */
 .store-product-desc {

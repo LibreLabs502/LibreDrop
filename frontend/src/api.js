@@ -249,6 +249,8 @@ export const SUPPORT_WHATSAPP = '+50236237067'
 export const SUBSCRIPTION_PRICE = 100
 
 export const formatPrice = (value) => {
+  // Sin precio (null/undefined/vacío) no se muestra nada, en vez de "Q 0.00".
+  if (value === null || value === undefined || value === '') return ''
   const amount = Number(value)
   if (Number.isNaN(amount)) return `Q ${value}`
   return `Q ${amount.toFixed(2)}`
