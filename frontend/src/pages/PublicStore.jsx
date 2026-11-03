@@ -117,9 +117,13 @@ export default function PublicStore() {
 
   const products = useMemo(() => {
     if (!store) return []
+    const q = query.toLowerCase()
     return store.products.filter((p) => {
       const inCategory = category === 'all' || String(p.category) === String(category)
-      const matches = !query || p.name.toLowerCase().includes(query.toLowerCase())
+      const matches =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.brand || '').toLowerCase().includes(q)
       return inCategory && matches
     })
   }, [store, category, query])
@@ -277,9 +281,12 @@ export default function PublicStore() {
             <article className="product-card" key={p.id}>
               {p.image && <img src={p.image} alt={p.name} />}
               <div className="product-body">
+                {p.brand && <span className="product-brand">{p.brand}</span>}
                 <h3 className="product-name-link" onClick={() => setSelected(p)}>{p.name}</h3>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
-                <span className="product-price">{formatPrice(p.price)}</span>
+                {formatPrice(p.price) && (
+                  <span className="product-price">{formatPrice(p.price)}</span>
+                )}
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
                     {buyLinks.map((c) => (
@@ -305,8 +312,11 @@ export default function PublicStore() {
             {selected.image && <img src={selected.image} alt={selected.name} />}
             <div className="product-modal-body">
               <h2>{selected.name}</h2>
+              {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
-              <span className="product-price">{formatPrice(selected.price)}</span>
+              {formatPrice(selected.price) && (
+                <span className="product-price">{formatPrice(selected.price)}</span>
+              )}
               {buildPurchaseLinks(
                 store,
                 `Hola ${store.name}, me gustaria comprar este producto: ${selected.name}. ¿Aun tienen a la venta?`,

@@ -4,7 +4,7 @@ import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 const EMPTY_CAT = { name: '' }
-const EMPTY_PROD = { name: '', description: '', price: '', category: '', is_active: true }
+const EMPTY_PROD = { name: '', description: '', brand: '', price: '', category: '', is_active: true }
 
 export default function AdminCatalog() {
   const { current, currentTenant, loading } = useTenant()
@@ -86,7 +86,8 @@ export default function AdminCatalog() {
     setProdEdit({
       name: p.name,
       description: p.description || '',
-      price: p.price,
+      brand: p.brand || '',
+      price: p.price ?? '',
       category: p.category || '',
       is_active: p.is_active,
     })
@@ -170,8 +171,17 @@ export default function AdminCatalog() {
           <Field label="Nombre *">
             <input value={prodForm.name} onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })} />
           </Field>
-          <Field label="Precio *">
-            <input type="number" step="0.01" value={prodForm.price} onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })} />
+          <Field label="Marca">
+            <input value={prodForm.brand} onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })} />
+          </Field>
+          <Field label="Precio" hint="Dejalo vacío si el producto no tiene precio.">
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Sin precio"
+              value={prodForm.price}
+              onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
+            />
           </Field>
           <Field label="Categoría">
             <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
@@ -197,27 +207,56 @@ export default function AdminCatalog() {
         {(products || []).map((p) => (
           <div className="row-item" key={p.id}>
             {editingProd === p.id ? (
-              <div className="row-item-main">
-                <input value={prodEdit.name} onChange={(e) => setProdEdit({ ...prodEdit, name: e.target.value })} />
-                <input type="number" step="0.01" value={prodEdit.price} onChange={(e) => setProdEdit({ ...prodEdit, price: e.target.value })} />
-                <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
-                  <option value="">Sin categoría</option>
-                  {(categories || []).map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <input value={prodEdit.description} onChange={(e) => setProdEdit({ ...prodEdit, description: e.target.value })} />
-                <input type="file" accept="image/*" onChange={(e) => setProdEditFile(e.target.files?.[0] || null)} />
-                <span className="btn-group">
-                  <button className="btn small" onClick={saveProduct}>Guardar</button>
-                  <button className="btn small ghost" onClick={() => setEditingProd(null)}>Cancelar</button>
-                </span>
+              <div className="row-item-main product-edit">
+                <div className="grid2">
+                  <Field label="Nombre *">
+                    <input value={prodEdit.name} onChange={(e) => setProdEdit({ ...prodEdit, name: e.target.value })} />
+                  </Field>
+                  <Field label="Marca">
+                    <input value={prodEdit.brand} onChange={(e) => setProdEdit({ ...prodEdit, brand: e.target.value })} />
+                  </Field>
+                  <Field label="Precio" hint="Dejalo vacío si el producto no tiene precio.">
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Sin precio"
+                      value={prodEdit.price}
+                      onChange={(e) => setProdEdit({ ...prodEdit, price: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Categoría">
+                    <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
+                      <option value="">Sin categoría</option>
+                      {(categories || []).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Descripción">
+                    <input value={prodEdit.description} onChange={(e) => setProdEdit({ ...prodEdit, description: e.target.value })} />
+                  </Field>
+                  <Field label="Imagen">
+                    <input type="file" accept="image/*" onChange={(e) => setProdEditFile(e.target.files?.[0] || null)} />
+                  </Field>
+                  <label className="field">
+                    <span className="field-label">Activo</span>
+                    <input type="checkbox" checked={prodEdit.is_active} onChange={(e) => setProdEdit({ ...prodEdit, is_active: e.target.checked })} />
+                  </label>
+                  <span className="btn-group">
+                    <button className="btn small" onClick={saveProduct}>Guardar</button>
+                    <button className="btn small ghost" onClick={() => setEditingProd(null)}>Cancelar</button>
+                  </span>
+                </div>
               </div>
             ) : (
               <>
                 <div className="row-item-main">
                   <b>{p.name}</b>
-                  <span className="muted">{formatPrice(p.price)} · {p.is_active ? 'activo' : 'inactivo'}</span>
+                  <span className="muted">
+                    {[p.brand, formatPrice(p.price), p.is_active ? 'activo' : 'inactivo']
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
                 </div>
                 <span className="btn-group">
                   <button className="btn small ghost" onClick={() => toggleActive(p)}>
