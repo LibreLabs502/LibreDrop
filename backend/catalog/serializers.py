@@ -30,6 +30,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "brand",
             "price",
+            "sales_price",
             "image",
             "is_active",
             "created_at",
@@ -40,6 +41,25 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        price = attrs.get("price", getattr(self.instance, "price", None))
+        sales_price = attrs.get("sales_price", getattr(self.instance, "sales_price", None))
+
+        if sales_price is not None:
+            if price is None:
+                raise serializers.ValidationError({
+                    "sales_price": "Para poner una oferta, el producto debe tener un precio normal."
+                })
+            if sales_price <= 0:
+                raise serializers.ValidationError({
+                    "sales_price": "El precio de oferta debe ser mayor que cero."
+                })
+            if sales_price >= price:
+                raise serializers.ValidationError({
+                    "sales_price": "El precio de oferta debe ser menor que el precio normal."
+                })
+        return attrs
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

@@ -1,10 +1,29 @@
 import { useCallback, useEffect, useState } from 'react'
 import { catalogApi, formatPrice } from '../../api'
+import { hasOffer } from '../../pricing'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 const EMPTY_CAT = { name: '' }
-const EMPTY_PROD = { name: '', description: '', brand: '', price: '', category: '', is_active: true }
+const EMPTY_PROD = { name: '', description: '', brand: '', price: '', sales_price: '', category: '', is_active: true }
+
+// Valida la oferta antes de enviarla: el backend también la valida, pero así
+// mostramos el error al instante y sin gastar una petición.
+const offerError = (form) => {
+  if (form.sales_price === '' || form.sales_price === null || form.sales_price === undefined) return ''
+  const price = Number(form.price)
+  const salesPrice = Number(form.sales_price)
+  if (form.price === '' || Number.isNaN(price)) {
+    return 'Para poner una oferta, primero escribí el precio normal.'
+  }
+  if (!Number.isFinite(salesPrice) || salesPrice <= 0) {
+    return 'El precio de oferta debe ser mayor que cero.'
+  }
+  if (salesPrice >= price) {
+    return 'El precio de oferta debe ser menor que el precio normal.'
+  }
+  return ''
+}
 
 export default function AdminCatalog() {
   const { current, currentTenant, loading } = useTenant()
@@ -68,6 +87,11 @@ export default function AdminCatalog() {
   const createProduct = async (e) => {
     e.preventDefault()
     setError('')
+    const problem = offerError(prodForm)
+    if (problem) {
+      setError(problem)
+      return
+    }
     try {
       const payload = { ...prodForm }
       if (!payload.category) delete payload.category
@@ -88,6 +112,7 @@ export default function AdminCatalog() {
       description: p.description || '',
       brand: p.brand || '',
       price: p.price ?? '',
+      sales_price: p.sales_price ?? '',
       category: p.category || '',
       is_active: p.is_active,
     })
@@ -96,6 +121,11 @@ export default function AdminCatalog() {
 
   const saveProduct = async () => {
     setError('')
+    const problem = offerError(prodEdit)
+    if (problem) {
+      setError(problem)
+      return
+    }
     try {
       const payload = { ...prodEdit }
       if (!payload.category) delete payload.category
@@ -183,6 +213,16 @@ export default function AdminCatalog() {
               onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
             />
           </Field>
+          <Field label="Precio de oferta" hint="Opcional. Debe ser menor que el precio normal.">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Sin oferta"
+              value={prodForm.sales_price}
+              onChange={(e) => setProdForm({ ...prodForm, sales_price: e.target.value })}
+            />
+          </Field>
           <Field label="Categoría">
             <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
               <option value="">Sin categoría</option>
@@ -224,6 +264,16 @@ export default function AdminCatalog() {
                       onChange={(e) => setProdEdit({ ...prodEdit, price: e.target.value })}
                     />
                   </Field>
+                  <Field label="Precio de oferta" hint="Opcional. Debe ser menor que el precio normal.">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Sin oferta"
+                      value={prodEdit.sales_price}
+                      onChange={(e) => setProdEdit({ ...prodEdit, sales_price: e.target.value })}
+                    />
+                  </Field>
                   <Field label="Categoría">
                     <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
                       <option value="">Sin categoría</option>
@@ -253,7 +303,14 @@ export default function AdminCatalog() {
                 <div className="row-item-main">
                   <b>{p.name}</b>
                   <span className="muted">
-                    {[p.brand, formatPrice(p.price), p.is_active ? 'activo' : 'inactivo']
+                    {[
+                      p.brand,
+                      hasOffer(p)
+                        ? `${formatPrice(p.sales_price)} (antes ${formatPrice(p.price)})`
+                        : formatPrice(p.price),
+                      hasOffer(p) ? 'oferta' : null,
+                      p.is_active ? 'activo' : 'inactivo',
+                    ]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>

@@ -1,13 +1,24 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { LATEST_UPDATE, VERSIONS_URL, hasSeenLatestUpdate, markLatestUpdateSeen } from './updates.js'
+import { LATEST_UPDATE, UPDATES, VERSIONS_URL, hasSeenLatestUpdate, markLatestUpdateSeen } from './updates.js'
 
 test('la última novedad tiene versión, título y contenido', () => {
   assert.ok(LATEST_UPDATE)
   assert.match(LATEST_UPDATE.version, /^v\d/)
   assert.ok(LATEST_UPDATE.title)
   assert.ok(LATEST_UPDATE.items.length > 0)
+})
+
+test('las novedades están separadas, ordenadas y sin versiones repetidas', () => {
+  const versions = UPDATES.map((update) => update.version)
+  assert.equal(versions[0], LATEST_UPDATE.version)
+  assert.equal(new Set(versions).size, versions.length)
+  for (const update of UPDATES) {
+    assert.ok(update.title)
+    assert.ok(update.date)
+    assert.ok(update.items.length > 0)
+  }
 })
 
 test('el enlace de más información apunta a VERSIONS.md en GitHub', () => {

@@ -133,9 +133,22 @@ Reglas:
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
 
 Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
-`brand`, `price` (puede ser `null` cuando no tiene precio), `image`, `is_active`,
-`created_at` y `updated_at`. El serializer del panel acepta `brand` y `price`
-opcionales; la tienda pública también incluye `brand`.
+`brand`, `price` (puede ser `null` cuando no tiene precio), `sales_price`
+(precio de oferta, puede ser `null`), `image`, `is_active`, `created_at` y
+`updated_at`. El serializer del panel acepta `brand`, `price` y `sales_price`
+opcionales; la tienda pública también incluye `brand` y `sales_price`.
+
+Reglas de la oferta:
+
+- `sales_price` solo se acepta si el producto tiene `price`.
+- Debe ser mayor que `0` y **menor** que `price`; si no, el backend responde
+  `400` con el error en el campo `sales_price`.
+- `sales_price` admite decimales (por ejemplo `79.99`). Enviar `null` o dejarlo
+  vacío quita la oferta.
+
+```json
+{ "price": "100.00", "sales_price": "79.99" }
+```
 
 ## Storefront público (`/public/`)
 

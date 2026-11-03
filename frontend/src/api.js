@@ -173,10 +173,11 @@ export const storefrontApi = {
   getStore: (slug) => api(`/public/${slug}/`, { auth: false }),
 }
 
-const formDataFrom = (data, files = {}) => {
+const formDataFrom = (data, files = {}, keepEmpty = []) => {
   const fd = new FormData()
   for (const [key, value] of Object.entries(data || {})) {
-    if (value === undefined || value === null || value === '') continue
+    if (value === undefined || value === null) continue
+    if (value === '' && !keepEmpty.includes(key)) continue
     if (Array.isArray(value)) {
       // Listas (ej. purchase_channels) viajan como claves repetidas. Un arreglo
       // vacío necesita un valor para no confundirse con "sin cambios" en PATCH.
@@ -212,6 +213,15 @@ export const billingApi = {
   update: (data) => api('/payments/billing/', { method: 'PUT', body: data }),
 }
 
+// Precio y precio de oferta vacíos viajan como null (el backend los acepta).
+const cleanProductPayload = (data) => {
+  const clean = { ...(data || {}) }
+  for (const key of ['price', 'sales_price']) {
+    if (clean[key] === '') clean[key] = null
+  }
+  return clean
+}
+
 export const catalogApi = {
   categories: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/categories/`, { auth: true }),
@@ -227,13 +237,17 @@ export const catalogApi = {
     create: (tenantId, data, file) =>
       api(`/catalog/tenants/${tenantId}/products/`, {
         method: 'POST',
-        body: file ? formDataFrom(data, { image: file }) : data,
+        body: file
+          ? formDataFrom(data, { image: file }, ['price', 'sales_price'])
+          : cleanProductPayload(data),
         form: !!file,
       }),
     update: (tenantId, id, data, file) =>
       api(`/catalog/tenants/${tenantId}/products/${id}/`, {
         method: 'PATCH',
-        body: file ? formDataFrom(data, { image: file }) : data,
+        body: file
+          ? formDataFrom(data, { image: file }, ['price', 'sales_price'])
+          : cleanProductPayload(data),
         form: !!file,
       }),
     remove: (tenantId, id) =>

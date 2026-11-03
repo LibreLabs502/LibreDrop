@@ -642,6 +642,48 @@ input:focus, select:focus, textarea:focus {
 
 .updates-body > p { margin: 0; }
 
+.updates-versions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 2px 0 10px;
+}
+
+.updates-entry + .updates-entry {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.updates-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.updates-version {
+  background: #fbbf24;
+  color: #422006;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.updates-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.updates-entry h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
 .updates-list {
   margin: 2px 0 8px;
   padding-left: 20px;
@@ -1186,6 +1228,25 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--store-primary);
 }
 
+/* Filtro especial de ofertas. */
+.offers-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.store-cats button.active .offers-count { background: var(--store-on-primary); color: var(--store-primary); }
+
 .store-search {
   border: 1px solid var(--store-border);
   border-radius: 999px;
@@ -1259,6 +1320,30 @@ input:focus, select:focus, textarea:focus {
   -webkit-box-orient: vertical;
 }
 .product-price { font-weight: 800; color: var(--store-primary-ink, var(--store-primary)); font-size: 17px; }
+
+.product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product-price-old {
+  color: var(--store-muted);
+  text-decoration: line-through;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.product-offer-badge {
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
 
 .product-buy {
   display: flex;

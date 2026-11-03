@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { discountPercent, hasOffer } from '../pricing'
 import { themeStyle } from '../theme'
 
 // Redes sociales de la tienda: cada una con su logo (ícono SVG).
@@ -57,6 +58,20 @@ const copyText = async (text) => {
   } catch {
     return false
   }
+}
+
+function PriceTag({ product }) {
+  if (hasOffer(product)) {
+    return (
+      <span className="product-price-row">
+        <span className="product-price">{formatPrice(product.sales_price)}</span>
+        <span className="product-price-old">{formatPrice(product.price)}</span>
+        <span className="product-offer-badge">-{discountPercent(product)}%</span>
+      </span>
+    )
+  }
+  const price = formatPrice(product.price)
+  return price ? <span className="product-price">{price}</span> : null
 }
 
 export default function PublicStore() {
@@ -147,11 +162,19 @@ export default function PublicStore() {
     }
   }, [themeVars])
 
+  const offerCount = useMemo(
+    () => (store ? store.products.filter(hasOffer).length : 0),
+    [store],
+  )
+
   const products = useMemo(() => {
     if (!store) return []
     const q = query.toLowerCase()
     return store.products.filter((p) => {
-      const inCategory = category === 'all' || String(p.category) === String(category)
+      const inCategory =
+        category === 'offers'
+          ? hasOffer(p)
+          : category === 'all' || String(p.category) === String(category)
       const matches =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -311,6 +334,14 @@ export default function PublicStore() {
             <button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>
               Todos
             </button>
+            {offerCount > 0 && (
+              <button
+                className={`offers-filter${category === 'offers' ? ' active' : ''}`}
+                onClick={() => setCategory('offers')}
+              >
+                Ofertas <span className="offers-count">{offerCount}</span>
+              </button>
+            )}
             {store.categories.map((c) => (
               <button
                 key={c.id}
@@ -362,9 +393,7 @@ export default function PublicStore() {
                 {p.brand && <span className="product-brand">{p.brand}</span>}
                 <h3 className="product-name-link" onClick={() => setSelected(p)}>{p.name}</h3>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
-                {formatPrice(p.price) && (
-                  <span className="product-price">{formatPrice(p.price)}</span>
-                )}
+                <PriceTag product={p} />
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
                     {buyLinks.map((c) => renderPurchaseButton(c, p))}
@@ -385,9 +414,7 @@ export default function PublicStore() {
               <h2>{selected.name}</h2>
               {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
-              {formatPrice(selected.price) && (
-                <span className="product-price">{formatPrice(selected.price)}</span>
-              )}
+              <PriceTag product={selected} />
               {buildPurchaseLinks(store, productOrderMessage(store, selected)).map((c) =>
                 renderPurchaseButton(c, selected),
               )}

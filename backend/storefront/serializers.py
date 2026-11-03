@@ -28,6 +28,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "description",
             "brand",
             "price",
+            "sales_price",
             "image",
         ]
 

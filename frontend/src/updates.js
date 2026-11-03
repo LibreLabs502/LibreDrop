@@ -4,13 +4,25 @@
 // 1. Agregá una entrada al principio de UPDATES con una `version` única.
 // 2. Actualizá VERSIONS.md con el mismo resumen para los desarrolladores.
 //
-// El panel muestra automáticamente la entrada más reciente a cada usuario que
-// todavía no la haya visto. Lo visto se guarda en localStorage por usuario.
+// El panel muestra todas las entradas de UPDATES (separadas por versión) y
+// avisa con “Nuevo” mientras el usuario no haya visto la más reciente. Lo visto
+// se guarda en localStorage por usuario.
 export const UPDATES = [
+  {
+    version: 'v0.10',
+    date: 'Noviembre 2026',
+    title: 'Ofertas en tu tienda',
+    items: [
+      'Agregá un precio de oferta a tus productos desde Catálogo.',
+      'La tienda pública muestra el precio anterior tachado y el porcentaje de descuento.',
+      'Nuevo filtro “Ofertas” para que tus clientes vean solo los productos rebajados.',
+      'Esta ventana ahora muestra también las versiones anteriores, separadas por número.',
+    ],
+  },
   {
     version: 'v0.9',
     date: 'Noviembre 2026',
-    title: 'Novedades en tu panel',
+    title: 'Texto de los botones de compra',
     items: [
       'Ahora podés personalizar el texto de los botones de compra de tu tienda.',
       'Elegí por ejemplo “Pedir por” o “Comprar por”: se usa en WhatsApp, Instagram, Facebook y TikTok.',
@@ -20,7 +32,7 @@ export const UPDATES = [
   {
     version: 'v0.8',
     date: 'Noviembre 2026',
-    title: 'Novedades en tu panel',
+    title: 'Novedades del panel',
     items: [
       'Ahora vas a ver este resumen cada vez que haya una actualización nueva.',
       'Agregá la marca de tus productos y editá todos sus datos.',

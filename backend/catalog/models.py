@@ -25,6 +25,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     brand = models.CharField(max_length=255, blank=True)
     price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    sales_price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
     image = CloudinaryField("producto")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

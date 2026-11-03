@@ -1,5 +1,36 @@
 # Versiones
 
+## v0.10 — Ofertas y Novedades con historial
+
+### Precio de oferta
+
+- `Product.sales_price` (`DecimalField(max_digits=10, decimal_places=2,
+  blank=True, null=True)`) guarda el precio rebajado; migración
+  `catalog/0007_product_sales_price.py`. Es opcional y admite centavos.
+- Una oferta solo es válida si hay **precio normal**, `sales_price > 0` y
+  `sales_price < price`. El backend lo valida en `ProductSerializer` y el panel
+  muestra el error antes de enviar.
+- Los serializers del panel (`ProductSerializer`) y del storefront público
+  (`PublicProductSerializer`) exponen `sales_price`.
+- Panel: los formularios de crear/editar producto tienen **“Precio de oferta”**
+  y la lista marca los productos con **“oferta”** (precio rebajado y precio
+  anterior).
+- Tienda pública: muestra el **precio de oferta** como principal, el precio
+  normal **tachado** y una etiqueta con el **porcentaje de descuento** (`-N%`).
+  También agrega el filtro **“Ofertas”** con la cantidad de productos rebajados.
+- Lógica compartida en `frontend/src/pricing.js` (`hasOffer`,
+  `discountPercent`, `effectivePrice`) con pruebas en `pricing.test.js`.
+
+### Historial de Novedades
+
+- La ventana de **Novedades** ahora muestra **todas** las versiones recientes
+  (`v0.10`, `v0.9`, `v0.8`, …) separadas por número y fecha, no solo la última.
+- La fuente sigue siendo `frontend/src/updates.js` (`UPDATES`, con la más
+  reciente primero); el seguimiento de “visto” continúa por usuario y por
+  `LATEST_UPDATE.version`.
+- Pruebas: `catalog/tests.py`, `storefront/tests.py` y
+  `frontend/src/pricing.test.js` / `updates.test.js`.
+
 ## v0.9 — Texto personalizado de los botones de compra
 
 - `Tenant.purchase_button_text` (`CharField(max_length=40,

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from catalog.models import Product
 from tenants.models import Membership, Tenant
 from tenants.theme import DEFAULT_PALETTE, PALETTES
 
@@ -78,3 +79,28 @@ class PublicStoreChannelsTests(TestCase):
         res = self.client.get(f"/public/{self.tenant.slug}/")
         # Instagram tiene datos, pero el dueño no lo activó: no se muestra.
         self.assertEqual(res.json()["purchase_channels"], ["whatsapp"])
+
+
+class PublicStoreOffersTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tenant = Tenant.objects.create(name="Tienda Ofertas")
+
+    def test_storefront_expone_precio_de_oferta(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Producto en oferta",
+            price="100.00",
+            sales_price="79.99",
+        )
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        product = res.json()["products"][0]
+        self.assertEqual(product["price"], "100.00")
+        self.assertEqual(product["sales_price"], "79.99")
+
+    def test_storefront_expone_oferta_vacia_como_null(self):
+        Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.json()["products"][0]["sales_price"])
