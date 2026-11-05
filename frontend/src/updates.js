@@ -12,12 +12,12 @@ export const UPDATES = [
   {
     version: 'v0.11',
     date: 'Noviembre 2026',
-    title: 'Más fotos y detalles de productos',
+    title: 'Más imágenes en tus productos',
     items: [
       'Ahora podés subir hasta 5 fotos por producto desde Catálogo.',
       'La primera foto es la portada y las demás aparecen en la ventana de detalles.',
       'En la tienda pública agregamos “Ver detalles…” debajo de la descripción, antes de los botones de compra.',
-      'Desde esa ventana tus clientes pueden ver todas las fotos, el precio y las opciones de compra.',
+      'Desde esa ventana tus clientes pueden ver todas las fotos y elegir cuál quieren ver.',
     ],
   },
   {

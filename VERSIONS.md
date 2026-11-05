@@ -1,6 +1,6 @@
 # Versiones
 
-## v0.11 — Hasta 5 fotos y “Ver detalles” en la tienda
+## v0.11 — Más imágenes y “Ver detalles” en la tienda
 
 - `Product` suma `image2`, `image3`, `image4` e `image5` (opcionales); junto a
   `image` permiten hasta **5 fotos por producto**. Migración
@@ -12,7 +12,7 @@
   reemplazar cualquier espacio.
 - Tienda pública: debajo de la descripción y **antes de los botones de compra**
   aparece **“Ver detalles…”**. Abre una ventana con **todas las fotos subidas**
-  (miniatura principal + selector), el precio/oferta y los botones de compra.
+  (miniatura principal + selector), el precio y los botones de compra.
 - La tarjeta sigue usando la primera foto como portada.
 - Pruebas: `catalog/tests.py`, `storefront/tests.py` y
   `frontend/src/pricing.test.js` / `updates.test.js`.
