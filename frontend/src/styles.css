@@ -1144,9 +1144,9 @@ input:focus, select:focus, textarea:focus {
 .store-offer-title { position: absolute; top: 12px; left: 14px; margin: 5px 0; color: var(--store-text); font-size: 19px; }
 .store-offer-photos { display: flex; flex: 1; min-width: 0; align-items: center; gap: 14px; overflow: hidden; border-radius: 10px; animation: offer-carousel-enter 0.45s ease both; }
 @keyframes offer-carousel-enter { from { opacity: 0.55; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
-.store-offer-frame { position: relative; display: flex; flex: 1 1 100%; min-width: 0; height: 300px; flex-direction: column; align-items: stretch; overflow: hidden; border: 1px solid var(--store-border); border-radius: 14px; background: var(--store-surface); }
+.store-offer-frame { position: relative; display: flex; flex: 1 1 100%; min-width: 0; height: 380px; flex-direction: column; align-items: stretch; overflow: hidden; border: 1px solid var(--store-border); border-radius: 14px; background: var(--store-surface); }
 .store-offer-frame h3 { display: -webkit-box; min-height: 48px; max-height: 48px; margin: 0; padding: 10px 8px 6px; overflow: hidden; color: var(--store-text); font-size: 16px; line-height: 1.3; text-align: center; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.store-offer-frame img { display: block; width: 100%; height: 250px; min-height: 0; object-fit: contain; }
+.store-offer-frame img { display: block; width: 100%; height: 330px; min-height: 0; object-fit: contain; }
 .store-offer-photos.has-three .store-offer-frame { flex-basis: calc((100% - 28px) / 3); }
 .store-offer-arrow {
   flex: 0 0 38px;
@@ -1208,9 +1208,12 @@ input:focus, select:focus, textarea:focus {
   .store-offer-carousel { gap: 7px; padding: 8px; }
   .store-offer-carousel { padding-top: 68px; }
   .store-offer-title { left: 10px; font-size: 16px; }
-  .store-offer-frame { height: 230px; }
+  .store-offer-photos { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .store-offer-photos::-webkit-scrollbar { display: none; }
+  .store-offer-frame { height: 350px; scroll-snap-align: start; }
+  .store-offer-photos.has-three .store-offer-frame { flex: 0 0 min(88%, 340px); }
   .store-offer-frame h3 { min-height: 44px; max-height: 44px; font-size: 14px; }
-  .store-offer-frame img { height: 186px; }
+  .store-offer-frame img { height: 306px; }
   .store-offer-arrow { flex-basis: 30px; width: 30px; height: 30px; font-size: 23px; }
   .store-offer-link { padding: 8px 10px; }
 }
