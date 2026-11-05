@@ -14,7 +14,8 @@
   calculado con descuento. Un carrusel debajo de la descripción muestra una
   foto a la vez para dos ofertas y hasta tres fotos para tres o más; “Ver
   ofertas” oculta el carrusel y filtra todos los productos rebajados. El título
-  usa `Tenant.sale_text` y las fotos avanzan automáticamente.
+  usa `Tenant.sale_text`, editable desde Tiendas, y las fotos avanzan
+  automáticamente.
 - Panel → Catálogo: buscá productos por nombre, marca o descripción.
 
 - `Product` suma `image2`, `image3`, `image4` e `image5` (opcionales); junto a

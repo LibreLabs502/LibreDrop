@@ -336,10 +336,6 @@ export default function PublicStore() {
       {offerProducts.length > 0 && category !== 'offers' && (
         <section className="store-offer-carousel" aria-label="Carrusel de ofertas">
           <h2 className="store-offer-title">{store.sale_text || 'Productos con ofertas'}</h2>
-          {offerPageCount > 1 && (
-            <button type="button" className="store-offer-arrow" aria-label="Ofertas anteriores"
-              onClick={() => setOfferSlide((slide) => (slide - 1 + offerPageCount) % offerPageCount)}>‹</button>
-          )}
           <div key={`offers-${offerSlide}`} className={`store-offer-photos${carouselProducts.length >= 3 ? ' has-three' : ''}`}>
             {carouselProducts.map((product) => {
               const photo = productImages(product)[0]
@@ -351,10 +347,6 @@ export default function PublicStore() {
               ) : null
             })}
           </div>
-          {offerPageCount > 1 && (
-            <button type="button" className="store-offer-arrow" aria-label="Más ofertas"
-              onClick={() => setOfferSlide((slide) => (slide + 1) % offerPageCount)}>›</button>
-          )}
           <button type="button" className="store-offer-link" onClick={() => setCategory('offers')}>Ver ofertas</button>
         </section>
       )}

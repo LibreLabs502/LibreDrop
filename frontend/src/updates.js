@@ -22,6 +22,7 @@ export const UPDATES = [
       'Con precio normal, mostramos el precio original y calculamos el precio con descuento; sin precio, mostramos solo el porcentaje.',
       'La tienda destaca ofertas con un carrusel de fotos y el botón “Ver ofertas” filtra todos los productos rebajados.',
       'El título del carrusel usa el texto de ofertas configurado para tu tienda y las fotos avanzan automáticamente.',
+      'Personalizá el título del carrusel desde Tiendas → Editar.',
       'Buscá productos por nombre, marca o descripción desde Catálogo en el panel.',
     ],
   },

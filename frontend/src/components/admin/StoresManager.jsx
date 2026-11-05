@@ -27,6 +27,7 @@ export default function StoresManager() {
     setForm({
       name: t.name,
       description: t.description || '',
+      sale_text: t.sale_text || 'Productos con ofertas',
       whatsapp: t.whatsapp || '',
       instagram_url: t.instagram_url || '',
       facebook_url: t.facebook_url || '',
@@ -67,6 +68,7 @@ export default function StoresManager() {
       // usuario borró el número o el enlace sin desactivar el interruptor).
       const payload = {
         ...form,
+        sale_text: String(form.sale_text || '').trim() || 'Productos con ofertas',
         purchase_button_text: String(form.purchase_button_text || '').trim() || DEFAULT_PURCHASE_BUTTON_TEXT,
         purchase_channels: (form.purchase_channels || []).filter((k) => channelIsReady(k, form)),
       }
@@ -108,6 +110,14 @@ export default function StoresManager() {
             </Field>
             <Field label="Descripción">
               <textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </Field>
+            <Field label="Título del carrusel de ofertas" hint="Aparece encima de las fotos de ofertas. Máximo 40 caracteres.">
+              <input
+                value={form.sale_text}
+                maxLength={40}
+                placeholder="Productos con ofertas"
+                onChange={(e) => setForm({ ...form, sale_text: e.target.value })}
+              />
             </Field>
             <Field label="Número de WhatsApp">
               <input value={form.whatsapp} placeholder="+50212345678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
@@ -256,6 +266,12 @@ export default function StoresManager() {
                   <>
                     <span className="store-field-label">Descripción</span>
                     <span>{t.description}</span>
+                  </>
+                )}
+                {t.sale_text && (
+                  <>
+                    <span className="store-field-label">Título de ofertas</span>
+                    <span>{t.sale_text}</span>
                   </>
                 )}
                 {t.whatsapp && (
