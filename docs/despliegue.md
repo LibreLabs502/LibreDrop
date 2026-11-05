@@ -101,6 +101,12 @@ con `sync: false` (`SECRET_KEY`, `DATABASE_URL`, `CORS_*`, `CLOUDINARY_*`);
 imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
 (buscalo en los logs de Render).
 
+Las migraciones de catálogo se aplican igual que el resto. La migración 0010
+convierte descuentos guardados a `discount_percent` y después retira
+`Product.sales_price`; el despliegue preserva así las ofertas existentes.
+Las migraciones 0008 y 0009 agregaron respectivamente las cuatro fotos
+adicionales y `discount_percent`.
+
 > **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
 > **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr
 > (y con él las migraciones). Dejá el **Start Command vacío** para que use el

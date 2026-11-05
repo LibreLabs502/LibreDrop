@@ -1,5 +1,55 @@
 # Versiones
 
+## v1 — Catálogo más rápido y ofertas renovadas
+
+- Se conserva la carga de **hasta cinco fotos por producto** y la vista
+  “Ver detalles” descrita abajo.
+- Las ofertas ahora se registran únicamente con `discount_percent` (entero de
+  1 a 99). Si existe `price`, el precio rebajado se calcula automáticamente;
+  si no existe, se muestra solo el porcentaje. La migración 0010 convierte las
+  ofertas guardadas antes de eliminar `sales_price`. Para registros antiguos
+  sin precio normal ni porcentaje, conserva la oferta como 1%, ya que no había
+  datos para recuperar el porcentaje original.
+- En la tienda, los productos en oferta muestran el precio normal y el precio
+  calculado con descuento. Un carrusel debajo de la descripción muestra una
+  foto a la vez para dos ofertas y hasta tres fotos para tres o más; “Ver
+  ofertas” oculta el carrusel y filtra todos los productos rebajados. El título
+  usa `Tenant.sale_text` y las fotos avanzan automáticamente.
+- Panel → Catálogo: buscá productos por nombre, marca o descripción.
+
+- `Product` suma `image2`, `image3`, `image4` e `image5` (opcionales); junto a
+  `image` permiten hasta **5 fotos por producto**. Migración
+  `catalog/0008_product_image2_product_image3_product_image4_and_more.py`.
+- Los serializers del panel y del storefront exponen las cinco fotos con la
+  entrega optimizada de Cloudinary.
+- Panel → Catálogo: cada producto tiene hasta cinco espacios de foto. La
+  **primera es la portada**; al editar se ve la foto actual y se puede
+  reemplazar cualquier espacio.
+- Tienda pública: debajo de la descripción y **antes de los botones de compra**
+  aparece **“Ver detalles…”**. Abre una ventana con **todas las fotos subidas**
+  (miniatura principal + selector), el precio y los botones de compra.
+- La tarjeta sigue usando la primera foto como portada.
+- Pruebas: `catalog/tests.py`, `storefront/tests.py` y
+  `frontend/src/pricing.test.js` / `updates.test.js`.
+
+## v0.10 — Ofertas y Novedades con historial
+
+- La oferta por precio fijo (`Product.sales_price`) descrita en esta versión
+  fue reemplazada en v1 por el porcentaje `discount_percent`.
+
+### Historial de Novedades
+
+- Al entrar al panel con una actualización sin ver, la ventana muestra **solo la
+  última versión**, igual que antes.
+- Al abrirla desde **“Novedades”** (barra lateral) o **“Ver Novedades”**
+  (Tiendas), se muestra el **historial completo** (`v0.10`, `v0.9`, `v0.8`, …)
+  separado por número y fecha.
+- La fuente sigue siendo `frontend/src/updates.js` (`UPDATES`, con la más
+  reciente primero); el seguimiento de “visto” continúa por usuario y por
+  `LATEST_UPDATE.version`.
+- Pruebas: `catalog/tests.py`, `storefront/tests.py` y
+  `frontend/src/pricing.test.js` / `updates.test.js`.
+
 ## v0.9 — Texto personalizado de los botones de compra
 
 - `Tenant.purchase_button_text` (`CharField(max_length=40,

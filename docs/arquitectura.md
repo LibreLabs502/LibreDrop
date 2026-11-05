@@ -38,6 +38,17 @@ activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
 `suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
 datos (fila única) y se editan desde el panel del superusuario.
 
+Las **ofertas** se guardan en `Product.discount_percent` (entero de 1 a 99).
+Si hay `price`, el frontend calcula el precio rebajado y muestra ambos precios;
+sin precio normal muestra solo el porcentaje. El filtro “Ofertas” se basa en
+ese campo. La migración 0010 conserva los descuentos existentes al retirar
+`Product.sales_price`.
+
+Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
+primera es la portada de la tarjeta; el resto se muestra en la ventana que abre
+el enlace **“Ver detalles…”**, ubicado debajo de la descripción y antes de los
+botones de compra.
+
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
 URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad
 automática) vía el helper `backend/backend/images.py::optimized()`.
@@ -50,17 +61,20 @@ React SPA (Vite). Páginas:
 - `/` → redirige a `/admin` (login/registro si no hay sesión).
 - `/admin` — panel: Tiendas (con **canales de compra**), Catálogo, Apariencia y
   Pagos (suscripción; si el plan no está activo el panel muestra el bloqueo de
-  activación). Al entrar se muestra una ventana de **Novedades** con el resumen
-  de la última actualización; se controla desde `frontend/src/updates.js` y se
-  recuerda por usuario con `localStorage`. También hay un botón **Novedades** en
-  la barra lateral para reabrirla.
+  activación). Al entrar se muestra una ventana de **Novedades** con la última
+  actualización; al abrirla desde el botón **Novedades** o **Ver Novedades** se
+  ve el historial completo separado por número y fecha. Se controla desde
+  `frontend/src/updates.js` y se recuerda por usuario con `localStorage`.
 - `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
   "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
   **botones de compra por canal**: el texto es configurable por tienda
   (`purchase_button_text`, por defecto "Comprar por"), así que puede verse "Comprar por
   WhatsApp" o "Pedir por Instagram". En las redes sociales se abre una ventana con
   el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
-  directo con el mensaje. Responsive.
+  directo con el mensaje. Los productos con oferta muestran el precio rebajado,
+  el anterior tachado, el porcentaje de descuento y el filtro **“Ofertas”**.
+  Debajo de la descripción aparece **“Ver detalles…”**, que abre la galería con
+  las fotos subidas, el precio y los botones de compra. Responsive.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,

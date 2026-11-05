@@ -12,6 +12,7 @@ class Tenant(models.Model):
     description = models.TextField(blank=True)
     logo = CloudinaryField("logo")
     purchase_button_text = models.CharField(max_length=40, default="Comprar por")
+    sale_text = models.CharField(max_length=40, default="Productos con ofertas")
     whatsapp = models.CharField(max_length=20, blank=True, null=True, default="")
     instagram_url = models.URLField(blank=True, null=True, default="")
     facebook_url = models.URLField(blank=True, null=True, default="")

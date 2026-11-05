@@ -173,10 +173,11 @@ export const storefrontApi = {
   getStore: (slug) => api(`/public/${slug}/`, { auth: false }),
 }
 
-const formDataFrom = (data, files = {}) => {
+const formDataFrom = (data, files = {}, keepEmpty = []) => {
   const fd = new FormData()
   for (const [key, value] of Object.entries(data || {})) {
-    if (value === undefined || value === null || value === '') continue
+    if (value === undefined || value === null) continue
+    if (value === '' && !keepEmpty.includes(key)) continue
     if (Array.isArray(value)) {
       // Listas (ej. purchase_channels) viajan como claves repetidas. Un arreglo
       // vacío necesita un valor para no confundirse con "sin cambios" en PATCH.
@@ -187,7 +188,10 @@ const formDataFrom = (data, files = {}) => {
     fd.append(key, value)
   }
   for (const [key, file] of Object.entries(files)) {
-    if (file) fd.append(key, file)
+    if (!file) continue
+    // Varios archivos para un mismo campo (por ejemplo, fotos de producto).
+    if (Array.isArray(file)) file.forEach((item) => item && fd.append(key, item))
+    else fd.append(key, file)
   }
   return fd
 }
@@ -212,6 +216,29 @@ export const billingApi = {
   update: (data) => api('/payments/billing/', { method: 'PUT', body: data }),
 }
 
+// Precio y porcentaje vacíos viajan como null (el backend los
+// acepta).
+const cleanProductPayload = (data) => {
+  const clean = { ...(data || {}) }
+  for (const key of ['price', 'discount_percent']) {
+    if (clean[key] === '') clean[key] = null
+  }
+  return clean
+}
+
+// Un producto puede tener hasta 5 fotos (image, image2 … image5). Aceptamos
+// tanto un solo archivo como un objeto con las claves de cada foto.
+const productFiles = (files) => {
+  if (!files) return {}
+  if (typeof File !== 'undefined' && files instanceof File) return { image: files }
+  return files
+}
+
+const hasProductFiles = (files) => Object.values(files).some(Boolean)
+
+const productFormBody = (data, files) =>
+  formDataFrom(data, productFiles(files), ['price', 'discount_percent'])
+
 export const catalogApi = {
   categories: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/categories/`, { auth: true }),
@@ -224,18 +251,22 @@ export const catalogApi = {
   },
   products: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),
-    create: (tenantId, data, file) =>
-      api(`/catalog/tenants/${tenantId}/products/`, {
+    create: (tenantId, data, files) => {
+      const form = hasProductFiles(productFiles(files))
+      return api(`/catalog/tenants/${tenantId}/products/`, {
         method: 'POST',
-        body: file ? formDataFrom(data, { image: file }) : data,
-        form: !!file,
-      }),
-    update: (tenantId, id, data, file) =>
-      api(`/catalog/tenants/${tenantId}/products/${id}/`, {
+        body: form ? productFormBody(data, files) : cleanProductPayload(data),
+        form,
+      })
+    },
+    update: (tenantId, id, data, files) => {
+      const form = hasProductFiles(productFiles(files))
+      return api(`/catalog/tenants/${tenantId}/products/${id}/`, {
         method: 'PATCH',
-        body: file ? formDataFrom(data, { image: file }) : data,
-        form: !!file,
-      }),
+        body: form ? productFormBody(data, files) : cleanProductPayload(data),
+        form,
+      })
+    },
     remove: (tenantId, id) =>
       api(`/catalog/tenants/${tenantId}/products/${id}/`, { method: 'DELETE' }),
   },

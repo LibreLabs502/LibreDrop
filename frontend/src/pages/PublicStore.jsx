@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { productImages } from '../images'
+import { discountPercent, effectivePrice, hasOffer } from '../pricing'
 import { themeStyle } from '../theme'
 
 // Redes sociales de la tienda: cada una con su logo (ícono SVG).
@@ -59,6 +61,22 @@ const copyText = async (text) => {
   }
 }
 
+function PriceTag({ product }) {
+  if (hasOffer(product)) {
+    const percent = discountPercent(product)
+    const oldPrice = formatPrice(product.price)
+    return (
+      <span className="product-price-row offer-price-list">
+        {oldPrice && <span className="product-price-old">Precio original: {oldPrice}</span>}
+        <span className="product-offer-badge">Descuento: {percent}%</span>
+        {oldPrice && <span className="product-price">Precio con descuento: {formatPrice(effectivePrice(product))}</span>}
+      </span>
+    )
+  }
+  const price = formatPrice(product.price)
+  return price ? <span className="product-price">{price}</span> : null
+}
+
 export default function PublicStore() {
   const { slug } = useParams()
   const [store, setStore] = useState(null)
@@ -66,8 +84,10 @@ export default function PublicStore() {
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
+  const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
+  const [offerSlide, setOfferSlide] = useState(0)
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
   // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
@@ -147,11 +167,33 @@ export default function PublicStore() {
     }
   }, [themeVars])
 
+  const offerCount = useMemo(
+    () => (store ? store.products.filter(hasOffer).length : 0),
+    [store],
+  )
+  const offerProducts = useMemo(
+    () => (store ? store.products.filter(hasOffer) : []),
+    [store],
+  )
+  const offerPageSize = offerProducts.length >= 3 ? 3 : 1
+  const offerPageCount = Math.ceil(offerProducts.length / offerPageSize)
+  const carouselProducts = offerProducts.length >= 3
+    ? Array.from({ length: 3 }, (_, offset) => offerProducts[(offerSlide * 3 + offset) % offerProducts.length])
+    : offerProducts.length > 0 ? [offerProducts[offerSlide % offerProducts.length]] : []
+  useEffect(() => {
+    if (offerPageCount <= 1 || category === 'offers') return undefined
+    const timer = window.setInterval(() => setOfferSlide((index) => (index + 1) % offerPageCount), 3500)
+    return () => window.clearInterval(timer)
+  }, [offerPageCount, category])
+
   const products = useMemo(() => {
     if (!store) return []
     const q = query.toLowerCase()
     return store.products.filter((p) => {
-      const inCategory = category === 'all' || String(p.category) === String(category)
+      const inCategory =
+        category === 'offers'
+          ? hasOffer(p)
+          : category === 'all' || String(p.category) === String(category)
       const matches =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -159,6 +201,11 @@ export default function PublicStore() {
       return inCategory && matches
     })
   }, [store, category, query])
+
+  const openProduct = (product) => {
+    setActiveImage(0)
+    setSelected(product)
+  }
 
   const openOrder = (product, channel) => {
     const message = productOrderMessage(store, product)
@@ -225,6 +272,7 @@ export default function PublicStore() {
   }
 
   const socials = SOCIAL_LINKS.filter((s) => store[s.key])
+  const selectedImages = selected ? productImages(selected) : []
 
   return (
     <div className="store-page" style={themeVars}>
@@ -285,6 +333,32 @@ export default function PublicStore() {
         </div>
       </header>
 
+      {offerProducts.length > 0 && category !== 'offers' && (
+        <section className="store-offer-carousel" aria-label="Carrusel de ofertas">
+          <h2 className="store-offer-title">{store.sale_text || 'Productos con ofertas'}</h2>
+          {offerPageCount > 1 && (
+            <button type="button" className="store-offer-arrow" aria-label="Ofertas anteriores"
+              onClick={() => setOfferSlide((slide) => (slide - 1 + offerPageCount) % offerPageCount)}>‹</button>
+          )}
+          <div key={`offers-${offerSlide}`} className={`store-offer-photos${carouselProducts.length >= 3 ? ' has-three' : ''}`}>
+            {carouselProducts.map((product) => {
+              const photo = productImages(product)[0]
+              return photo ? (
+                <div className="store-offer-frame" key={product.id}>
+                  <h3>{product.name}</h3>
+                  <img src={photo} alt={product.name} />
+                </div>
+              ) : null
+            })}
+          </div>
+          {offerPageCount > 1 && (
+            <button type="button" className="store-offer-arrow" aria-label="Más ofertas"
+              onClick={() => setOfferSlide((slide) => (slide + 1) % offerPageCount)}>›</button>
+          )}
+          <button type="button" className="store-offer-link" onClick={() => setCategory('offers')}>Ver ofertas</button>
+        </section>
+      )}
+
       <div className="store-toolbar">
         <div className="store-cats-wrap">
           {catsNav.overflow && (
@@ -311,6 +385,14 @@ export default function PublicStore() {
             <button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>
               Todos
             </button>
+            {offerCount > 0 && (
+              <button
+                className={`offers-filter${category === 'offers' ? ' active' : ''}`}
+                onClick={() => setCategory('offers')}
+              >
+                Ofertas <span className="offers-count">{offerCount}</span>
+              </button>
+            )}
             {store.categories.map((c) => (
               <button
                 key={c.id}
@@ -355,16 +437,18 @@ export default function PublicStore() {
         {products.length === 0 && <p className="muted">No hay productos.</p>}
         {products.map((p) => {
           const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, p))
+          const cover = productImages(p)[0]
           return (
             <article className="product-card" key={p.id}>
-              {p.image && <img src={p.image} alt={p.name} />}
+              {cover && <img src={cover} alt={p.name} />}
               <div className="product-body">
                 {p.brand && <span className="product-brand">{p.brand}</span>}
-                <h3 className="product-name-link" onClick={() => setSelected(p)}>{p.name}</h3>
+                <h3 className="product-name-link" onClick={() => openProduct(p)}>{p.name}</h3>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
-                {formatPrice(p.price) && (
-                  <span className="product-price">{formatPrice(p.price)}</span>
-                )}
+                <PriceTag product={p} />
+                <button type="button" className="product-details-link" onClick={() => openProduct(p)}>
+                  Ver detalles…
+                </button>
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
                     {buyLinks.map((c) => renderPurchaseButton(c, p))}
@@ -380,14 +464,36 @@ export default function PublicStore() {
         <div className="product-modal-overlay" onClick={() => setSelected(null)}>
           <div className="product-modal" onClick={(e) => e.stopPropagation()}>
             <button className="product-modal-close" onClick={() => setSelected(null)} aria-label="Cerrar">×</button>
-            {selected.image && <img src={selected.image} alt={selected.name} />}
+            {selectedImages.length > 0 && (
+              <div className="product-gallery">
+                <img
+                  className="product-gallery-main"
+                  src={selectedImages[activeImage] || selectedImages[0]}
+                  alt={selected.name}
+                />
+                {selectedImages.length > 1 && (
+                  <div className="product-gallery-thumbs">
+                    {selectedImages.map((src, index) => (
+                      <button
+                        key={src}
+                        type="button"
+                        className={index === activeImage ? 'active' : ''}
+                        onClick={() => setActiveImage(index)}
+                        aria-label={`Ver foto ${index + 1}`}
+                        aria-pressed={index === activeImage}
+                      >
+                        <img src={src} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="product-modal-body">
               <h2>{selected.name}</h2>
               {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
-              {formatPrice(selected.price) && (
-                <span className="product-price">{formatPrice(selected.price)}</span>
-              )}
+              <PriceTag product={selected} />
               {buildPurchaseLinks(store, productOrderMessage(store, selected)).map((c) =>
                 renderPurchaseButton(c, selected),
               )}

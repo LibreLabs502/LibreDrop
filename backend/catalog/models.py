@@ -1,4 +1,5 @@
 from cloudinary.models import CloudinaryField
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from tenants.models import Tenant
@@ -25,7 +26,12 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     brand = models.CharField(max_length=255, blank=True)
     price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    discount_percent = models.PositiveSmallIntegerField(blank=True, null=True)
     image = CloudinaryField("producto")
+    image2 = CloudinaryField("producto", blank=True, null=True)
+    image3 = CloudinaryField("producto", blank=True, null=True)
+    image4 = CloudinaryField("producto", blank=True, null=True)
+    image5 = CloudinaryField("producto", blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -37,3 +43,16 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.discount_percent is not None:
+            if (
+                not isinstance(self.discount_percent, int)
+                or isinstance(self.discount_percent, bool)
+                or self.discount_percent < 1
+                or self.discount_percent > 99
+            ):
+                raise ValidationError({
+                    "discount_percent": "El porcentaje de descuento debe estar entre 1 y 99."
+                })

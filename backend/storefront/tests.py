@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from catalog.models import Product
 from tenants.models import Membership, Tenant
 from tenants.theme import DEFAULT_PALETTE, PALETTES
 
@@ -78,3 +79,32 @@ class PublicStoreChannelsTests(TestCase):
         res = self.client.get(f"/public/{self.tenant.slug}/")
         # Instagram tiene datos, pero el dueño no lo activó: no se muestra.
         self.assertEqual(res.json()["purchase_channels"], ["whatsapp"])
+
+
+class PublicStoreOffersTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tenant = Tenant.objects.create(name="Tienda Ofertas")
+
+    def test_storefront_expone_porcentaje_y_no_precio_de_oferta(self):
+        Product.objects.create(tenant=self.tenant, name="Producto en oferta", price="100.00", discount_percent=20)
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        product = res.json()["products"][0]
+        self.assertEqual(product["price"], "100.00")
+        self.assertEqual(product["discount_percent"], 20)
+        self.assertNotIn("sales_price", product)
+        for field in ("image", "image2", "image3", "image4", "image5"):
+            self.assertIn(field, product)
+
+    def test_oferta_sin_precio_se_publica_solo_como_porcentaje(self):
+        Product.objects.create(tenant=self.tenant, name="Oferta sin precio", discount_percent=20)
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertIsNone(product["price"])
+        self.assertEqual(product["discount_percent"], 20)
+        self.assertNotIn("sales_price", product)
+
+    def test_producto_sin_oferta_publica_porcentaje_null(self):
+        Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertIsNone(product["discount_percent"])

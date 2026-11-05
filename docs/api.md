@@ -133,9 +133,21 @@ Reglas:
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
 
 Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
-`brand`, `price` (puede ser `null` cuando no tiene precio), `image`, `is_active`,
-`created_at` y `updated_at`. El serializer del panel acepta `brand` y `price`
-opcionales; la tienda pública también incluye `brand`.
+`brand`, `price` (puede ser `null`), `discount_percent` (entero opcional de 1
+a 99), `image` y `image2`…`image5` (hasta cinco fotos; la primera es la
+portada), `is_active`, `created_at` y `updated_at`. `sales_price` fue retirado;
+la migración 0010 convierte las ofertas guardadas a porcentajes antes de quitar
+la columna. El porcentaje determina si hay oferta. Con `price`, el precio
+rebajado se calcula automáticamente; sin `price`, solo se muestra el porcentaje.
+
+Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
+`image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
+conservan la foto anterior. `discount_percent` se puede dejar vacío para quitar
+la oferta; los valores válidos son enteros entre 1 y 99.
+
+```json
+{ "price": "100.00", "discount_percent": 20 }
+```
 
 ## Storefront público (`/public/`)
 
