@@ -32,6 +32,10 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "sales_price",
             "image",
+            "image2",
+            "image3",
+            "image4",
+            "image5",
             "is_active",
             "created_at",
             "updated_at",
@@ -63,8 +67,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if instance.image:
-            data["image"] = optimized(instance.image.url)
+        for field in ("image", "image2", "image3", "image4", "image5"):
+            image = getattr(instance, field, None)
+            if image:
+                data[field] = optimized(image.url)
         return data
 
     def validate_category(self, category):

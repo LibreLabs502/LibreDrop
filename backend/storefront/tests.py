@@ -98,6 +98,9 @@ class PublicStoreOffersTests(TestCase):
         product = res.json()["products"][0]
         self.assertEqual(product["price"], "100.00")
         self.assertEqual(product["sales_price"], "79.99")
+        # Las cinco fotos viajan al storefront; las vacías llegan como null.
+        for field in ("image", "image2", "image3", "image4", "image5"):
+            self.assertIn(field, product)
 
     def test_storefront_expone_oferta_vacia_como_null(self):
         Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")

@@ -30,12 +30,18 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "price",
             "sales_price",
             "image",
+            "image2",
+            "image3",
+            "image4",
+            "image5",
         ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if instance.image:
-            data["image"] = optimized(instance.image.url)
+        for field in ("image", "image2", "image3", "image4", "image5"):
+            image = getattr(instance, field, None)
+            if image:
+                data[field] = optimized(image.url)
         return data
 
 

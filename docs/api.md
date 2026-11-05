@@ -134,9 +134,14 @@ Reglas:
 
 Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
 `brand`, `price` (puede ser `null` cuando no tiene precio), `sales_price`
-(precio de oferta, puede ser `null`), `image`, `is_active`, `created_at` y
-`updated_at`. El serializer del panel acepta `brand`, `price` y `sales_price`
-opcionales; la tienda pública también incluye `brand` y `sales_price`.
+(precio de oferta, puede ser `null`), `image` y `image2`…`image5` (hasta cinco
+fotos; la primera es la portada), `is_active`, `created_at` y `updated_at`. El
+serializer del panel acepta `brand`, `price` y `sales_price` opcionales; la
+tienda pública también incluye `brand`, `sales_price` y las cinco fotos.
+
+Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
+`image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
+conservan la foto anterior.
 
 Reglas de la oferta:
 

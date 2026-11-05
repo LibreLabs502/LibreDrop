@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { productImages } from '../images'
 import { discountPercent, hasOffer } from '../pricing'
 import { themeStyle } from '../theme'
 
@@ -81,6 +82,7 @@ export default function PublicStore() {
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
+  const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
 
@@ -183,6 +185,11 @@ export default function PublicStore() {
     })
   }, [store, category, query])
 
+  const openProduct = (product) => {
+    setActiveImage(0)
+    setSelected(product)
+  }
+
   const openOrder = (product, channel) => {
     const message = productOrderMessage(store, product)
     setSelected(null)
@@ -248,6 +255,7 @@ export default function PublicStore() {
   }
 
   const socials = SOCIAL_LINKS.filter((s) => store[s.key])
+  const selectedImages = selected ? productImages(selected) : []
 
   return (
     <div className="store-page" style={themeVars}>
@@ -386,14 +394,18 @@ export default function PublicStore() {
         {products.length === 0 && <p className="muted">No hay productos.</p>}
         {products.map((p) => {
           const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, p))
+          const cover = productImages(p)[0]
           return (
             <article className="product-card" key={p.id}>
-              {p.image && <img src={p.image} alt={p.name} />}
+              {cover && <img src={cover} alt={p.name} />}
               <div className="product-body">
                 {p.brand && <span className="product-brand">{p.brand}</span>}
-                <h3 className="product-name-link" onClick={() => setSelected(p)}>{p.name}</h3>
+                <h3 className="product-name-link" onClick={() => openProduct(p)}>{p.name}</h3>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
                 <PriceTag product={p} />
+                <button type="button" className="product-details-link" onClick={() => openProduct(p)}>
+                  Ver detalles…
+                </button>
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
                     {buyLinks.map((c) => renderPurchaseButton(c, p))}
@@ -409,7 +421,31 @@ export default function PublicStore() {
         <div className="product-modal-overlay" onClick={() => setSelected(null)}>
           <div className="product-modal" onClick={(e) => e.stopPropagation()}>
             <button className="product-modal-close" onClick={() => setSelected(null)} aria-label="Cerrar">×</button>
-            {selected.image && <img src={selected.image} alt={selected.name} />}
+            {selectedImages.length > 0 && (
+              <div className="product-gallery">
+                <img
+                  className="product-gallery-main"
+                  src={selectedImages[activeImage] || selectedImages[0]}
+                  alt={selected.name}
+                />
+                {selectedImages.length > 1 && (
+                  <div className="product-gallery-thumbs">
+                    {selectedImages.map((src, index) => (
+                      <button
+                        key={src}
+                        type="button"
+                        className={index === activeImage ? 'active' : ''}
+                        onClick={() => setActiveImage(index)}
+                        aria-label={`Ver foto ${index + 1}`}
+                        aria-pressed={index === activeImage}
+                      >
+                        <img src={src} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="product-modal-body">
               <h2>{selected.name}</h2>
               {selected.brand && <span className="product-brand">{selected.brand}</span>}

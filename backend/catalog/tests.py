@@ -62,3 +62,15 @@ class ProductOfferValidationTests(TestCase):
         serializer = product_serializer({"name": "Producto", "price": "99.99", "sales_price": "74.99"})
         self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(str(serializer.validated_data["sales_price"]), "74.99")
+
+    def test_acepta_hasta_cinco_fotos(self):
+        serializer = product_serializer({
+            "name": "Producto",
+            "image2": SimpleUploadedFile("foto2.png", PNG_1X1, content_type="image/png"),
+            "image3": SimpleUploadedFile("foto3.png", PNG_1X1, content_type="image/png"),
+            "image4": SimpleUploadedFile("foto4.png", PNG_1X1, content_type="image/png"),
+            "image5": SimpleUploadedFile("foto5.png", PNG_1X1, content_type="image/png"),
+        })
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        for field in ("image", "image2", "image3", "image4", "image5"):
+            self.assertIn(field, serializer.validated_data)

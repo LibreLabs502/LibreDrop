@@ -84,6 +84,32 @@ input:focus, select:focus, textarea:focus {
 .check { display: flex; align-items: center; gap: 7px; font-size: 13px; white-space: nowrap; }
 .check input { width: auto; }
 
+/* Fotos del producto en el panel (hasta 5). */
+.photo-field-wide { grid-column: 1 / -1; }
+.product-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.photo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+}
+.photo-field input[type='file'] { padding: 6px; font-size: 11px; }
+.photo-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.photo-name { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ---------- interruptor (canales de compra) ---------- */
 
 .switch { display: inline-flex; align-items: center; cursor: pointer; }
@@ -1345,6 +1371,23 @@ input:focus, select:focus, textarea:focus {
   letter-spacing: 0.02em;
 }
 
+.product-details-link {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 1px 0 4px;
+  color: var(--store-primary-ink, var(--store-primary));
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.product-details-link:hover { filter: brightness(0.85); }
+
 .product-buy {
   display: flex;
   flex-direction: column;
@@ -1430,9 +1473,35 @@ input:focus, select:focus, textarea:focus {
   position: relative;
 }
 
-.product-modal img {
+.product-gallery { display: flex; flex-direction: column; }
+.product-gallery-main {
   width: 100%;
   max-height: 60vh;
+  object-fit: contain;
+  display: block;
+  background: #f1f5f9;
+}
+.product-gallery-thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+}
+.product-gallery-thumbs button {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+.product-gallery-thumbs button.active { border-color: var(--store-primary); }
+.product-gallery-thumbs img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
 }

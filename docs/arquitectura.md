@@ -45,6 +45,11 @@ centraliza el cálculo del descuento en `frontend/src/pricing.js`. La tienda
 pública muestra el precio de oferta, el anterior tachado y el porcentaje, y
 ofrece un filtro **“Ofertas”** con la cantidad disponible.
 
+Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
+primera es la portada de la tarjeta; el resto se muestra en la ventana que abre
+el enlace **“Ver detalles…”**, ubicado debajo de la descripción y antes de los
+botones de compra.
+
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
 URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad
 automática) vía el helper `backend/backend/images.py::optimized()`.
@@ -69,7 +74,8 @@ React SPA (Vite). Páginas:
   el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
   directo con el mensaje. Los productos con oferta muestran el precio rebajado,
   el anterior tachado, el porcentaje de descuento y el filtro **“Ofertas”**.
-  Responsive.
+  Debajo de la descripción aparece **“Ver detalles…”**, que abre la galería con
+  las fotos subidas, el precio y los botones de compra. Responsive.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,

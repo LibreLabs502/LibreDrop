@@ -1,5 +1,22 @@
 # Versiones
 
+## v0.11 — Hasta 5 fotos y “Ver detalles” en la tienda
+
+- `Product` suma `image2`, `image3`, `image4` e `image5` (opcionales); junto a
+  `image` permiten hasta **5 fotos por producto**. Migración
+  `catalog/0008_product_image2_product_image3_product_image4_and_more.py`.
+- Los serializers del panel y del storefront exponen las cinco fotos con la
+  entrega optimizada de Cloudinary.
+- Panel → Catálogo: cada producto tiene hasta cinco espacios de foto. La
+  **primera es la portada**; al editar se ve la foto actual y se puede
+  reemplazar cualquier espacio.
+- Tienda pública: debajo de la descripción y **antes de los botones de compra**
+  aparece **“Ver detalles…”**. Abre una ventana con **todas las fotos subidas**
+  (miniatura principal + selector), el precio/oferta y los botones de compra.
+- La tarjeta sigue usando la primera foto como portada.
+- Pruebas: `catalog/tests.py`, `storefront/tests.py` y
+  `frontend/src/pricing.test.js` / `updates.test.js`.
+
 ## v0.10 — Ofertas y Novedades con historial
 
 ### Precio de oferta

@@ -103,8 +103,11 @@ imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
 
 Las migraciones de catálogo se aplican igual que el resto. Por ejemplo, el
 precio de oferta (`Product.sales_price`) llega con
-`catalog/0007_product_sales_price.py`: después del deploy, el panel ya puede
-crear ofertas y la tienda pública las muestra sin pasos manuales.
+`catalog/0007_product_sales_price.py` y las fotos adicionales
+(`image2`…`image5`) con
+`catalog/0008_product_image2_product_image3_product_image4_and_more.py`:
+después del deploy, el panel ya puede crear ofertas y subir hasta cinco fotos
+por producto sin pasos manuales.
 
 > **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
 > **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr

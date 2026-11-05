@@ -188,7 +188,10 @@ const formDataFrom = (data, files = {}, keepEmpty = []) => {
     fd.append(key, value)
   }
   for (const [key, file] of Object.entries(files)) {
-    if (file) fd.append(key, file)
+    if (!file) continue
+    // Varios archivos para un mismo campo (por ejemplo, fotos de producto).
+    if (Array.isArray(file)) file.forEach((item) => item && fd.append(key, item))
+    else fd.append(key, file)
   }
   return fd
 }
@@ -222,6 +225,19 @@ const cleanProductPayload = (data) => {
   return clean
 }
 
+// Un producto puede tener hasta 5 fotos (image, image2 … image5). Aceptamos
+// tanto un solo archivo como un objeto con las claves de cada foto.
+const productFiles = (files) => {
+  if (!files) return {}
+  if (typeof File !== 'undefined' && files instanceof File) return { image: files }
+  return files
+}
+
+const hasProductFiles = (files) => Object.values(files).some(Boolean)
+
+const productFormBody = (data, files) =>
+  formDataFrom(data, productFiles(files), ['price', 'sales_price'])
+
 export const catalogApi = {
   categories: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/categories/`, { auth: true }),
@@ -234,22 +250,22 @@ export const catalogApi = {
   },
   products: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),
-    create: (tenantId, data, file) =>
-      api(`/catalog/tenants/${tenantId}/products/`, {
+    create: (tenantId, data, files) => {
+      const form = hasProductFiles(productFiles(files))
+      return api(`/catalog/tenants/${tenantId}/products/`, {
         method: 'POST',
-        body: file
-          ? formDataFrom(data, { image: file }, ['price', 'sales_price'])
-          : cleanProductPayload(data),
-        form: !!file,
-      }),
-    update: (tenantId, id, data, file) =>
-      api(`/catalog/tenants/${tenantId}/products/${id}/`, {
+        body: form ? productFormBody(data, files) : cleanProductPayload(data),
+        form,
+      })
+    },
+    update: (tenantId, id, data, files) => {
+      const form = hasProductFiles(productFiles(files))
+      return api(`/catalog/tenants/${tenantId}/products/${id}/`, {
         method: 'PATCH',
-        body: file
-          ? formDataFrom(data, { image: file }, ['price', 'sales_price'])
-          : cleanProductPayload(data),
-        form: !!file,
-      }),
+        body: form ? productFormBody(data, files) : cleanProductPayload(data),
+        form,
+      })
+    },
     remove: (tenantId, id) =>
       api(`/catalog/tenants/${tenantId}/products/${id}/`, { method: 'DELETE' }),
   },
