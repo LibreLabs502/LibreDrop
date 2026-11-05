@@ -134,10 +134,12 @@ Reglas:
 
 Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
 `brand`, `price` (puede ser `null` cuando no tiene precio), `sales_price`
-(precio de oferta, puede ser `null`), `image` y `image2`…`image5` (hasta cinco
-fotos; la primera es la portada), `is_active`, `created_at` y `updated_at`. El
-serializer del panel acepta `brand`, `price` y `sales_price` opcionales; la
-tienda pública también incluye `brand`, `sales_price` y las cinco fotos.
+(precio de oferta, puede ser `null`), `discount_percent` (porcentaje manual,
+puede ser `null`), `image` y `image2`…`image5` (hasta cinco fotos; la primera es
+la portada), `is_active`, `created_at` y `updated_at`. El serializer del panel
+acepta `brand`, `price`, `sales_price` y `discount_percent` opcionales; la
+tienda pública también incluye `brand`, `sales_price`, `discount_percent` y las
+cinco fotos.
 
 Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
 `image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
@@ -145,14 +147,22 @@ conservan la foto anterior.
 
 Reglas de la oferta:
 
-- `sales_price` solo se acepta si el producto tiene `price`.
-- Debe ser mayor que `0` y **menor** que `price`; si no, el backend responde
-  `400` con el error en el campo `sales_price`.
+- `sales_price` puede existir con o sin `price`.
+- Debe ser mayor que `0`. Si además hay `price`, debe ser **menor** que `price`;
+  si no, el backend responde `400` con el error en el campo `sales_price`.
+- `discount_percent` es opcional, entero entre `1` y `99`, y solo se acepta
+  junto a `sales_price`. Se usa cuando **no hay `price`**; con precio normal el
+  porcentaje se calcula automáticamente.
 - `sales_price` admite decimales (por ejemplo `79.99`). Enviar `null` o dejarlo
-  vacío quita la oferta.
+  vacío quita la oferta. Enviar `discount_percent` vacío o `null` quita el
+  porcentaje manual.
 
 ```json
 { "price": "100.00", "sales_price": "79.99" }
+```
+
+```json
+{ "sales_price": "80.00", "discount_percent": 20 }
 ```
 
 ## Storefront público (`/public/`)

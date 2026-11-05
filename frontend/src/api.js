@@ -216,10 +216,11 @@ export const billingApi = {
   update: (data) => api('/payments/billing/', { method: 'PUT', body: data }),
 }
 
-// Precio y precio de oferta vacíos viajan como null (el backend los acepta).
+// Precio, precio de oferta y porcentaje vacíos viajan como null (el backend los
+// acepta).
 const cleanProductPayload = (data) => {
   const clean = { ...(data || {}) }
-  for (const key of ['price', 'sales_price']) {
+  for (const key of ['price', 'sales_price', 'discount_percent']) {
     if (clean[key] === '') clean[key] = null
   }
   return clean
@@ -236,7 +237,7 @@ const productFiles = (files) => {
 const hasProductFiles = (files) => Object.values(files).some(Boolean)
 
 const productFormBody = (data, files) =>
-  formDataFrom(data, productFiles(files), ['price', 'sales_price'])
+  formDataFrom(data, productFiles(files), ['price', 'sales_price', 'discount_percent'])
 
 export const catalogApi = {
   categories: {

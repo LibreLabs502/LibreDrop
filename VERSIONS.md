@@ -24,17 +24,23 @@
 - `Product.sales_price` (`DecimalField(max_digits=10, decimal_places=2,
   blank=True, null=True)`) guarda el precio rebajado; migración
   `catalog/0007_product_sales_price.py`. Es opcional y admite centavos.
-- Una oferta solo es válida si hay **precio normal**, `sales_price > 0` y
-  `sales_price < price`. El backend lo valida en `ProductSerializer` y el panel
-  muestra el error antes de enviar.
+- `Product.discount_percent` (`PositiveSmallIntegerField`, opcional, 1–99;
+  migración `catalog/0009_product_discount_percent.py`) permite mostrar el
+  porcentaje cuando el producto **no tiene precio normal**. Solo se acepta si
+  hay `sales_price`.
+- Una oferta es válida si `sales_price > 0` y, **cuando existe `price`**, además
+  `sales_price < price`. Sin precio normal la oferta se acepta; el porcentaje
+  sale de `discount_percent` o se muestra solo **“Oferta”**. El backend lo
+  valida en `ProductSerializer` y el panel muestra el error antes de enviar.
 - Los serializers del panel (`ProductSerializer`) y del storefront público
-  (`PublicProductSerializer`) exponen `sales_price`.
+  (`PublicProductSerializer`) exponen `sales_price` y `discount_percent`.
 - Panel: los formularios de crear/editar producto tienen **“Precio de oferta”**
-  y la lista marca los productos con **“oferta”** (precio rebajado y precio
-  anterior).
+  y **“% de descuento”** (este último solo se usa sin precio normal). La lista
+  marca el precio rebajado, el precio anterior cuando existe y el porcentaje.
 - Tienda pública: muestra el **precio de oferta** como principal, el precio
-  normal **tachado** y una etiqueta **“Descuento del: N%”**.
-  También agrega el filtro **“Ofertas”** con la cantidad de productos rebajados.
+  normal **tachado** (si existe) y una etiqueta **“Descuento del: N%”** o
+  **“Oferta”** cuando no hay porcentaje. También agrega el filtro **“Ofertas”**
+  con la cantidad de productos rebajados.
 - Lógica compartida en `frontend/src/pricing.js` (`hasOffer`,
   `discountPercent`, `effectivePrice`) con pruebas en `pricing.test.js`.
 

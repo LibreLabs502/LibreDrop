@@ -63,11 +63,15 @@ const copyText = async (text) => {
 
 function PriceTag({ product }) {
   if (hasOffer(product)) {
+    const percent = discountPercent(product)
+    const oldPrice = formatPrice(product.price)
     return (
       <span className="product-price-row">
         <span className="product-price">{formatPrice(product.sales_price)}</span>
-        <span className="product-price-old">{formatPrice(product.price)}</span>
-        <span className="product-offer-badge">Descuento del: {discountPercent(product)}%</span>
+        {oldPrice && <span className="product-price-old">{oldPrice}</span>}
+        <span className="product-offer-badge">
+          {percent > 0 ? `Descuento del: ${percent}%` : 'Oferta'}
+        </span>
       </span>
     )
   }

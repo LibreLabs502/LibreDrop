@@ -101,6 +101,21 @@ class PublicStoreOffersTests(TestCase):
         # Las cinco fotos viajan al storefront; las vacías llegan como null.
         for field in ("image", "image2", "image3", "image4", "image5"):
             self.assertIn(field, product)
+        self.assertIn("discount_percent", product)
+
+    def test_storefront_expone_oferta_sin_precio_y_porcentaje_manual(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Oferta sin precio",
+            sales_price="80.00",
+            discount_percent=20,
+        )
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        product = res.json()["products"][0]
+        self.assertIsNone(product["price"])
+        self.assertEqual(product["sales_price"], "80.00")
+        self.assertEqual(product["discount_percent"], 20)
 
     def test_storefront_expone_oferta_vacia_como_null(self):
         Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")

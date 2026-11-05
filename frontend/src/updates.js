@@ -26,7 +26,8 @@ export const UPDATES = [
     title: 'Ofertas en tu tienda',
     items: [
       'Agregá un precio de oferta a tus productos desde Catálogo.',
-      'La tienda pública muestra el precio anterior tachado y el porcentaje de descuento.',
+      'Si un producto no tiene precio normal, podés indicar el porcentaje de descuento manualmente.',
+      'La tienda pública muestra el precio anterior tachado (si existe) y la etiqueta “Descuento del: N%”.',
       'Nuevo filtro “Ofertas” para que tus clientes vean solo los productos rebajados.',
       'Esta ventana ahora muestra también las versiones anteriores, separadas por número.',
     ],

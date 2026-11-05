@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { catalogApi, formatPrice } from '../../api'
-import { hasOffer } from '../../pricing'
+import { discountPercent, hasOffer } from '../../pricing'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 const EMPTY_CAT = { name: '' }
-const EMPTY_PROD = { name: '', description: '', brand: '', price: '', sales_price: '', category: '', is_active: true }
+const EMPTY_PROD = {
+  name: '',
+  description: '',
+  brand: '',
+  price: '',
+  sales_price: '',
+  discount_percent: '',
+  category: '',
+  is_active: true,
+}
 
 // El backend guarda hasta 5 fotos en image, image2 … image5. La primera es la
 // portada que se ve en la tarjeta; el resto aparece en “Ver detalles”.
@@ -42,19 +51,34 @@ function ProductPhotos({ images = {}, files = {}, onPick }) {
 
 // Valida la oferta antes de enviarla: el backend también la valida, pero así
 // mostramos el error al instante y sin gastar una petición.
+const isEmpty = (value) => value === '' || value === null || value === undefined
+
 const offerError = (form) => {
-  if (form.sales_price === '' || form.sales_price === null || form.sales_price === undefined) return ''
+  const hasPrice = !isEmpty(form.price)
+  const hasSalesPrice = !isEmpty(form.sales_price)
+  const hasDiscount = !isEmpty(form.discount_percent)
   const price = Number(form.price)
   const salesPrice = Number(form.sales_price)
-  if (form.price === '' || Number.isNaN(price)) {
-    return 'Para poner una oferta, primero escribí el precio normal.'
+  const discount = Number(form.discount_percent)
+
+  if (hasSalesPrice) {
+    if (!Number.isFinite(salesPrice) || salesPrice <= 0) {
+      return 'El precio de oferta debe ser mayor que cero.'
+    }
+    if (hasPrice && (!Number.isFinite(price) || salesPrice >= price)) {
+      return 'El precio de oferta debe ser menor que el precio normal.'
+    }
   }
-  if (!Number.isFinite(salesPrice) || salesPrice <= 0) {
-    return 'El precio de oferta debe ser mayor que cero.'
+
+  if (hasDiscount) {
+    if (!hasSalesPrice) {
+      return 'Para usar un porcentaje de descuento, primero poné un precio de oferta.'
+    }
+    if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
+      return 'El porcentaje de descuento debe ser un número entero entre 1 y 99.'
+    }
   }
-  if (salesPrice >= price) {
-    return 'El precio de oferta debe ser menor que el precio normal.'
-  }
+
   return ''
 }
 
@@ -147,6 +171,7 @@ export default function AdminCatalog() {
       brand: p.brand || '',
       price: p.price ?? '',
       sales_price: p.sales_price ?? '',
+      discount_percent: p.discount_percent ?? '',
       category: p.category || '',
       is_active: p.is_active,
     })
@@ -262,6 +287,20 @@ export default function AdminCatalog() {
               onChange={(e) => setProdForm({ ...prodForm, sales_price: e.target.value })}
             />
           </Field>
+          <Field
+            label="% de descuento"
+            hint="Solo si no cargás precio normal. Con precio, el porcentaje se calcula solo."
+          >
+            <input
+              type="number"
+              step="1"
+              min="1"
+              max="99"
+              placeholder="Sin porcentaje"
+              value={prodForm.discount_percent}
+              onChange={(e) => setProdForm({ ...prodForm, discount_percent: e.target.value })}
+            />
+          </Field>
           <Field label="Categoría">
             <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
               <option value="">Sin categoría</option>
@@ -318,6 +357,20 @@ export default function AdminCatalog() {
                       onChange={(e) => setProdEdit({ ...prodEdit, sales_price: e.target.value })}
                     />
                   </Field>
+                  <Field
+                    label="% de descuento"
+                    hint="Solo si no cargás precio normal. Con precio, el porcentaje se calcula solo."
+                  >
+                    <input
+                      type="number"
+                      step="1"
+                      min="1"
+                      max="99"
+                      placeholder="Sin porcentaje"
+                      value={prodEdit.discount_percent}
+                      onChange={(e) => setProdEdit({ ...prodEdit, discount_percent: e.target.value })}
+                    />
+                  </Field>
                   <Field label="Categoría">
                     <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
                       <option value="">Sin categoría</option>
@@ -355,10 +408,13 @@ export default function AdminCatalog() {
                   <span className="muted">
                     {[
                       p.brand,
+                      hasOffer(p) ? formatPrice(p.sales_price) : formatPrice(p.price),
+                      hasOffer(p) && p.price ? `antes ${formatPrice(p.price)}` : null,
                       hasOffer(p)
-                        ? `${formatPrice(p.sales_price)} (antes ${formatPrice(p.price)})`
-                        : formatPrice(p.price),
-                      hasOffer(p) ? 'oferta' : null,
+                        ? discountPercent(p) > 0
+                          ? `Descuento del ${discountPercent(p)}%`
+                          : 'oferta'
+                        : null,
                       p.is_active ? 'activo' : 'inactivo',
                     ]
                       .filter(Boolean)

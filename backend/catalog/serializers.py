@@ -4,6 +4,20 @@ from backend.images import optimized
 from .models import Category, Product
 
 
+class NullableIntegerField(serializers.IntegerField):
+    """Entero que acepta ``""`` como ``None``.
+
+    Los formularios multipart no pueden enviar ``null``; al editar un producto
+    con fotos, un porcentaje de descuento vacío viaja como cadena vacía y debe
+    borrar el valor anterior.
+    """
+
+    def validate_empty_values(self, data):
+        if data == "":
+            return (True, None)
+        return super().validate_empty_values(data)
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -21,6 +35,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    discount_percent = NullableIntegerField(required=False, allow_null=True)
+
     class Meta:
         model = Product
         fields = [
@@ -31,6 +47,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "brand",
             "price",
             "sales_price",
+            "discount_percent",
             "image",
             "image2",
             "image3",
@@ -49,19 +66,30 @@ class ProductSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         price = attrs.get("price", getattr(self.instance, "price", None))
         sales_price = attrs.get("sales_price", getattr(self.instance, "sales_price", None))
+        discount_percent = attrs.get(
+            "discount_percent", getattr(self.instance, "discount_percent", None)
+        )
 
         if sales_price is not None:
-            if price is None:
-                raise serializers.ValidationError({
-                    "sales_price": "Para poner una oferta, el producto debe tener un precio normal."
-                })
             if sales_price <= 0:
                 raise serializers.ValidationError({
                     "sales_price": "El precio de oferta debe ser mayor que cero."
                 })
-            if sales_price >= price:
+            # Sin precio normal se permite la oferta; el porcentaje se toma del
+            # campo manual o se muestra solo “Oferta”.
+            if price is not None and sales_price >= price:
                 raise serializers.ValidationError({
                     "sales_price": "El precio de oferta debe ser menor que el precio normal."
+                })
+
+        if discount_percent is not None:
+            if discount_percent < 1 or discount_percent > 99:
+                raise serializers.ValidationError({
+                    "discount_percent": "El porcentaje de descuento debe estar entre 1 y 99."
+                })
+            if sales_price is None:
+                raise serializers.ValidationError({
+                    "discount_percent": "Para usar un porcentaje de descuento, primero poné un precio de oferta."
                 })
         return attrs
 

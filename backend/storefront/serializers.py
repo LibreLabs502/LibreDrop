@@ -29,6 +29,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "brand",
             "price",
             "sales_price",
+            "discount_percent",
             "image",
             "image2",
             "image3",
