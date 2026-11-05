@@ -67,11 +67,11 @@ function PriceTag({ product }) {
     const oldPrice = formatPrice(product.price)
     return (
       <span className="product-price-row">
-        <span className="product-price">{formatPrice(product.sales_price)}</span>
         {oldPrice && <span className="product-price-old">{oldPrice}</span>}
         <span className="product-offer-badge">
           {percent > 0 ? `Descuento del: ${percent}%` : 'Oferta'}
         </span>
+        <span className="product-price">{formatPrice(product.sales_price)}</span>
       </span>
     )
   }
