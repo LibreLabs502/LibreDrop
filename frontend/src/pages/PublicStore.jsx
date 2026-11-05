@@ -67,7 +67,7 @@ function PriceTag({ product }) {
       <span className="product-price-row">
         <span className="product-price">{formatPrice(product.sales_price)}</span>
         <span className="product-price-old">{formatPrice(product.price)}</span>
-        <span className="product-offer-badge">-{discountPercent(product)}%</span>
+        <span className="product-offer-badge">Descuento del: {discountPercent(product)}%</span>
       </span>
     )
   }

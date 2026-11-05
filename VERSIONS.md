@@ -33,7 +33,7 @@
   y la lista marca los productos con **“oferta”** (precio rebajado y precio
   anterior).
 - Tienda pública: muestra el **precio de oferta** como principal, el precio
-  normal **tachado** y una etiqueta con el **porcentaje de descuento** (`-N%`).
+  normal **tachado** y una etiqueta **“Descuento del: N%”**.
   También agrega el filtro **“Ofertas”** con la cantidad de productos rebajados.
 - Lógica compartida en `frontend/src/pricing.js` (`hasOffer`,
   `discountPercent`, `effectivePrice`) con pruebas en `pricing.test.js`.

@@ -1369,6 +1369,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .product-details-link {

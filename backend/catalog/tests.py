@@ -1,9 +1,12 @@
+from decimal import Decimal
 from types import SimpleNamespace
 
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
+from .models import Product
 from .serializers import ProductSerializer
 
 # PNG 1x1 transparente: alcanza para que el ImageField del producto valide.
@@ -74,3 +77,17 @@ class ProductOfferValidationTests(TestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
         for field in ("image", "image2", "image3", "image4", "image5"):
             self.assertIn(field, serializer.validated_data)
+
+
+class ProductOfferModelTests(TestCase):
+    def test_clean_acepta_una_oferta_valida(self):
+        Product(price=Decimal("100.00"), sales_price=Decimal("80.00")).clean()
+
+    def test_clean_rechaza_oferta_sin_precio(self):
+        with self.assertRaises(ValidationError):
+            Product(sales_price=Decimal("80.00")).clean()
+
+    def test_clean_rechaza_oferta_igual_o_mayor_al_precio(self):
+        for sales_price in ("100.00", "120.00", "0.00"):
+            with self.assertRaises(ValidationError):
+                Product(price=Decimal("100.00"), sales_price=Decimal(sales_price)).clean()

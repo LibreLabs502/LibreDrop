@@ -1,4 +1,5 @@
 from cloudinary.models import CloudinaryField
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from tenants.models import Tenant
@@ -42,3 +43,20 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.sales_price is None:
+            return
+        if self.price is None:
+            raise ValidationError({
+                "sales_price": "Para poner una oferta, el producto debe tener un precio normal."
+            })
+        if self.sales_price <= 0:
+            raise ValidationError({
+                "sales_price": "El precio de oferta debe ser mayor que cero."
+            })
+        if self.sales_price >= self.price:
+            raise ValidationError({
+                "sales_price": "El precio de oferta debe ser menor que el precio normal."
+            })
