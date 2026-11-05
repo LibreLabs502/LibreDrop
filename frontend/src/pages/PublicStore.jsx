@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
 import { productImages } from '../images'
-import { discountPercent, hasOffer } from '../pricing'
+import { discountPercent, effectivePrice, hasOffer } from '../pricing'
 import { themeStyle } from '../theme'
 
 // Redes sociales de la tienda: cada una con su logo (ícono SVG).
@@ -66,12 +66,10 @@ function PriceTag({ product }) {
     const percent = discountPercent(product)
     const oldPrice = formatPrice(product.price)
     return (
-      <span className="product-price-row">
-        {oldPrice && <span className="product-price-old">{oldPrice}</span>}
-        <span className="product-offer-badge">
-          {percent > 0 ? `Descuento del: ${percent}%` : 'Oferta'}
-        </span>
-        <span className="product-price">{formatPrice(product.sales_price)}</span>
+      <span className="product-price-row offer-price-list">
+        {oldPrice && <span className="product-price-old">Precio original: {oldPrice}</span>}
+        <span className="product-offer-badge">Descuento: {percent}%</span>
+        {oldPrice && <span className="product-price">Precio con descuento: {formatPrice(effectivePrice(product))}</span>}
       </span>
     )
   }
@@ -89,6 +87,7 @@ export default function PublicStore() {
   const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
+  const [offerSlide, setOfferSlide] = useState(0)
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
   // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
@@ -172,6 +171,20 @@ export default function PublicStore() {
     () => (store ? store.products.filter(hasOffer).length : 0),
     [store],
   )
+  const offerProducts = useMemo(
+    () => (store ? store.products.filter(hasOffer) : []),
+    [store],
+  )
+  const offerPageSize = offerProducts.length >= 3 ? 3 : 1
+  const offerPageCount = Math.ceil(offerProducts.length / offerPageSize)
+  const carouselProducts = offerProducts.length >= 3
+    ? Array.from({ length: 3 }, (_, offset) => offerProducts[(offerSlide * 3 + offset) % offerProducts.length])
+    : offerProducts.length > 0 ? [offerProducts[offerSlide % offerProducts.length]] : []
+  useEffect(() => {
+    if (offerPageCount <= 1 || category === 'offers') return undefined
+    const timer = window.setInterval(() => setOfferSlide((index) => (index + 1) % offerPageCount), 3500)
+    return () => window.clearInterval(timer)
+  }, [offerPageCount, category])
 
   const products = useMemo(() => {
     if (!store) return []
@@ -319,6 +332,32 @@ export default function PublicStore() {
           )}
         </div>
       </header>
+
+      {offerProducts.length > 0 && category !== 'offers' && (
+        <section className="store-offer-carousel" aria-label="Carrusel de ofertas">
+          <h2 className="store-offer-title">{store.sale_text || 'Productos con ofertas'}</h2>
+          {offerPageCount > 1 && (
+            <button type="button" className="store-offer-arrow" aria-label="Ofertas anteriores"
+              onClick={() => setOfferSlide((slide) => (slide - 1 + offerPageCount) % offerPageCount)}>‹</button>
+          )}
+          <div key={`offers-${offerSlide}`} className={`store-offer-photos${carouselProducts.length >= 3 ? ' has-three' : ''}`}>
+            {carouselProducts.map((product) => {
+              const photo = productImages(product)[0]
+              return photo ? (
+                <div className="store-offer-frame" key={product.id}>
+                  <h3>{product.name}</h3>
+                  <img src={photo} alt={product.name} />
+                </div>
+              ) : null
+            })}
+          </div>
+          {offerPageCount > 1 && (
+            <button type="button" className="store-offer-arrow" aria-label="Más ofertas"
+              onClick={() => setOfferSlide((slide) => (slide + 1) % offerPageCount)}>›</button>
+          )}
+          <button type="button" className="store-offer-link" onClick={() => setCategory('offers')}>Ver ofertas</button>
+        </section>
+      )}
 
       <div className="store-toolbar">
         <div className="store-cats-wrap">

@@ -10,14 +10,19 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
-    version: 'v0.11',
+    version: 'v1',
     date: 'Noviembre 2026',
-    title: 'Más imágenes en tus productos',
+    title: 'Más imágenes y ofertas en tu tienda',
     items: [
       'Ahora podés subir hasta 5 fotos por producto desde Catálogo.',
       'La primera foto es la portada y las demás aparecen en la ventana de detalles.',
       'En la tienda pública agregamos “Ver detalles…” debajo de la descripción, antes de los botones de compra.',
       'Desde esa ventana tus clientes pueden ver todas las fotos y elegir cuál quieren ver.',
+      'Agregá una oferta ingresando un descuento entero entre 1% y 99%.',
+      'Con precio normal, mostramos el precio original y calculamos el precio con descuento; sin precio, mostramos solo el porcentaje.',
+      'La tienda destaca ofertas con un carrusel de fotos y el botón “Ver ofertas” filtra todos los productos rebajados.',
+      'El título del carrusel usa el texto de ofertas configurado para tu tienda y las fotos avanzan automáticamente.',
+      'Buscá productos por nombre, marca o descripción desde Catálogo en el panel.',
     ],
   },
   {

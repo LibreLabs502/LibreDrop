@@ -5,7 +5,7 @@ import { LATEST_UPDATE, UPDATES, VERSIONS_URL, hasSeenLatestUpdate, markLatestUp
 
 test('la última novedad tiene versión, título y contenido', () => {
   assert.ok(LATEST_UPDATE)
-  assert.match(LATEST_UPDATE.version, /^v\d/)
+  assert.match(LATEST_UPDATE.version, /^v\d+(?:\.\d+)?$/)
   assert.ok(LATEST_UPDATE.title)
   assert.ok(LATEST_UPDATE.items.length > 0)
 })

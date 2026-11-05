@@ -58,6 +58,7 @@ class TenantSerializer(serializers.ModelSerializer):
             "description",
             "logo",
             "purchase_button_text",
+            "sale_text",
             "whatsapp",
             "slug",
             "instagram_url",

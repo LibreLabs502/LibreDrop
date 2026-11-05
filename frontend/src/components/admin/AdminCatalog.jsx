@@ -10,7 +10,6 @@ const EMPTY_PROD = {
   description: '',
   brand: '',
   price: '',
-  sales_price: '',
   discount_percent: '',
   category: '',
   is_active: true,
@@ -54,38 +53,26 @@ function ProductPhotos({ images = {}, files = {}, onPick }) {
 const isEmpty = (value) => value === '' || value === null || value === undefined
 
 const offerError = (form) => {
-  const hasPrice = !isEmpty(form.price)
-  const hasSalesPrice = !isEmpty(form.sales_price)
-  const hasDiscount = !isEmpty(form.discount_percent)
-  const price = Number(form.price)
-  const salesPrice = Number(form.sales_price)
+  if (isEmpty(form.discount_percent)) return ''
   const discount = Number(form.discount_percent)
-
-  if (hasSalesPrice) {
-    if (!Number.isFinite(salesPrice) || salesPrice <= 0) {
-      return 'El precio de oferta debe ser mayor que cero.'
-    }
-    if (hasPrice && (!Number.isFinite(price) || salesPrice >= price)) {
-      return 'El precio de oferta debe ser menor que el precio normal.'
-    }
+  if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
+    return 'El porcentaje de descuento debe ser un número entero entre 1 y 99.'
   }
-
-  if (hasDiscount) {
-    if (!hasSalesPrice) {
-      return 'Para usar un porcentaje de descuento, primero poné un precio de oferta.'
-    }
-    if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
-      return 'El porcentaje de descuento debe ser un número entero entre 1 y 99.'
-    }
-  }
-
   return ''
+}
+
+const offerPreview = (form) => {
+  if (isEmpty(form.price) || Number(form.price) <= 0 || isEmpty(form.discount_percent) || offerError(form)) return ''
+  const percent = Number(form.discount_percent)
+  const discounted = Math.round(Number(form.price) * (100 - percent)) / 100
+  return `Precio original: ${formatPrice(form.price)} · Descuento: ${percent}% · Precio con descuento: ${formatPrice(discounted)}`
 }
 
 export default function AdminCatalog() {
   const { current, currentTenant, loading } = useTenant()
   const [categories, setCategories] = useState(null)
   const [products, setProducts] = useState(null)
+  const [productSearch, setProductSearch] = useState('')
   const [catForm, setCatForm] = useState(EMPTY_CAT)
   const [editingCat, setEditingCat] = useState(null)
   const [catEdit, setCatEdit] = useState(EMPTY_CAT)
@@ -105,6 +92,12 @@ export default function AdminCatalog() {
   }, [current])
 
   useEffect(load, [load])
+
+  const filteredProducts = (products || []).filter((product) => {
+    const search = productSearch.trim().toLocaleLowerCase()
+    return !search || [product.name, product.brand, product.description]
+      .some((value) => (value || '').toLocaleLowerCase().includes(search))
+  })
 
   const createCategory = async (e) => {
     e.preventDefault()
@@ -170,7 +163,6 @@ export default function AdminCatalog() {
       description: p.description || '',
       brand: p.brand || '',
       price: p.price ?? '',
-      sales_price: p.sales_price ?? '',
       discount_percent: p.discount_percent ?? '',
       category: p.category || '',
       is_active: p.is_active,
@@ -260,7 +252,7 @@ export default function AdminCatalog() {
         ))}
       </Card>
 
-      <Card title={`Productos (${(products || []).length})`}>
+      <Card title={`Productos (${filteredProducts.length}${productSearch ? ` de ${(products || []).length}` : ''})`}>
         <form onSubmit={createProduct} className="grid2">
           <Field label="Nombre *">
             <input value={prodForm.name} onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })} />
@@ -277,30 +269,19 @@ export default function AdminCatalog() {
               onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
             />
           </Field>
-          <Field label="Precio de oferta" hint="Opcional. Debe ser menor que el precio normal.">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Sin oferta"
-              value={prodForm.sales_price}
-              onChange={(e) => setProdForm({ ...prodForm, sales_price: e.target.value })}
-            />
-          </Field>
-          <Field
-            label="% de descuento"
-            hint="Solo si no cargás precio normal. Con precio, el porcentaje se calcula solo."
-          >
+          <Field label="% de descuento" hint="Ingresá un número entero entre 1 y 99.">
             <input
               type="number"
               step="1"
               min="1"
               max="99"
-              placeholder="Sin porcentaje"
+              placeholder="Sin oferta"
               value={prodForm.discount_percent}
               onChange={(e) => setProdForm({ ...prodForm, discount_percent: e.target.value })}
             />
+            {offerPreview(prodForm) && <span className="field-hint">{offerPreview(prodForm)}</span>}
           </Field>
+
           <Field label="Categoría">
             <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
               <option value="">Sin categoría</option>
@@ -327,7 +308,16 @@ export default function AdminCatalog() {
           <button className="btn">Crear producto</button>
         </form>
 
-        {(products || []).map((p) => (
+        <Field label="Buscar producto">
+          <input
+            type="search"
+            placeholder="Buscar por nombre, marca o descripción…"
+            value={productSearch}
+            onChange={(event) => setProductSearch(event.target.value)}
+          />
+        </Field>
+        {productSearch && filteredProducts.length === 0 && <p className="muted">No se encontraron productos.</p>}
+        {filteredProducts.map((p) => (
           <div className="row-item" key={p.id}>
             {editingProd === p.id ? (
               <div className="row-item-main product-edit">
@@ -347,30 +337,19 @@ export default function AdminCatalog() {
                       onChange={(e) => setProdEdit({ ...prodEdit, price: e.target.value })}
                     />
                   </Field>
-                  <Field label="Precio de oferta" hint="Opcional. Debe ser menor que el precio normal.">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Sin oferta"
-                      value={prodEdit.sales_price}
-                      onChange={(e) => setProdEdit({ ...prodEdit, sales_price: e.target.value })}
-                    />
-                  </Field>
-                  <Field
-                    label="% de descuento"
-                    hint="Solo si no cargás precio normal. Con precio, el porcentaje se calcula solo."
-                  >
+                  <Field label="% de descuento" hint="Ingresá un número entero entre 1 y 99.">
                     <input
                       type="number"
                       step="1"
                       min="1"
                       max="99"
-                      placeholder="Sin porcentaje"
+                      placeholder="Sin oferta"
                       value={prodEdit.discount_percent}
                       onChange={(e) => setProdEdit({ ...prodEdit, discount_percent: e.target.value })}
                     />
+                    {offerPreview(prodEdit) && <span className="field-hint">{offerPreview(prodEdit)}</span>}
                   </Field>
+
                   <Field label="Categoría">
                     <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
                       <option value="">Sin categoría</option>
@@ -408,13 +387,11 @@ export default function AdminCatalog() {
                   <span className="muted">
                     {[
                       p.brand,
-                      hasOffer(p) ? formatPrice(p.sales_price) : formatPrice(p.price),
-                      hasOffer(p) && p.price ? `antes ${formatPrice(p.price)}` : null,
-                      hasOffer(p)
-                        ? discountPercent(p) > 0
-                          ? `Descuento del ${discountPercent(p)}%`
-                          : 'oferta'
-                        : null,
+                      hasOffer(p) && formatPrice(p.price) ? `Precio original: ${formatPrice(p.price)}` : null,
+                      hasOffer(p) ? `Descuento: ${discountPercent(p)}%` : null,
+                      hasOffer(p) && formatPrice(p.price)
+                        ? `Precio con descuento: ${formatPrice(Math.round(Number(p.price) * (100 - discountPercent(p)) / 100 * 100) / 100)}`
+                        : !hasOffer(p) ? formatPrice(p.price) : null,
                       p.is_active ? 'activo' : 'inactivo',
                     ]
                       .filter(Boolean)

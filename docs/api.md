@@ -133,36 +133,20 @@ Reglas:
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
 
 Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
-`brand`, `price` (puede ser `null` cuando no tiene precio), `sales_price`
-(precio de oferta, puede ser `null`), `discount_percent` (porcentaje manual,
-puede ser `null`), `image` y `image2`…`image5` (hasta cinco fotos; la primera es
-la portada), `is_active`, `created_at` y `updated_at`. El serializer del panel
-acepta `brand`, `price`, `sales_price` y `discount_percent` opcionales; la
-tienda pública también incluye `brand`, `sales_price`, `discount_percent` y las
-cinco fotos.
+`brand`, `price` (puede ser `null`), `discount_percent` (entero opcional de 1
+a 99), `image` y `image2`…`image5` (hasta cinco fotos; la primera es la
+portada), `is_active`, `created_at` y `updated_at`. `sales_price` fue retirado;
+la migración 0010 convierte las ofertas guardadas a porcentajes antes de quitar
+la columna. El porcentaje determina si hay oferta. Con `price`, el precio
+rebajado se calcula automáticamente; sin `price`, solo se muestra el porcentaje.
 
 Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
 `image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
-conservan la foto anterior.
-
-Reglas de la oferta:
-
-- `sales_price` puede existir con o sin `price`.
-- Debe ser mayor que `0`. Si además hay `price`, debe ser **menor** que `price`;
-  si no, el backend responde `400` con el error en el campo `sales_price`.
-- `discount_percent` es opcional, entero entre `1` y `99`, y solo se acepta
-  junto a `sales_price`. Se usa cuando **no hay `price`**; con precio normal el
-  porcentaje se calcula automáticamente.
-- `sales_price` admite decimales (por ejemplo `79.99`). Enviar `null` o dejarlo
-  vacío quita la oferta. Enviar `discount_percent` vacío o `null` quita el
-  porcentaje manual.
+conservan la foto anterior. `discount_percent` se puede dejar vacío para quitar
+la oferta; los valores válidos son enteros entre 1 y 99.
 
 ```json
-{ "price": "100.00", "sales_price": "79.99" }
-```
-
-```json
-{ "sales_price": "80.00", "discount_percent": 20 }
+{ "price": "100.00", "discount_percent": 20 }
 ```
 
 ## Storefront público (`/public/`)

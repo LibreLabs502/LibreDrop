@@ -86,39 +86,25 @@ class PublicStoreOffersTests(TestCase):
         self.client = APIClient()
         self.tenant = Tenant.objects.create(name="Tienda Ofertas")
 
-    def test_storefront_expone_precio_de_oferta(self):
-        Product.objects.create(
-            tenant=self.tenant,
-            name="Producto en oferta",
-            price="100.00",
-            sales_price="79.99",
-        )
+    def test_storefront_expone_porcentaje_y_no_precio_de_oferta(self):
+        Product.objects.create(tenant=self.tenant, name="Producto en oferta", price="100.00", discount_percent=20)
         res = self.client.get(f"/public/{self.tenant.slug}/")
         self.assertEqual(res.status_code, 200)
         product = res.json()["products"][0]
         self.assertEqual(product["price"], "100.00")
-        self.assertEqual(product["sales_price"], "79.99")
-        # Las cinco fotos viajan al storefront; las vacías llegan como null.
+        self.assertEqual(product["discount_percent"], 20)
+        self.assertNotIn("sales_price", product)
         for field in ("image", "image2", "image3", "image4", "image5"):
             self.assertIn(field, product)
-        self.assertIn("discount_percent", product)
 
-    def test_storefront_expone_oferta_sin_precio_y_porcentaje_manual(self):
-        Product.objects.create(
-            tenant=self.tenant,
-            name="Oferta sin precio",
-            sales_price="80.00",
-            discount_percent=20,
-        )
-        res = self.client.get(f"/public/{self.tenant.slug}/")
-        self.assertEqual(res.status_code, 200)
-        product = res.json()["products"][0]
+    def test_oferta_sin_precio_se_publica_solo_como_porcentaje(self):
+        Product.objects.create(tenant=self.tenant, name="Oferta sin precio", discount_percent=20)
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
         self.assertIsNone(product["price"])
-        self.assertEqual(product["sales_price"], "80.00")
         self.assertEqual(product["discount_percent"], 20)
+        self.assertNotIn("sales_price", product)
 
-    def test_storefront_expone_oferta_vacia_como_null(self):
+    def test_producto_sin_oferta_publica_porcentaje_null(self):
         Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")
-        res = self.client.get(f"/public/{self.tenant.slug}/")
-        self.assertEqual(res.status_code, 200)
-        self.assertIsNone(res.json()["products"][0]["sales_price"])
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertIsNone(product["discount_percent"])

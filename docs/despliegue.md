@@ -101,15 +101,11 @@ con `sync: false` (`SECRET_KEY`, `DATABASE_URL`, `CORS_*`, `CLOUDINARY_*`);
 imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
 (buscalo en los logs de Render).
 
-Las migraciones de catálogo se aplican igual que el resto. Por ejemplo, el
-precio de oferta (`Product.sales_price`) llega con
-`catalog/0007_product_sales_price.py`, las fotos adicionales
-(`image2`…`image5`) con
-`catalog/0008_product_image2_product_image3_product_image4_and_more.py` y el
-porcentaje manual (`Product.discount_percent`) con
-`catalog/0009_product_discount_percent.py`: después del deploy, el panel ya
-puede crear ofertas (con o sin precio normal) y subir hasta cinco fotos por
-producto sin pasos manuales.
+Las migraciones de catálogo se aplican igual que el resto. La migración 0010
+convierte descuentos guardados a `discount_percent` y después retira
+`Product.sales_price`; el despliegue preserva así las ofertas existentes.
+Las migraciones 0008 y 0009 agregaron respectivamente las cuatro fotos
+adicionales y `discount_percent`.
 
 > **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
 > **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr

@@ -1,6 +1,21 @@
 # Versiones
 
-## v0.11 — Más imágenes y “Ver detalles” en la tienda
+## v1 — Catálogo más rápido y ofertas renovadas
+
+- Se conserva la carga de **hasta cinco fotos por producto** y la vista
+  “Ver detalles” descrita abajo.
+- Las ofertas ahora se registran únicamente con `discount_percent` (entero de
+  1 a 99). Si existe `price`, el precio rebajado se calcula automáticamente;
+  si no existe, se muestra solo el porcentaje. La migración 0010 convierte las
+  ofertas guardadas antes de eliminar `sales_price`. Para registros antiguos
+  sin precio normal ni porcentaje, conserva la oferta como 1%, ya que no había
+  datos para recuperar el porcentaje original.
+- En la tienda, los productos en oferta muestran el precio normal y el precio
+  calculado con descuento. Un carrusel debajo de la descripción muestra una
+  foto a la vez para dos ofertas y hasta tres fotos para tres o más; “Ver
+  ofertas” oculta el carrusel y filtra todos los productos rebajados. El título
+  usa `Tenant.sale_text` y las fotos avanzan automáticamente.
+- Panel → Catálogo: buscá productos por nombre, marca o descripción.
 
 - `Product` suma `image2`, `image3`, `image4` e `image5` (opcionales); junto a
   `image` permiten hasta **5 fotos por producto**. Migración
@@ -19,30 +34,8 @@
 
 ## v0.10 — Ofertas y Novedades con historial
 
-### Precio de oferta
-
-- `Product.sales_price` (`DecimalField(max_digits=10, decimal_places=2,
-  blank=True, null=True)`) guarda el precio rebajado; migración
-  `catalog/0007_product_sales_price.py`. Es opcional y admite centavos.
-- `Product.discount_percent` (`PositiveSmallIntegerField`, opcional, 1–99;
-  migración `catalog/0009_product_discount_percent.py`) permite mostrar el
-  porcentaje cuando el producto **no tiene precio normal**. Solo se acepta si
-  hay `sales_price`.
-- Una oferta es válida si `sales_price > 0` y, **cuando existe `price`**, además
-  `sales_price < price`. Sin precio normal la oferta se acepta; el porcentaje
-  sale de `discount_percent` o se muestra solo **“Oferta”**. El backend lo
-  valida en `ProductSerializer` y el panel muestra el error antes de enviar.
-- Los serializers del panel (`ProductSerializer`) y del storefront público
-  (`PublicProductSerializer`) exponen `sales_price` y `discount_percent`.
-- Panel: los formularios de crear/editar producto tienen **“Precio de oferta”**
-  y **“% de descuento”** (este último solo se usa sin precio normal). La lista
-  marca el precio rebajado, el precio anterior cuando existe y el porcentaje.
-- Tienda pública: muestra el **precio de oferta** como principal, el precio
-  normal **tachado** (si existe) y una etiqueta **“Descuento del: N%”** o
-  **“Oferta”** cuando no hay porcentaje. También agrega el filtro **“Ofertas”**
-  con la cantidad de productos rebajados.
-- Lógica compartida en `frontend/src/pricing.js` (`hasOffer`,
-  `discountPercent`, `effectivePrice`) con pruebas en `pricing.test.js`.
+- La oferta por precio fijo (`Product.sales_price`) descrita en esta versión
+  fue reemplazada en v1 por el porcentaje `discount_percent`.
 
 ### Historial de Novedades
 

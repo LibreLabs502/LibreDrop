@@ -38,15 +38,11 @@ activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
 `suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
 datos (fila única) y se editan desde el panel del superusuario.
 
-Las **ofertas** se guardan en `Product.sales_price` (decimal opcional) y, para
-productos sin precio normal, en `Product.discount_percent` (1–99, opcional).
-El backend acepta `sales_price > 0` con o sin `price`; si hay precio normal,
-exige `sales_price < price`. El frontend repite la validación antes de enviar y
-centraliza el cálculo del descuento en `frontend/src/pricing.js`: con precio
-normal el porcentaje se calcula, y sin precio normal se usa
-`discount_percent` o se muestra solo **“Oferta”**. La tienda pública muestra el
-precio de oferta, el anterior tachado cuando existe, la etiqueta
-**“Descuento del: N%”** y un filtro **“Ofertas”** con la cantidad disponible.
+Las **ofertas** se guardan en `Product.discount_percent` (entero de 1 a 99).
+Si hay `price`, el frontend calcula el precio rebajado y muestra ambos precios;
+sin precio normal muestra solo el porcentaje. El filtro “Ofertas” se basa en
+ese campo. La migración 0010 conserva los descuentos existentes al retirar
+`Product.sales_price`.
 
 Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
 primera es la portada de la tarjeta; el resto se muestra en la ventana que abre

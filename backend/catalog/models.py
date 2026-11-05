@@ -26,9 +26,6 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     brand = models.CharField(max_length=255, blank=True)
     price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    sales_price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    # Porcentaje manual para tiendas que quieren mostrar un descuento sin
-    # cargar el precio normal. Si hay precio normal, se calcula solo.
     discount_percent = models.PositiveSmallIntegerField(blank=True, null=True)
     image = CloudinaryField("producto")
     image2 = CloudinaryField("producto", blank=True, null=True)
@@ -49,24 +46,13 @@ class Product(models.Model):
 
     def clean(self):
         super().clean()
-        if self.sales_price is not None:
-            if self.sales_price <= 0:
-                raise ValidationError({
-                    "sales_price": "El precio de oferta debe ser mayor que cero."
-                })
-            # Sin precio normal se permite la oferta; en ese caso el porcentaje
-            # se toma de discount_percent o se muestra solo “Oferta”.
-            if self.price is not None and self.sales_price >= self.price:
-                raise ValidationError({
-                    "sales_price": "El precio de oferta debe ser menor que el precio normal."
-                })
-
         if self.discount_percent is not None:
-            if self.discount_percent < 1 or self.discount_percent > 99:
+            if (
+                not isinstance(self.discount_percent, int)
+                or isinstance(self.discount_percent, bool)
+                or self.discount_percent < 1
+                or self.discount_percent > 99
+            ):
                 raise ValidationError({
                     "discount_percent": "El porcentaje de descuento debe estar entre 1 y 99."
-                })
-            if self.sales_price is None:
-                raise ValidationError({
-                    "discount_percent": "Para usar un porcentaje de descuento, primero poné un precio de oferta."
                 })
