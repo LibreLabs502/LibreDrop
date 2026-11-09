@@ -7,6 +7,7 @@ import PaymentGate from '../components/admin/PaymentGate'
 import WhatsNew from '../components/admin/WhatsNew'
 import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
 import { hasSeenLatestUpdate, markLatestUpdateSeen } from '../updates'
+import { hasAdminSubscriptionAccess } from '../subscriptionAccess'
 
 const LINKS = [
   { to: '/admin', end: true, label: 'Tiendas', Icon: StoresIcon },
@@ -138,10 +139,12 @@ function GateOrShell() {
 
   if (loading) return <div className="page-load">Cargando tiendas…</div>
 
-  // Hasta que la tienda esté activada (plan activo), el dueño no entra al panel:
-  // solo ve el formulario de pago. El superusuario siempre entra.
-  const blocked =
-    !user?.is_superuser && currentTenant && currentTenant.subscription?.status !== 'active'
+  // Sin suscripción o después de terminar los diez días de gracia, el dueño
+  // solo ve el flujo de pago. Durante `past_due` conserva el panel.
+  const blocked = currentTenant && !hasAdminSubscriptionAccess(
+    currentTenant.subscription,
+    !!user?.is_superuser,
+  )
   if (blocked) return <PaymentGate />
 
   return <Shell />

@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from catalog.models import Product, SeasonalCategory
-from tenants.models import Membership, Tenant
+from tenants.models import Membership, Subscription, Tenant
 from tenants.theme import DEFAULT_PALETTE, PALETTES
 
 User = get_user_model()
@@ -195,3 +198,35 @@ class PublicStoreCollectionsTests(TestCase):
         self.assertIsNone(products[featured.name]["seasonal_category"])
         self.assertFalse(products[seasonal.name]["featured"])
         self.assertEqual(products[seasonal.name]["seasonal_category"], self.season.id)
+
+
+class PublicStoreSubscriptionTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tenant = Tenant.objects.create(name="Tienda con suscripción")
+        self.subscription = Subscription.objects.create(
+            tenant=self.tenant,
+            current_period_end=timezone.now() + timedelta(days=30),
+        )
+
+    def test_tienda_publica_sigue_disponible_durante_la_gracia(self):
+        self.subscription.current_period_end = timezone.now() - timedelta(days=9)
+        self.subscription.save(update_fields=["current_period_end"])
+        response = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_tienda_publica_se_oculta_al_terminar_la_gracia(self):
+        self.subscription.current_period_end = timezone.now() - timedelta(days=10)
+        self.subscription.save(update_fields=["current_period_end"])
+        response = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_renovacion_vuelve_a_publicar_la_tienda(self):
+        self.subscription.current_period_end = timezone.now() - timedelta(days=12)
+        self.subscription.save(update_fields=["current_period_end"])
+        self.assertEqual(self.client.get(f"/public/{self.tenant.slug}/").status_code, 404)
+
+        from tenants.services import renew_subscription
+
+        renew_subscription(self.subscription)
+        self.assertEqual(self.client.get(f"/public/{self.tenant.slug}/").status_code, 200)

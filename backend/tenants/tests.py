@@ -1,9 +1,12 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Membership, Tenant
+from .models import Membership, Subscription, Tenant
 from .theme import DEFAULT_PALETTE, PALETTES
 
 User = get_user_model()
@@ -60,6 +63,10 @@ class TenantSlugApiTests(APITestCase):
         self.user = User.objects.create_user(username="ana", password="clave-segura-123")
         self.tenant = Tenant.objects.create(name="Tienda A")
         Membership.objects.create(user=self.user, tenant=self.tenant, role=Membership.Role.owner)
+        Subscription.objects.create(
+            tenant=self.tenant,
+            current_period_end=timezone.now() + timedelta(days=30),
+        )
         self.client.force_authenticate(self.user)
 
     def test_patch_del_nombre_actualiza_el_slug(self):
@@ -104,6 +111,10 @@ class TenantThemeApiTests(APITestCase):
         self.user = User.objects.create_user(username="ana", password="clave-segura-123")
         self.tenant = Tenant.objects.create(name="Tienda A")
         Membership.objects.create(user=self.user, tenant=self.tenant, role=Membership.Role.owner)
+        Subscription.objects.create(
+            tenant=self.tenant,
+            current_period_end=timezone.now() + timedelta(days=30),
+        )
         self.client.force_authenticate(self.user)
 
     def test_listado_expone_tema_completo(self):

@@ -12,7 +12,11 @@ from .channels import (
     is_valid_destination,
     normalize_channels,
 )
-from .models import Membership, Tenant
+from datetime import timedelta
+
+from django.utils import timezone
+
+from .models import Membership, Subscription, Tenant
 
 User = get_user_model()
 
@@ -56,6 +60,10 @@ class PurchaseChannelsApiTests(APITestCase):
         self.user = User.objects.create_user(username="ana", password="clave-segura-123")
         self.tenant = Tenant.objects.create(name="Tienda A")
         Membership.objects.create(user=self.user, tenant=self.tenant, role=Membership.Role.owner)
+        Subscription.objects.create(
+            tenant=self.tenant,
+            current_period_end=timezone.now() + timedelta(days=30),
+        )
         self.client.force_authenticate(self.user)
 
     def _patch(self, payload):

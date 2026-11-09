@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { tenantsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
+import { tenantsApi, paymentsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
 import { PURCHASE_CHANNELS, channelIsReady, DEFAULT_PURCHASE_BUTTON_TEXT, purchaseButtonText } from '../../channels'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
@@ -28,6 +28,30 @@ export default function StoresManager() {
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
   const [busy, setBusy] = useState(false)
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0)
+
+  useEffect(() => {
+    if (!user?.is_superuser) return undefined
+
+    let mounted = true
+    const loadPendingPayments = async () => {
+      try {
+        const payments = await paymentsApi.list()
+        if (mounted) {
+          setPendingPaymentsCount(payments.filter((payment) => payment.status === 'pending').length)
+        }
+      } catch {
+        // El aviso es auxiliar; la pantalla de pagos conserva su manejo de errores.
+      }
+    }
+
+    loadPendingPayments()
+    const interval = window.setInterval(loadPendingPayments, 60_000)
+    return () => {
+      mounted = false
+      window.clearInterval(interval)
+    }
+  }, [user?.is_superuser])
 
   useEffect(() => {
     if (!loading) reload()
@@ -224,6 +248,17 @@ export default function StoresManager() {
               Me gustaría activar mi cuenta
             </a>
           </div>
+        </div>
+      )}
+
+      {user?.is_superuser && pendingPaymentsCount > 0 && (
+        <div className="notice warn">
+          <p className="notice-text">
+            Hay <b>{pendingPaymentsCount} pago{pendingPaymentsCount === 1 ? '' : 's'} pendiente{pendingPaymentsCount === 1 ? '' : 's'}</b> por revisar.
+          </p>
+          <Link className="btn small" to="/admin/pagos">
+            Revisar pagos
+          </Link>
         </div>
       )}
 
