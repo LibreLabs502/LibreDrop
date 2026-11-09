@@ -179,8 +179,10 @@ defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
 de ofertas y productos destacados. `seasonal_categories` lista las categorías de
 temporada de la tienda. Los productos con `featured: true` aparecen en la
 colección de destacados y los que tienen `seasonal_category` en la de temporada.
-El frontend muestra un carrusel de fotos por cada colección que tenga productos y
-un filtro con el mismo nombre en la barra de categorías.
+El frontend muestra un carrusel de fotos por cada colección que tenga al menos
+dos fotos (con dos productos, una por vez; con tres o más, tres por tanda,
+repitiendo si hace falta) y un filtro con el mismo nombre en la barra de
+categorías.
 
 ## Pagos y suscripción (`/payments/`)
 

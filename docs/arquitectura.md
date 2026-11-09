@@ -48,8 +48,9 @@ convirtió las ofertas existentes a porcentaje y retiró la columna; la migraci�
 Las **categorías de temporada** (`SeasonalCategory`) agrupan productos para la
 colección “Productos de temporada”. Los **productos destacados** usan
 `Product.featured`. La tienda pública muestra un carrusel de fotos por cada
-colección que tenga productos, con un filtro equivalente en la barra de
-categorías.
+colección que tenga al menos dos fotos (con dos productos, una por vez; con tres
+o más, tres por tanda, repitiendo si hace falta para completarla), con un filtro
+equivalente en la barra de categorías.
 
 Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
 primera es la portada de la tarjeta; el resto se muestra en la ventana que abre

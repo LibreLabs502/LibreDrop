@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { carouselPage } from '../carousel'
 import { productImages } from '../images'
 import { discountPercent, effectivePrice, hasOffer } from '../pricing'
 import { themeStyle } from '../theme'
@@ -85,8 +86,10 @@ function PriceTag({ product }) {
 }
 
 // Carrusel compartido por las colecciones de la tienda. Solo muestra fotos:
-// al tocar una, se abre la ventana de detalles del producto. Si hay 3 o más
-// productos se ven de a tres; con uno o dos, de a uno.
+// al tocar una, se abre la ventana de detalles del producto. Con una sola foto
+// no hay carrusel (solo queda el filtro de la colección); con dos se ve una a
+// la vez; con tres o más se ven de a tres, repitiendo fotos si hace falta para
+// completar cada tanda.
 function ProductPhotoCarousel({
   title,
   eyebrow,
@@ -97,13 +100,8 @@ function ProductPhotoCarousel({
   interval = 4000,
 }) {
   const [slide, setSlide] = useState(0)
-  const pageSize = products.length >= 3 ? 3 : 1
-  const pageCount = Math.max(1, Math.ceil(products.length / pageSize))
-  const activeSlide = slide % pageCount
-  const visibleProducts = products.slice(
-    activeSlide * pageSize,
-    activeSlide * pageSize + pageSize,
-  )
+  const photos = products.filter((product) => productImages(product).length > 0)
+  const { pageSize, pageCount, items } = carouselPage(photos, slide)
 
   useEffect(() => {
     if (pageCount <= 1) return undefined
@@ -114,7 +112,7 @@ function ProductPhotoCarousel({
     return () => window.clearInterval(timer)
   }, [pageCount, interval])
 
-  if (!products.length) return null
+  if (!pageCount) return null
 
   return (
     <section className="store-carousel" aria-label={title}>
@@ -123,10 +121,10 @@ function ProductPhotoCarousel({
         <h2>{title}</h2>
       </div>
       <div
-        key={`${title}-${activeSlide}`}
+        key={`${title}-${slide % pageCount}`}
         className={`store-carousel-photos${pageSize === 3 ? ' has-three' : ''}`}
       >
-        {visibleProducts.map((product) => {
+        {items.map((product) => {
           const photo = productImages(product)[0]
           return photo ? (
             <button

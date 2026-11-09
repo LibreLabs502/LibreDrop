@@ -8,9 +8,11 @@
   categorías normales.
 - La tienda pública muestra hasta tres carruseles de fotos, en este orden:
   **Productos de temporada**, **Ofertas** y **Productos destacados**. Cada uno
-  aparece solo si su colección tiene productos con foto.
-- Los carruseles avanzan solos. Con uno o dos productos se ve una foto a la
-  vez; con tres o más se ven tres fotos en un diseño grande.
+  aparece solo si su colección tiene al menos dos productos con foto; con una
+  sola foto queda únicamente el filtro de la colección.
+- Los carruseles avanzan solos. Con dos productos se ve una foto a la vez (1 y
+  1); con tres o más se ven tres fotos por tanda, repitiendo fotos si hace falta
+  para completar la tanda.
 - Debajo de cada carrusel hay un botón (**Ver ofertas**, **Ver productos de
   temporada**, **Ver productos destacados**) que activa el filtro de esa
   colección y oculta el carrusel.
