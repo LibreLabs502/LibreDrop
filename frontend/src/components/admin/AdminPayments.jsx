@@ -36,7 +36,7 @@ export default function AdminPayments() {
 
   return (
     <div className="stack">
-      <SubscriptionPanel />
+      <SubscriptionPanel isSuperuser={isSuperuser} />
       {isSuperuser && <PaymentsTable />}
       {isSuperuser && <BillingSettings />}
     </div>
@@ -45,7 +45,7 @@ export default function AdminPayments() {
 
 /* ---------- Mi plan (dueño de la tienda) ---------- */
 
-function SubscriptionPanel() {
+function SubscriptionPanel({ isSuperuser }) {
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
   const [description, setDescription] = useState(SUBSCRIPTION_DESC)
@@ -57,11 +57,12 @@ function SubscriptionPanel() {
   const [billing, setBilling] = useState(null)
 
   useEffect(() => {
+    if (isSuperuser) return
     billingApi
       .get()
       .then(setBilling)
       .catch(() => setBilling(null))
-  }, [])
+  }, [isSuperuser])
 
   if (!currentTenant) {
     return (
@@ -173,7 +174,12 @@ function SubscriptionPanel() {
           </div>
         )}
 
-        {needsPayment && <BankDetails billing={billing} />}
+        {needsPayment && isSuperuser && (
+          <p className="field-hint">
+            Los datos bancarios no se cargan ni se muestran en el panel de superusuario.
+          </p>
+        )}
+        {needsPayment && !isSuperuser && <BankDetails billing={billing} />}
 
         {ok && <Alert kind="ok">{ok}</Alert>}
         {error && <Alert>{error}</Alert>}
@@ -335,22 +341,21 @@ function PaymentsTable() {
   )
 }
 
-/* ---------- Datos de pago (superusuario) ---------- */
+/* ---------- Configuración bancaria (superusuario) ---------- */
 
 function BillingSettings() {
-  const [form, setForm] = useState(null)
+  const [form, setForm] = useState({ bank: '', account_type: '', account_number: '', holder: '' })
+  const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
 
-  useEffect(() => {
-    billingApi
-      .get()
-      .then(setForm)
-      .catch((err) => setError(err.message))
-  }, [])
-
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
+  const set = (key) => (e) => setForm((current) => ({ ...current, [key]: e.target.value }))
+  const cancelEdit = () => {
+    setForm({ bank: '', account_type: '', account_number: '', holder: '' })
+    setEditing(false)
+    setError('')
+  }
 
   const save = async (e) => {
     e.preventDefault()
@@ -358,14 +363,10 @@ function BillingSettings() {
     setError('')
     setOk('')
     try {
-      const updated = await billingApi.update({
-        bank: form.bank,
-        account_type: form.account_type,
-        account_number: form.account_number,
-        holder: form.holder,
-      })
-      setForm(updated)
-      setOk('Datos de pago guardados.')
+      await billingApi.update(form)
+      setForm({ bank: '', account_type: '', account_number: '', holder: '' })
+      setEditing(false)
+      setOk('Datos bancarios guardados. No se volverán a cargar en este panel.')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -373,41 +374,39 @@ function BillingSettings() {
     }
   }
 
-  if (!form) {
-    return (
-      <Card title="Datos de pago (cuenta bancaria)">
-        {error ? <Alert>{error}</Alert> : <Spinner />}
-      </Card>
-    )
-  }
-
   return (
     <Card title="Datos de pago (cuenta bancaria)">
       <p className="muted">
-        Es la cuenta que ven los dueños para depositar la suscripción. Se muestra en
-        el paso de activación y en el panel de pagos.
+        Ingresá la cuenta que verán los dueños de tiendas al pagar. Por seguridad, el formulario
+        empieza vacío y no consulta ni rellena los datos guardados.
       </p>
-      <form className="form" onSubmit={save}>
-        <Field label="Banco">
-          <input value={form.bank} onChange={set('bank')} />
-        </Field>
-        <Field label="Tipo de cuenta">
-          <input value={form.account_type} onChange={set('account_type')} />
-        </Field>
-        <Field label="Número de cuenta">
-          <input value={form.account_number} onChange={set('account_number')} />
-        </Field>
-        <Field label="Titular">
-          <input value={form.holder} onChange={set('holder')} />
-        </Field>
-        {error && <Alert>{error}</Alert>}
-        {ok && <Alert kind="ok">{ok}</Alert>}
-        <div className="btn-group">
-          <button className="btn" disabled={busy}>
-            {busy ? 'Guardando…' : 'Guardar'}
-          </button>
-        </div>
-      </form>
+      {!editing ? (
+        <button type="button" className="btn ghost small" onClick={() => { setError(''); setOk(''); setEditing(true) }}>
+          Agregar o cambiar datos bancarios
+        </button>
+      ) : (
+        <form className="form" onSubmit={save}>
+          <Field label="Banco">
+            <input value={form.bank} onChange={set('bank')} required />
+          </Field>
+          <Field label="Tipo de cuenta">
+            <input value={form.account_type} onChange={set('account_type')} required />
+          </Field>
+          <Field label="Número de cuenta">
+            <input value={form.account_number} onChange={set('account_number')} required />
+          </Field>
+          <Field label="Titular">
+            <input value={form.holder} onChange={set('holder')} required />
+          </Field>
+          {error && <Alert>{error}</Alert>}
+          {ok && <Alert kind="ok">{ok}</Alert>}
+          <div className="btn-group">
+            <button className="btn" disabled={busy}>{busy ? 'Guardando…' : 'Guardar datos'}</button>
+            <button type="button" className="btn ghost" onClick={cancelEdit}>Cancelar</button>
+          </div>
+        </form>
+      )}
+      {ok && <Alert kind="ok">{ok}</Alert>}
     </Card>
   )
 }
