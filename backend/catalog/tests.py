@@ -6,9 +6,10 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
+from datetime import timedelta
 from rest_framework.test import APIClient, APIRequestFactory
 
-from tenants.models import Membership, Tenant
+from tenants.models import Membership, Subscription, Tenant
 
 from .models import Product
 from .serializers import ProductSerializer
@@ -210,6 +211,10 @@ class ProductReorderFeaturedTests(TestCase):
         Membership.objects.create(
             user=self.user, tenant=self.tenant, role=Membership.Role.owner
         )
+        self.subscription = Subscription.objects.create(
+            tenant=self.tenant,
+            current_period_end=timezone.now() + timedelta(days=30),
+        )
         self.client.force_authenticate(self.user)
         self.uno = Product.objects.create(tenant=self.tenant, name="Uno", price="10.00")
         self.dos = Product.objects.create(tenant=self.tenant, name="Dos", price="20.00")
@@ -244,3 +249,13 @@ class ProductReorderFeaturedTests(TestCase):
         otra = Tenant.objects.create(name="Otra tienda")
         ajeno = Product.objects.create(tenant=otra, name="Ajeno", price="10.00")
         self.assertEqual(self.reorder([ajeno.id]).status_code, 400)
+
+    def test_permita_gestionar_durante_los_diez_dias_de_gracia(self):
+        self.subscription.current_period_end = timezone.now() - timedelta(days=9)
+        self.subscription.save(update_fields=["current_period_end"])
+        self.assertEqual(self.reorder([self.uno.id]).status_code, 200)
+
+    def test_bloquea_gestion_despues_de_los_diez_dias_de_gracia(self):
+        self.subscription.current_period_end = timezone.now() - timedelta(days=10, seconds=1)
+        self.subscription.save(update_fields=["current_period_end"])
+        self.assertEqual(self.reorder([self.uno.id]).status_code, 403)

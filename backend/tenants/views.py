@@ -2,8 +2,10 @@ from rest_framework import generics, viewsets
 from .serializers import MembershipSerializer, PaletteSerializer, TenantSerializer
 from .models import Tenant, Membership
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 
 from .theme import palette_catalog
+from .permissions import TenantSubscriptionAccess, tenant_subscription_allows_access
 
 class TenantViewSet(viewsets.ModelViewSet):
     serializer_class = TenantSerializer
@@ -15,6 +17,17 @@ class TenantViewSet(viewsets.ModelViewSet):
             .select_related("subscription")
             .distinct()
         )
+
+    def perform_update(self, serializer):
+        tenant = serializer.instance
+        if not self.request.user.is_superuser and not tenant_subscription_allows_access(tenant):
+            raise PermissionDenied("La suscripción está suspendida. Pagá para recuperar el acceso.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if not self.request.user.is_superuser and not tenant_subscription_allows_access(instance):
+            raise PermissionDenied("La suscripción está suspendida. Pagá para recuperar el acceso.")
+        instance.delete()
 
 
 class PaletteListView(generics.ListAPIView):
@@ -28,7 +41,7 @@ class PaletteListView(generics.ListAPIView):
 
 class TenantMemberView(viewsets.ModelViewSet):
     serializer_class = MembershipSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TenantSubscriptionAccess]
 
     def get_queryset(self): # type: ignore
         return Membership.objects.select_related("tenant", "user").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)

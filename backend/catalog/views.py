@@ -2,13 +2,15 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from tenants.permissions import TenantSubscriptionAccess
+
 from .models import Category, Product, SeasonalCategory
 from .serializers import CategorySerializer, ProductSerializer, SeasonalCategorySerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TenantSubscriptionAccess]
 
     def get_queryset(self): # type: ignore
         return Category.objects.select_related("tenant").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
@@ -19,7 +21,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class SeasonalCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = SeasonalCategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TenantSubscriptionAccess]
 
     def get_queryset(self): # type: ignore
         return SeasonalCategory.objects.select_related("tenant").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
@@ -30,7 +32,7 @@ class SeasonalCategoryViewSet(viewsets.ModelViewSet):
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TenantSubscriptionAccess]
 
     def get_queryset(self): # type: ignore
         return Product.objects.select_related("tenant", "category", "seasonal_category").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
