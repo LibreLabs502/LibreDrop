@@ -102,10 +102,12 @@ imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
 (buscalo en los logs de Render).
 
 Las migraciones de catálogo se aplican igual que el resto. La migración 0010
-convierte descuentos guardados a `discount_percent` y después retira
-`Product.sales_price`; el despliegue preserva así las ofertas existentes.
-Las migraciones 0008 y 0009 agregaron respectivamente las cuatro fotos
-adicionales y `discount_percent`.
+convirtió las ofertas guardadas a `discount_percent` y retiró
+`Product.sales_price`; la migración 0014 restaura el precio de oferta y lo
+reconstruye a partir del descuento cuando todavía hay precio normal, de modo que
+las ofertas existentes se conservan. Las migraciones 0008, 0009 y 0011–0013
+agregaron las cuatro fotos adicionales, `discount_percent`, `featured` y las
+categorías de temporada.
 
 > **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
 > **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr

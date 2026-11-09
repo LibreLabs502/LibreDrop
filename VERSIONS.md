@@ -1,5 +1,31 @@
 # Versiones
 
+## v1.1 — Colecciones de temporada, ofertas y destacados
+
+- Panel → Catálogo: marcá productos para destacarlos y asignales una categoría
+  de temporada —por ejemplo Navidad o Día de la Madre—.
+- Panel → Catálogo: las categorías de temporada se crean y editan como las
+  categorías normales.
+- La tienda pública muestra hasta tres carruseles de fotos, en este orden:
+  **Productos de temporada**, **Ofertas** y **Productos destacados**. Cada uno
+  aparece solo si su colección tiene productos con foto.
+- Los carruseles avanzan solos. Con uno o dos productos se ve una foto a la
+  vez; con tres o más se ven tres fotos en un diseño grande.
+- Debajo de cada carrusel hay un botón (**Ver ofertas**, **Ver productos de
+  temporada**, **Ver productos destacados**) que activa el filtro de esa
+  colección y oculta el carrusel.
+- La barra de categorías suma los filtros **Ofertas**, **Temporada** y
+  **Destacados**, con la cantidad de productos de cada colección.
+- Se restaura `Product.sales_price` como base de las ofertas. La migración
+  `catalog/0014_restore_product_sales_price.py` reconstruye el precio de oferta
+  de las ofertas que todavía tienen precio normal. `discount_percent` queda como
+  porcentaje manual opcional cuando no hay precio normal.
+- Los serializers del catálogo y del storefront exponen `Product.sales_price`,
+  `Product.featured`, `Product.seasonal_category`,
+  `Tenant.featured_products_text` y `Tenant.seasonal_categories`.
+- Las secciones usan la paleta de la tienda, se adaptan a móviles y respetan la
+  preferencia de reducir movimiento.
+
 ## v1 — Catálogo más rápido y ofertas renovadas
 
 - Se conserva la carga de **hasta cinco fotos por producto** y la vista
@@ -35,7 +61,8 @@
 ## v0.10 — Ofertas y Novedades con historial
 
 - La oferta por precio fijo (`Product.sales_price`) descrita en esta versión
-  fue reemplazada en v1 por el porcentaje `discount_percent`.
+  fue reemplazada en v1 por el porcentaje `discount_percent` y restaurada en
+  v1.1 como base de las ofertas.
 
 ### Historial de Novedades
 

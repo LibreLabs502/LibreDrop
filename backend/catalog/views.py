@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .serializers import CategorySerializer, ProductSerializer
-from .models import Category, Product
+from .serializers import CategorySerializer, ProductSerializer, SeasonalCategorySerializer
+from .models import Category, Product, SeasonalCategory
 from rest_framework.permissions import IsAuthenticated
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -13,12 +13,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(tenant_id = self.kwargs["tenant_id"])
 
+class SeasonalCategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = SeasonalCategorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self): # type: ignore
+        return SeasonalCategory.objects.select_related("tenant").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(tenant_id = self.kwargs["tenant_id"])
+
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self): # type: ignore
-        return Product.objects.select_related("tenant", "category").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
+        return Product.objects.select_related("tenant", "category", "seasonal_category").filter(tenant_id=self.kwargs["tenant_id"], tenant__memberships__user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(tenant_id = self.kwargs["tenant_id"])

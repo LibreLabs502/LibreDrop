@@ -38,11 +38,18 @@ activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
 `suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
 datos (fila única) y se editan desde el panel del superusuario.
 
-Las **ofertas** se guardan en `Product.discount_percent` (entero de 1 a 99).
-Si hay `price`, el frontend calcula el precio rebajado y muestra ambos precios;
-sin precio normal muestra solo el porcentaje. El filtro “Ofertas” se basa en
-ese campo. La migración 0010 conserva los descuentos existentes al retirar
-`Product.sales_price`.
+Las **ofertas** se guardan en `Product.sales_price` (precio de oferta). Si hay
+`price`, el frontend calcula el porcentaje y muestra ambos precios; sin precio
+normal usa `discount_percent` (entero opcional de 1 a 99) solo para mostrar el
+porcentaje. El filtro “Ofertas” se basa en `sales_price`. La migración 0010
+convirtió las ofertas existentes a porcentaje y retiró la columna; la migración
+0014 la restaura y reconstruye el precio de oferta cuando hay precio normal.
+
+Las **categorías de temporada** (`SeasonalCategory`) agrupan productos para la
+colección “Productos de temporada”. Los **productos destacados** usan
+`Product.featured`. La tienda pública muestra un carrusel de fotos por cada
+colección que tenga productos, con un filtro equivalente en la barra de
+categorías.
 
 Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
 primera es la portada de la tarjeta; el resto se muestra en la ventana que abre

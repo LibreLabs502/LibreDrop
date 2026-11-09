@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CategoryViewSet, ProductViewSet
+from .views import CategoryViewSet, ProductViewSet, SeasonalCategoryViewSet
 
 
 urlpatterns = [
@@ -13,6 +13,22 @@ urlpatterns = [
     path(
         "tenants/<int:tenant_id>/categories/<int:pk>/",
         CategoryViewSet.as_view({
+            "get": "retrieve",
+            "patch": "partial_update",
+            "put": "update",
+            "delete": "destroy",
+        }),
+    ),
+    path(
+        "tenants/<int:tenant_id>/seasonal-categories/",
+        SeasonalCategoryViewSet.as_view({
+            "get": "list",
+            "post": "create",
+        }),
+    ),
+    path(
+        "tenants/<int:tenant_id>/seasonal-categories/<int:pk>/",
+        SeasonalCategoryViewSet.as_view({
             "get": "retrieve",
             "patch": "partial_update",
             "put": "update",

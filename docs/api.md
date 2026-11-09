@@ -117,49 +117,70 @@ Reglas:
   storefront público. Si viene vacío o no existe, el frontend usa siempre
   **“Comprar por”** como respaldo.
 - El mismo texto se aplica a todos los canales activos.
+- `Tenant.sale_text` y `Tenant.featured_products_text` personalizan los títulos
+  de las secciones de ofertas y productos destacados. Ambos se editan desde el
+  panel de Tiendas, admiten hasta 40 caracteres y el storefront los expone.
 - `PATCH /tenants/tenant/<id>/`:
 
 ```json
-{ "purchase_button_text": "Pedir por" }
+{
+  "purchase_button_text": "Pedir por",
+  "sale_text": "Ofertas de temporada",
+  "featured_products_text": "Favoritos de la tienda"
+}
 ```
 
 ## Catálogo (`/catalog/`)
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET/POST | `/catalog/tenants/<id>/categories/` | Categorías |
+| GET/POST | `/catalog/tenants/<id>/categories/` | Categorías normales (`name`) |
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/categories/<pk>/` | Detalle |
-| GET/POST | `/catalog/tenants/<id>/products/` | Productos |
+| GET/POST | `/catalog/tenants/<id>/seasonal-categories/` | Categorías de temporada (`name`) |
+| GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/seasonal-categories/<pk>/` | Detalle |
+| GET/POST | `/catalog/tenants/<id>/products/` | Productos (`featured` marca productos destacados) |
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
 
-Un producto expone: `id`, `category` (puede ser `null`), `name`, `description`,
-`brand`, `price` (puede ser `null`), `discount_percent` (entero opcional de 1
-a 99), `image` y `image2`…`image5` (hasta cinco fotos; la primera es la
-portada), `is_active`, `created_at` y `updated_at`. `sales_price` fue retirado;
-la migración 0010 convierte las ofertas guardadas a porcentajes antes de quitar
-la columna. El porcentaje determina si hay oferta. Con `price`, el precio
-rebajado se calcula automáticamente; sin `price`, solo se muestra el porcentaje.
+Un producto expone: `id`, `category` (puede ser `null`), `seasonal_category`
+(puede ser `null`), `name`, `description`, `brand`, `price` (puede ser `null`),
+`sales_price` (precio de oferta, puede ser `null`), `discount_percent` (entero
+opcional de 1 a 99), `featured` (booleano para destacarlo en la tienda), `image`
+y `image2`…`image5` (hasta cinco fotos; la primera es la portada), `is_active`,
+`created_at` y `updated_at`.
+
+La oferta se detecta con `sales_price`: debe ser mayor que cero y, si hay
+`price`, menor que el precio normal. `discount_percent` se usa únicamente cuando
+no hay precio normal para mostrar el porcentaje manual. Si se envía
+`discount_percent` también hay que enviar `sales_price`.
 
 Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
 `image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
-conservan la foto anterior. `discount_percent` se puede dejar vacío para quitar
-la oferta; los valores válidos son enteros entre 1 y 99.
+conservan la foto anterior. `sales_price` y `discount_percent` se pueden dejar
+vacíos para quitar la oferta; los valores válidos del porcentaje son enteros
+entre 1 y 99.
 
 ```json
-{ "price": "100.00", "discount_percent": 20 }
+{ "price": "100.00", "sales_price": "80.00", "discount_percent": 20, "featured": true }
 ```
 
 ## Storefront público (`/public/`)
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/public/<slug>/` | Tienda pública: logo, whatsapp, canales de compra (efectivos), categorías y productos activos. Sin JWT. |
+| GET | `/public/<slug>/` | Tienda pública: logo, whatsapp, canales de compra (efectivos), categorías, categorías de temporada y productos activos. Sin JWT. |
 
 `purchase_channels` en el storefront son los **canales efectivos**: los activados
 que además tienen un destino válido. El frontend los convierte en los botones de
 compra. El texto que precede al canal viene de `purchase_button_text` (por
 defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
 "Pedir por Instagram".
+
+`sale_text` y `featured_products_text` definen los encabezados de las secciones
+de ofertas y productos destacados. `seasonal_categories` lista las categorías de
+temporada de la tienda. Los productos con `featured: true` aparecen en la
+colección de destacados y los que tienen `seasonal_category` en la de temporada.
+El frontend muestra un carrusel de fotos por cada colección que tenga productos y
+un filtro con el mismo nombre en la barra de categorías.
 
 ## Pagos y suscripción (`/payments/`)
 

@@ -220,7 +220,7 @@ export const billingApi = {
 // acepta).
 const cleanProductPayload = (data) => {
   const clean = { ...(data || {}) }
-  for (const key of ['price', 'discount_percent']) {
+  for (const key of ['price', 'sales_price', 'discount_percent']) {
     if (clean[key] === '') clean[key] = null
   }
   return clean
@@ -237,7 +237,7 @@ const productFiles = (files) => {
 const hasProductFiles = (files) => Object.values(files).some(Boolean)
 
 const productFormBody = (data, files) =>
-  formDataFrom(data, productFiles(files), ['price', 'discount_percent'])
+  formDataFrom(data, productFiles(files), ['price', 'sales_price', 'discount_percent'])
 
 export const catalogApi = {
   categories: {
@@ -248,6 +248,15 @@ export const catalogApi = {
       api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'PATCH', body: data }),
     remove: (tenantId, id) =>
       api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'DELETE' }),
+  },
+  seasonalCategories: {
+    list: (tenantId) => api(`/catalog/tenants/${tenantId}/seasonal-categories/`, { auth: true }),
+    create: (tenantId, data) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/`, { method: 'POST', body: data }),
+    update: (tenantId, id, data) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/${id}/`, { method: 'PATCH', body: data }),
+    remove: (tenantId, id) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/${id}/`, { method: 'DELETE' }),
   },
   products: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),

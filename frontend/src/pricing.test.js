@@ -1,17 +1,48 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+
 import { discountPercent, effectivePrice, hasOffer } from './pricing.js'
 
-test('solo porcentajes enteros entre 1 y 99 son ofertas', () => {
-  assert.equal(hasOffer({ price: '100', discount_percent: 20 }), true)
-  for (const value of [0, 100, 20.5, null]) assert.equal(hasOffer({ discount_percent: value }), false)
+test('sin precio de oferta no hay oferta', () => {
+  assert.equal(hasOffer({ price: '100', sales_price: null }), false)
+  assert.equal(hasOffer({ price: '100' }), false)
+  assert.equal(hasOffer({ sales_price: '0' }), false)
+  assert.equal(hasOffer({ price: '100', discount_percent: 20 }), false)
 })
-test('calcula el precio rebajado cuando hay precio normal', () => {
-  assert.equal(discountPercent({ discount_percent: 20 }), 20)
-  assert.equal(effectivePrice({ price: '100', discount_percent: 20 }), 80)
-  assert.equal(effectivePrice({ price: '99.99', discount_percent: 25 }), 74.99)
+
+test('una oferta válida debe ser menor al precio normal', () => {
+  assert.equal(hasOffer({ price: '100', sales_price: '80' }), true)
+  assert.equal(hasOffer({ price: '100', sales_price: '100' }), false)
+  assert.equal(hasOffer({ price: '100', sales_price: '120' }), false)
+  assert.equal(hasOffer({ price: '100', sales_price: '0' }), false)
 })
-test('sin precio normal conserva solo el porcentaje', () => {
-  assert.equal(hasOffer({ discount_percent: 35 }), true)
-  assert.equal(effectivePrice({ discount_percent: 35 }), null)
+
+test('se permite oferta sin precio normal', () => {
+  assert.equal(hasOffer({ price: null, sales_price: '80' }), true)
+  assert.equal(hasOffer({ sales_price: '80', discount_percent: 20 }), true)
+})
+
+test('calcula el porcentaje de descuento redondeado', () => {
+  assert.equal(discountPercent({ price: '100', sales_price: '80' }), 20)
+  assert.equal(discountPercent({ price: '99.99', sales_price: '74.99' }), 25)
+  assert.equal(discountPercent({ price: '100' }), 0)
+})
+
+test('sin precio normal usa el porcentaje manual', () => {
+  assert.equal(discountPercent({ sales_price: '80', discount_percent: 20 }), 20)
+  assert.equal(discountPercent({ sales_price: '80', discount_percent: '35' }), 35)
+  assert.equal(discountPercent({ sales_price: '80' }), 0)
+  assert.equal(discountPercent({ sales_price: '80', discount_percent: 0 }), 0)
+  assert.equal(discountPercent({ sales_price: '80', discount_percent: 120 }), 0)
+})
+
+test('con precio normal el porcentaje manual no reemplaza al calculado', () => {
+  assert.equal(discountPercent({ price: '100', sales_price: '80', discount_percent: 50 }), 20)
+})
+
+test('el precio efectivo usa el de oferta cuando existe', () => {
+  assert.equal(effectivePrice({ price: '100', sales_price: '80' }), 80)
+  assert.equal(effectivePrice({ price: null, sales_price: '80' }), 80)
+  assert.equal(effectivePrice({ price: '100' }), 100)
+  assert.equal(effectivePrice({ price: null }), null)
 })

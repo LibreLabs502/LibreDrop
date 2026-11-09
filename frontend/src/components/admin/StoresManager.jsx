@@ -6,6 +6,18 @@ import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
+function EditSection({ title, description, children }) {
+  return (
+    <section className="tenant-edit-section">
+      <div className="tenant-edit-section-heading">
+        <h4>{title}</h4>
+        <p>{description}</p>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 export default function StoresManager() {
   const { user } = useAuth()
   const { openUpdates, hasNews } = useOutletContext() || {}
@@ -27,6 +39,8 @@ export default function StoresManager() {
     setForm({
       name: t.name,
       description: t.description || '',
+      sale_text: t.sale_text || 'Productos con ofertas',
+      featured_products_text: t.featured_products_text || 'Productos destacados',
       whatsapp: t.whatsapp || '',
       instagram_url: t.instagram_url || '',
       facebook_url: t.facebook_url || '',
@@ -67,6 +81,8 @@ export default function StoresManager() {
       // usuario borró el número o el enlace sin desactivar el interruptor).
       const payload = {
         ...form,
+        sale_text: String(form.sale_text || '').trim() || 'Productos con ofertas',
+        featured_products_text: String(form.featured_products_text || '').trim() || 'Productos destacados',
         purchase_button_text: String(form.purchase_button_text || '').trim() || DEFAULT_PURCHASE_BUTTON_TEXT,
         purchase_channels: (form.purchase_channels || []).filter((k) => channelIsReady(k, form)),
       }
@@ -102,110 +118,90 @@ export default function StoresManager() {
     <div className="stack">
       {editing !== null && form && (
         <Card title="Actualizar tienda">
-          <form onSubmit={save} className="grid2">
-            <Field label="Nombre *">
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </Field>
-            <Field label="Descripción">
-              <textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </Field>
-            <Field label="Número de WhatsApp">
-              <input value={form.whatsapp} placeholder="+50212345678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-            </Field>
-            <Field label="Logo">
-              <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
-            </Field>
-            <h4 className="form-section">Redes sociales (opcional)</h4>
-            <Field label="Instagram">
-              <input
-                type="url"
-                value={form.instagram_url}
-                placeholder="https://instagram.com/tu-cuenta"
-                onChange={(e) => setForm({ ...form, instagram_url: e.target.value })}
-              />
-            </Field>
-            <Field label="Facebook">
-              <input
-                type="url"
-                value={form.facebook_url}
-                placeholder="https://facebook.com/tu-pagina"
-                onChange={(e) => setForm({ ...form, facebook_url: e.target.value })}
-              />
-            </Field>
-            <Field label="TikTok">
-              <input
-                type="url"
-                value={form.tiktok_url}
-                placeholder="https://tiktok.com/@tu-cuenta"
-                onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })}
-              />
-            </Field>
-            <Field label="LinkedIn">
-              <input
-                type="url"
-                value={form.linkedin_url}
-                placeholder="https://linkedin.com/in/tu-perfil"
-                onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
-              />
-            </Field>
-            {stores.find((t) => t.id === editing)?.logo && (
-              <div className="stack small">
-                <span className="muted">Logo actual:</span>
-                <img src={stores.find((t) => t.id === editing).logo} alt="Logo" style={{ width: 96, borderRadius: 12 }} />
+          <form onSubmit={save} className="tenant-edit-form">
+            <EditSection title="Información" description="Los datos principales que identifican tu tienda.">
+              <div className="tenant-edit-grid">
+                <Field label="Nombre *">
+                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                </Field>
+                <Field label="Descripción">
+                  <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                </Field>
+                <Field label="Número de WhatsApp" hint="Usalo con código de país, por ejemplo +502…">
+                  <input value={form.whatsapp} placeholder="+50212345678" onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+                </Field>
+                <Field label="Logo">
+                  <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                </Field>
               </div>
-            )}
-            <h4 className="form-section">Canales de compra</h4>
-            <div className="channels-block">
-              <p className="field-hint">
-                Seleccione las plataformas por las que sus clientes pueden realizar pedidos.
-              </p>
-              <div className="channel-list">
-                {PURCHASE_CHANNELS.map((c) => {
-                  const ready = channelIsReady(c.key, form)
-                  const active = ready && (form.purchase_channels || []).includes(c.key)
-                  return (
-                    <div className="channel-row" key={c.key}>
-                      <div className="channel-info">
-                        <span className="channel-name">{c.label}</span>
-                        {!ready && (
-                          <span className="channel-note warn">Falta {c.hint} para activarlo.</span>
-                        )}
+              {stores.find((t) => t.id === editing)?.logo && (
+                <div className="tenant-current-logo">
+                  <span className="field-label">Logo actual</span>
+                  <img src={stores.find((t) => t.id === editing).logo} alt="Logo actual de la tienda" />
+                </div>
+              )}
+            </EditSection>
+
+            <EditSection title="Presentación" description="Personalizá los títulos de las secciones que ven tus clientes.">
+              <div className="tenant-edit-grid">
+                <Field label="Título del carrusel de ofertas" hint="Aparece encima de las fotos de ofertas. Máximo 40 caracteres.">
+                  <input value={form.sale_text} maxLength={40} onChange={(e) => setForm({ ...form, sale_text: e.target.value })} />
+                </Field>
+                <Field label="Título de productos destacados" hint="Encabezado de la selección destacada. Máximo 40 caracteres.">
+                  <input value={form.featured_products_text} maxLength={40} onChange={(e) => setForm({ ...form, featured_products_text: e.target.value })} />
+                </Field>
+              </div>
+            </EditSection>
+
+            <EditSection title="Redes sociales" description="Agregá los perfiles donde tus clientes pueden encontrarte. Todos son opcionales.">
+              <div className="tenant-edit-grid">
+                <Field label="Instagram">
+                  <input type="url" value={form.instagram_url} placeholder="https://instagram.com/tu-cuenta" onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} />
+                </Field>
+                <Field label="Facebook">
+                  <input type="url" value={form.facebook_url} placeholder="https://facebook.com/tu-pagina" onChange={(e) => setForm({ ...form, facebook_url: e.target.value })} />
+                </Field>
+                <Field label="TikTok">
+                  <input type="url" value={form.tiktok_url} placeholder="https://tiktok.com/@tu-cuenta" onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} />
+                </Field>
+                <Field label="LinkedIn">
+                  <input type="url" value={form.linkedin_url} placeholder="https://linkedin.com/in/tu-perfil" onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} />
+                </Field>
+              </div>
+            </EditSection>
+
+            <EditSection title="Pedidos y canales" description="Elegí dónde recibir pedidos y personalizá el texto de tus botones.">
+              <div className="channels-block">
+                <div className="channel-list">
+                  {PURCHASE_CHANNELS.map((c) => {
+                    const ready = channelIsReady(c.key, form)
+                    const active = ready && (form.purchase_channels || []).includes(c.key)
+                    return (
+                      <div className="channel-row" key={c.key}>
+                        <div className="channel-info">
+                          <span className="channel-name">{c.label}</span>
+                          {!ready && <span className="channel-note warn">Falta {c.hint} para activarlo.</span>}
+                        </div>
+                        <label className={`switch${ready ? '' : ' disabled'}`}>
+                          <input type="checkbox" checked={active} disabled={!ready} onChange={() => toggleChannel(c.key)} />
+                          <span className="switch-track"><span className="switch-thumb" /></span>
+                        </label>
                       </div>
-                      <label className={`switch${ready ? '' : ' disabled'}`}>
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          disabled={!ready}
-                          onChange={() => toggleChannel(c.key)}
-                        />
-                        <span className="switch-track"><span className="switch-thumb" /></span>
-                      </label>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-            <div className="purchase-button-text-block">
-              <Field
-                label="Texto de los botones de compra"
-                hint="Elegí el texto que aparece antes del nombre de cada red. Se verá como: «Comprar por WhatsApp»."
-              >
-                <input
-                  value={form.purchase_button_text}
-                  maxLength={40}
-                  placeholder={DEFAULT_PURCHASE_BUTTON_TEXT}
-                  onChange={(e) => setForm({ ...form, purchase_button_text: e.target.value })}
-                />
-              </Field>
-              <p className="channel-preview">
-                Vista previa:{' '}
-                <b>
-                  {purchaseButtonText(form)}{' '}
-                  {PURCHASE_CHANNELS.find((c) => (form.purchase_channels || []).includes(c.key))?.label || 'WhatsApp'}
-                </b>
-              </p>
-            </div>
-            <div className="btn-group">
+              <div className="purchase-button-text-block">
+                <Field label="Texto de los botones de compra" hint="Se verá, por ejemplo, como «Comprar por WhatsApp».">
+                  <input value={form.purchase_button_text} maxLength={40} placeholder={DEFAULT_PURCHASE_BUTTON_TEXT} onChange={(e) => setForm({ ...form, purchase_button_text: e.target.value })} />
+                </Field>
+                <p className="channel-preview">
+                  Vista previa: <b>{purchaseButtonText(form)} {PURCHASE_CHANNELS.find((c) => (form.purchase_channels || []).includes(c.key))?.label || 'WhatsApp'}</b>
+                </p>
+              </div>
+            </EditSection>
+
+            <div className="tenant-edit-actions">
               <button className="btn" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cambios'}</button>
               <button type="button" className="btn ghost" onClick={cancelEdit}>Cancelar</button>
             </div>
@@ -256,6 +252,18 @@ export default function StoresManager() {
                   <>
                     <span className="store-field-label">Descripción</span>
                     <span>{t.description}</span>
+                  </>
+                )}
+                {t.sale_text && (
+                  <>
+                    <span className="store-field-label">Título de ofertas</span>
+                    <span>{t.sale_text}</span>
+                  </>
+                )}
+                {t.featured_products_text && (
+                  <>
+                    <span className="store-field-label">Título de destacados</span>
+                    <span>{t.featured_products_text}</span>
                   </>
                 )}
                 {t.whatsapp && (

@@ -10,9 +10,12 @@ const EMPTY_PROD = {
   description: '',
   brand: '',
   price: '',
+  sales_price: '',
   discount_percent: '',
   category: '',
+  seasonal_category: '',
   is_active: true,
+  featured: false,
 }
 
 // El backend guarda hasta 5 fotos en image, image2 … image5. La primera es la
@@ -48,34 +51,89 @@ function ProductPhotos({ images = {}, files = {}, onPick }) {
   )
 }
 
+function ToggleSwitch({ checked, onChange, label, disabled = false }) {
+  return (
+    <label className={`switch catalog-switch${disabled ? ' disabled' : ''}`}>
+      <span>{label}</span>
+      <input type="checkbox" checked={!!checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} />
+      <span className="switch-track"><span className="switch-thumb" /></span>
+    </label>
+  )
+}
+
+function EditModal({ title, children, onClose, onSubmit, wide = false }) {
+  return (
+    <div className="modal-backdrop catalog-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className={`modal catalog-edit-modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <form onSubmit={onSubmit} className="catalog-modal-form">
+          <header className="catalog-modal-heading"><span>Editar catálogo</span><h2>{title}</h2></header>
+          {children}
+        </form>
+      </section>
+    </div>
+  )
+}
+
 // Valida la oferta antes de enviarla: el backend también la valida, pero así
 // mostramos el error al instante y sin gastar una petición.
 const isEmpty = (value) => value === '' || value === null || value === undefined
 
 const offerError = (form) => {
-  if (isEmpty(form.discount_percent)) return ''
+  const hasPrice = !isEmpty(form.price)
+  const hasSalesPrice = !isEmpty(form.sales_price)
+  const hasDiscount = !isEmpty(form.discount_percent)
+  const price = Number(form.price)
+  const salesPrice = Number(form.sales_price)
   const discount = Number(form.discount_percent)
-  if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
-    return 'El porcentaje de descuento debe ser un número entero entre 1 y 99.'
+
+  if (hasSalesPrice) {
+    if (!Number.isFinite(salesPrice) || salesPrice <= 0) {
+      return 'El precio de oferta debe ser mayor que cero.'
+    }
+    if (hasPrice && (!Number.isFinite(price) || salesPrice >= price)) {
+      return 'El precio de oferta debe ser menor que el precio normal.'
+    }
   }
+
+  if (hasDiscount) {
+    if (!hasSalesPrice) {
+      return 'Para usar un porcentaje de descuento, primero poné un precio de oferta.'
+    }
+    if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
+      return 'El porcentaje de descuento debe ser un número entero entre 1 y 99.'
+    }
+  }
+
   return ''
 }
 
 const offerPreview = (form) => {
-  if (isEmpty(form.price) || Number(form.price) <= 0 || isEmpty(form.discount_percent) || offerError(form)) return ''
-  const percent = Number(form.discount_percent)
-  const discounted = Math.round(Number(form.price) * (100 - percent)) / 100
-  return `Precio original: ${formatPrice(form.price)} · Descuento: ${percent}% · Precio con descuento: ${formatPrice(discounted)}`
+  if (isEmpty(form.sales_price) || offerError(form)) return ''
+  const parts = []
+  if (!isEmpty(form.price) && Number(form.price) > 0) {
+    const percent = Math.round((1 - Number(form.sales_price) / Number(form.price)) * 100)
+    parts.push(`Precio original: ${formatPrice(form.price)}`)
+    if (percent > 0) parts.push(`Descuento: ${percent}%`)
+  } else if (!isEmpty(form.discount_percent)) {
+    parts.push(`Descuento: ${Number(form.discount_percent)}%`)
+  }
+  parts.push(`Precio con descuento: ${formatPrice(form.sales_price)}`)
+  return parts.join(' · ')
 }
 
 export default function AdminCatalog() {
   const { current, currentTenant, loading } = useTenant()
   const [categories, setCategories] = useState(null)
+  const [seasonalCategories, setSeasonalCategories] = useState([])
   const [products, setProducts] = useState(null)
   const [productSearch, setProductSearch] = useState('')
   const [catForm, setCatForm] = useState(EMPTY_CAT)
   const [editingCat, setEditingCat] = useState(null)
   const [catEdit, setCatEdit] = useState(EMPTY_CAT)
+  const [seasonalCatForm, setSeasonalCatForm] = useState(EMPTY_CAT)
+  const [editingSeasonalCat, setEditingSeasonalCat] = useState(null)
+  const [seasonalCatEdit, setSeasonalCatEdit] = useState(EMPTY_CAT)
   const [prodForm, setProdForm] = useState(EMPTY_PROD)
   const [prodFiles, setProdFiles] = useState(EMPTY_FILES)
   const [editingProd, setEditingProd] = useState(null)
@@ -88,10 +146,25 @@ export default function AdminCatalog() {
   const load = useCallback(() => {
     if (!current) return
     catalogApi.categories.list(current).then(setCategories).catch((e) => setError(e.message))
+    catalogApi.seasonalCategories.list(current).then(setSeasonalCategories).catch((e) => setError(e.message))
     catalogApi.products.list(current).then(setProducts).catch((e) => setError(e.message))
   }, [current])
 
   useEffect(load, [load])
+
+  useEffect(() => {
+    if (editingCat === null && editingSeasonalCat === null && editingProd === null) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setEditingCat(null)
+        setEditingSeasonalCat(null)
+        setEditingProd(null)
+        setError('')
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [editingCat, editingSeasonalCat, editingProd])
 
   const filteredProducts = (products || []).filter((product) => {
     const search = productSearch.trim().toLocaleLowerCase()
@@ -135,6 +208,36 @@ export default function AdminCatalog() {
     }
   }
 
+  const createSeasonalCategory = async (e) => {
+    e.preventDefault()
+    setError('')
+    try {
+      await catalogApi.seasonalCategories.create(current, seasonalCatForm)
+      setSeasonalCatForm(EMPTY_CAT)
+      setOk('Categoría de temporada creada.')
+      load()
+    } catch (err) { setError(err.message) }
+  }
+
+  const saveSeasonalCategory = async () => {
+    setError('')
+    try {
+      await catalogApi.seasonalCategories.update(current, editingSeasonalCat, seasonalCatEdit)
+      setEditingSeasonalCat(null)
+      setOk('Categoría de temporada actualizada.')
+      load()
+    } catch (err) { setError(err.message) }
+  }
+
+  const removeSeasonalCategory = async (category) => {
+    if (!window.confirm(`¿Eliminar la categoría de temporada "${category.name}"?`)) return
+    setError('')
+    try {
+      await catalogApi.seasonalCategories.remove(current, category.id)
+      load()
+    } catch (err) { setError(err.message) }
+  }
+
   const createProduct = async (e) => {
     e.preventDefault()
     setError('')
@@ -146,6 +249,7 @@ export default function AdminCatalog() {
     try {
       const payload = { ...prodForm }
       if (!payload.category) delete payload.category
+      if (!payload.seasonal_category) delete payload.seasonal_category
       await catalogApi.products.create(current, payload, prodFiles)
       setProdForm(EMPTY_PROD)
       setProdFiles(EMPTY_FILES)
@@ -163,9 +267,12 @@ export default function AdminCatalog() {
       description: p.description || '',
       brand: p.brand || '',
       price: p.price ?? '',
+      sales_price: p.sales_price ?? '',
       discount_percent: p.discount_percent ?? '',
       category: p.category || '',
+      seasonal_category: p.seasonal_category || '',
       is_active: p.is_active,
+      featured: p.featured ?? false,
     })
     setProdEditFiles(EMPTY_FILES)
     setProdEditImages(
@@ -183,6 +290,7 @@ export default function AdminCatalog() {
     try {
       const payload = { ...prodEdit }
       if (!payload.category) delete payload.category
+      if (!payload.seasonal_category) delete payload.seasonal_category
       await catalogApi.products.update(current, editingProd, payload, prodEditFiles)
       setEditingProd(null)
       setProdEditFiles(EMPTY_FILES)
@@ -202,6 +310,14 @@ export default function AdminCatalog() {
     } catch (err) {
       setError(err.message)
     }
+  }
+
+  const toggleFeatured = async (p) => {
+    setError('')
+    try {
+      await catalogApi.products.update(current, p.id, { featured: !p.featured })
+      load()
+    } catch (err) { setError(err.message) }
   }
 
   const removeProduct = async (p) => {
@@ -229,25 +345,29 @@ export default function AdminCatalog() {
         </form>
         {(categories || []).map((c) => (
           <div className="row-item" key={c.id}>
-            {editingCat === c.id ? (
-              <div className="row-item-main">
-                <input value={catEdit.name} onChange={(e) => setCatEdit({ ...catEdit, name: e.target.value })} />
-                <span className="btn-group">
-                  <button className="btn small" onClick={saveCategory}>Guardar</button>
-                  <button className="btn small ghost" onClick={() => setEditingCat(null)}>Cancelar</button>
-                </span>
-              </div>
-            ) : (
-              <>
-                <div className="row-item-main">
-                  <b>{c.name}</b>
-                </div>
-                <span className="btn-group">
-                  <button className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name }) }}>Editar</button>
-                  <button className="btn small danger" onClick={() => removeCategory(c)}>Eliminar</button>
-                </span>
-              </>
-            )}
+            <div className="row-item-main"><b>{c.name}</b></div>
+            <span className="btn-group">
+              <button className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name }); setError('') }}>Editar</button>
+              <button className="btn small danger" onClick={() => removeCategory(c)}>Eliminar</button>
+            </span>
+          </div>
+        ))}
+      </Card>
+
+      <Card title={`Categorías de temporada (${seasonalCategories.length})`}>
+        <form onSubmit={createSeasonalCategory} className="row add-row">
+          <Field label="Nombre de la temporada *">
+            <input value={seasonalCatForm.name} onChange={(e) => setSeasonalCatForm({ name: e.target.value })} placeholder="Navidad, Día de la madre…" />
+          </Field>
+          <button className="btn">Agregar</button>
+        </form>
+        {seasonalCategories.map((item) => (
+          <div className="row-item" key={item.id}>
+            <div className="row-item-main"><b>{item.name}</b><span className="seasonal-category-tag">Temporada</span></div>
+            <span className="btn-group">
+              <button type="button" className="btn small ghost" onClick={() => { setEditingSeasonalCat(item.id); setSeasonalCatEdit({ name: item.name }); setError('') }}>Editar</button>
+              <button type="button" className="btn small danger" onClick={() => removeSeasonalCategory(item)}>Eliminar</button>
+            </span>
           </div>
         ))}
       </Card>
@@ -269,13 +389,23 @@ export default function AdminCatalog() {
               onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
             />
           </Field>
-          <Field label="% de descuento" hint="Ingresá un número entero entre 1 y 99.">
+          <Field label="Precio de oferta" hint="Dejalo vacío si el producto no está en oferta.">
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="Sin oferta"
+              value={prodForm.sales_price}
+              onChange={(e) => setProdForm({ ...prodForm, sales_price: e.target.value })}
+            />
+          </Field>
+          <Field label="% de descuento" hint="Solo si no cargás precio normal. Con precio normal se calcula solo.">
             <input
               type="number"
               step="1"
               min="1"
               max="99"
-              placeholder="Sin oferta"
+              placeholder="Automático"
               value={prodForm.discount_percent}
               onChange={(e) => setProdForm({ ...prodForm, discount_percent: e.target.value })}
             />
@@ -290,6 +420,12 @@ export default function AdminCatalog() {
               ))}
             </select>
           </Field>
+          <Field label="Categoría de temporada">
+            <select value={prodForm.seasonal_category} onChange={(e) => setProdForm({ ...prodForm, seasonal_category: e.target.value })}>
+              <option value="">Sin temporada</option>
+              {seasonalCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </Field>
           <Field label="Descripción">
             <input value={prodForm.description} onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })} />
           </Field>
@@ -301,10 +437,8 @@ export default function AdminCatalog() {
               onPick={(key, file) => setProdFiles((prev) => ({ ...prev, [key]: file }))}
             />
           </div>
-          <label className="field">
-            <span className="field-label">Activo</span>
-            <input type="checkbox" checked={prodForm.is_active} onChange={(e) => setProdForm({ ...prodForm, is_active: e.target.checked })} />
-          </label>
+          <ToggleSwitch label="Activo" checked={prodForm.is_active} onChange={(value) => setProdForm({ ...prodForm, is_active: value })} />
+          <ToggleSwitch label="Destacado" checked={prodForm.featured} onChange={(value) => setProdForm({ ...prodForm, featured: value })} />
           <button className="btn">Crear producto</button>
         </form>
 
@@ -319,97 +453,104 @@ export default function AdminCatalog() {
         {productSearch && filteredProducts.length === 0 && <p className="muted">No se encontraron productos.</p>}
         {filteredProducts.map((p) => (
           <div className="row-item" key={p.id}>
-            {editingProd === p.id ? (
-              <div className="row-item-main product-edit">
-                <div className="grid2">
-                  <Field label="Nombre *">
-                    <input value={prodEdit.name} onChange={(e) => setProdEdit({ ...prodEdit, name: e.target.value })} />
-                  </Field>
-                  <Field label="Marca">
-                    <input value={prodEdit.brand} onChange={(e) => setProdEdit({ ...prodEdit, brand: e.target.value })} />
-                  </Field>
-                  <Field label="Precio" hint="Dejalo vacío si el producto no tiene precio.">
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Sin precio"
-                      value={prodEdit.price}
-                      onChange={(e) => setProdEdit({ ...prodEdit, price: e.target.value })}
-                    />
-                  </Field>
-                  <Field label="% de descuento" hint="Ingresá un número entero entre 1 y 99.">
-                    <input
-                      type="number"
-                      step="1"
-                      min="1"
-                      max="99"
-                      placeholder="Sin oferta"
-                      value={prodEdit.discount_percent}
-                      onChange={(e) => setProdEdit({ ...prodEdit, discount_percent: e.target.value })}
-                    />
-                    {offerPreview(prodEdit) && <span className="field-hint">{offerPreview(prodEdit)}</span>}
-                  </Field>
-
-                  <Field label="Categoría">
-                    <select value={prodEdit.category} onChange={(e) => setProdEdit({ ...prodEdit, category: e.target.value })}>
-                      <option value="">Sin categoría</option>
-                      {(categories || []).map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Descripción">
-                    <input value={prodEdit.description} onChange={(e) => setProdEdit({ ...prodEdit, description: e.target.value })} />
-                  </Field>
-                  <div className="field photo-field-wide">
-                    <span className="field-label">Fotos (hasta 5)</span>
-                    <span className="field-hint">Podés reemplazar una foto eligiendo un archivo nuevo en su lugar.</span>
-                    <ProductPhotos
-                      images={prodEditImages}
-                      files={prodEditFiles}
-                      onPick={(key, file) => setProdEditFiles((prev) => ({ ...prev, [key]: file }))}
-                    />
-                  </div>
-                  <label className="field">
-                    <span className="field-label">Activo</span>
-                    <input type="checkbox" checked={prodEdit.is_active} onChange={(e) => setProdEdit({ ...prodEdit, is_active: e.target.checked })} />
-                  </label>
-                  <span className="btn-group">
-                    <button className="btn small" onClick={saveProduct}>Guardar</button>
-                    <button className="btn small ghost" onClick={() => setEditingProd(null)}>Cancelar</button>
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="row-item-main">
-                  <b>{p.name}</b>
-                  <span className="muted">
-                    {[
-                      p.brand,
-                      hasOffer(p) && formatPrice(p.price) ? `Precio original: ${formatPrice(p.price)}` : null,
-                      hasOffer(p) ? `Descuento: ${discountPercent(p)}%` : null,
-                      hasOffer(p) && formatPrice(p.price)
-                        ? `Precio con descuento: ${formatPrice(Math.round(Number(p.price) * (100 - discountPercent(p)) / 100 * 100) / 100)}`
-                        : !hasOffer(p) ? formatPrice(p.price) : null,
-                      p.is_active ? 'activo' : 'inactivo',
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
-                </div>
-                <span className="btn-group">
-                  <button className="btn small ghost" onClick={() => toggleActive(p)}>
-                    {p.is_active ? 'Desactivar' : 'Activar'}
-                  </button>
-                  <button className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
-                  <button className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
-                </span>
-              </>
-            )}
+            <div className="row-item-main">
+              <b>{p.name}</b>
+              <span className="muted">
+                {[
+                  p.brand,
+                  hasOffer(p) && formatPrice(p.price) ? `Precio original: ${formatPrice(p.price)}` : null,
+                  hasOffer(p) && discountPercent(p) > 0 ? `Descuento: ${discountPercent(p)}%` : null,
+                  hasOffer(p)
+                    ? `Precio con descuento: ${formatPrice(p.sales_price)}`
+                    : formatPrice(p.price),
+                ].filter(Boolean).join(' · ')}
+              </span>
+            </div>
+            <div className="catalog-product-actions">
+              <ToggleSwitch label="Activo" checked={p.is_active} onChange={() => toggleActive(p)} />
+              <ToggleSwitch label="Destacado" checked={p.featured} onChange={() => toggleFeatured(p)} />
+              <button className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
+              <button className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
+            </div>
           </div>
         ))}
       </Card>
+
+      {editingCat !== null && (
+        <EditModal title="Editar categoría" onClose={() => setEditingCat(null)} onSubmit={(event) => { event.preventDefault(); saveCategory() }}>
+          <div className="catalog-modal-content">
+            <Alert>{error}</Alert>
+            <Field label="Nombre de la categoría *">
+              <input autoFocus value={catEdit.name} onChange={(event) => setCatEdit({ ...catEdit, name: event.target.value })} />
+            </Field>
+            <div className="catalog-modal-actions">
+              <button className="btn">Guardar cambios</button>
+              <button type="button" className="btn ghost" onClick={() => setEditingCat(null)}>Cancelar</button>
+            </div>
+          </div>
+        </EditModal>
+      )}
+
+      {editingSeasonalCat !== null && (
+        <EditModal title="Editar categoría de temporada" onClose={() => setEditingSeasonalCat(null)} onSubmit={(event) => { event.preventDefault(); saveSeasonalCategory() }}>
+          <div className="catalog-modal-content">
+            <Alert>{error}</Alert>
+            <Field label="Nombre de la temporada *">
+              <input autoFocus value={seasonalCatEdit.name} onChange={(event) => setSeasonalCatEdit({ name: event.target.value })} />
+            </Field>
+            <div className="catalog-modal-actions">
+              <button className="btn">Guardar cambios</button>
+              <button type="button" className="btn ghost" onClick={() => setEditingSeasonalCat(null)}>Cancelar</button>
+            </div>
+          </div>
+        </EditModal>
+      )}
+
+      {editingProd !== null && (
+        <EditModal wide title="Editar producto" onClose={() => setEditingProd(null)} onSubmit={(event) => { event.preventDefault(); saveProduct() }}>
+          <div className="catalog-modal-content">
+            <Alert>{error}</Alert>
+            <div className="catalog-modal-grid">
+              <Field label="Nombre *"><input autoFocus value={prodEdit.name} onChange={(event) => setProdEdit({ ...prodEdit, name: event.target.value })} /></Field>
+              <Field label="Marca"><input value={prodEdit.brand} onChange={(event) => setProdEdit({ ...prodEdit, brand: event.target.value })} /></Field>
+              <Field label="Precio" hint="Dejalo vacío si el producto no tiene precio.">
+                <input type="number" step="0.01" placeholder="Sin precio" value={prodEdit.price} onChange={(event) => setProdEdit({ ...prodEdit, price: event.target.value })} />
+              </Field>
+              <Field label="Precio de oferta" hint="Dejalo vacío si el producto no está en oferta.">
+                <input type="number" step="0.01" min="0.01" placeholder="Sin oferta" value={prodEdit.sales_price} onChange={(event) => setProdEdit({ ...prodEdit, sales_price: event.target.value })} />
+              </Field>
+              <Field label="% de descuento" hint="Solo si no cargás precio normal. Con precio normal se calcula solo.">
+                <input type="number" step="1" min="1" max="99" placeholder="Automático" value={prodEdit.discount_percent} onChange={(event) => setProdEdit({ ...prodEdit, discount_percent: event.target.value })} />
+                {offerPreview(prodEdit) && <span className="field-hint">{offerPreview(prodEdit)}</span>}
+              </Field>
+              <Field label="Categoría">
+                <select value={prodEdit.category} onChange={(event) => setProdEdit({ ...prodEdit, category: event.target.value })}>
+                  <option value="">Sin categoría</option>{(categories || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Categoría de temporada">
+                <select value={prodEdit.seasonal_category} onChange={(event) => setProdEdit({ ...prodEdit, seasonal_category: event.target.value })}>
+                  <option value="">Sin temporada</option>{seasonalCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Descripción"><textarea rows={3} value={prodEdit.description} onChange={(event) => setProdEdit({ ...prodEdit, description: event.target.value })} /></Field>
+              <div className="field photo-field-wide">
+                <span className="field-label">Fotos (hasta 5)</span>
+                <span className="field-hint">Podés reemplazar una foto eligiendo un archivo nuevo en su lugar.</span>
+                <ProductPhotos images={prodEditImages} files={prodEditFiles} onPick={(key, file) => setProdEditFiles((prev) => ({ ...prev, [key]: file }))} />
+              </div>
+              <div className="catalog-modal-toggles">
+                <ToggleSwitch label="Activo" checked={prodEdit.is_active} onChange={(value) => setProdEdit({ ...prodEdit, is_active: value })} />
+                <ToggleSwitch label="Destacado" checked={prodEdit.featured} onChange={(value) => setProdEdit({ ...prodEdit, featured: value })} />
+              </div>
+            </div>
+            <div className="catalog-modal-actions">
+              <button className="btn">Guardar cambios</button>
+              <button type="button" className="btn ghost" onClick={() => setEditingProd(null)}>Cancelar</button>
+            </div>
+          </div>
+        </EditModal>
+      )}
 
       <div className="stack small">
         <Alert kind="ok">{ok}</Alert>

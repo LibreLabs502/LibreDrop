@@ -29,33 +29,70 @@ def product_serializer(data):
 
 
 class ProductOfferValidationTests(TestCase):
-    def test_porcentaje_valido_con_precio(self):
-        serializer = product_serializer({"name": "Producto", "price": "100.00", "discount_percent": 20})
+    def test_oferta_valida_con_precio_normal(self):
+        serializer = product_serializer(
+            {"name": "Producto", "price": "100.00", "sales_price": "80.00"}
+        )
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
-    def test_porcentaje_valido_sin_precio(self):
+    def test_oferta_valida_sin_precio_normal(self):
+        serializer = product_serializer({"name": "Producto", "sales_price": "80.00"})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_porcentaje_manual_requiere_precio_de_oferta(self):
         serializer = product_serializer({"name": "Producto", "discount_percent": 20})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("discount_percent", serializer.errors)
+
+    def test_porcentaje_manual_valido_junto_al_precio_de_oferta(self):
+        serializer = product_serializer(
+            {"name": "Producto", "sales_price": "80.00", "discount_percent": 20}
+        )
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_producto_sin_oferta_es_valido(self):
         serializer = product_serializer({"name": "Producto", "price": "100.00"})
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
+    def test_precio_de_oferta_mayor_o_igual_al_normal_es_invalido(self):
+        for sales_price in ("100.00", "120.00"):
+            serializer = product_serializer(
+                {"name": "Producto", "price": "100.00", "sales_price": sales_price}
+            )
+            self.assertFalse(serializer.is_valid(), sales_price)
+            self.assertIn("sales_price", serializer.errors)
+
+    def test_precio_de_oferta_debe_ser_positivo(self):
+        serializer = product_serializer({"name": "Producto", "sales_price": "0"})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("sales_price", serializer.errors)
+
     def test_porcentaje_vacio_se_convierte_en_null(self):
         serializer = product_serializer({"name": "Producto", "discount_percent": ""})
         self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertIsNone(serializer.validated_data["discount_percent"])
 
+    def test_precio_de_oferta_vacio_se_convierte_en_null(self):
+        serializer = product_serializer(
+            {"name": "Producto", "price": "100.00", "sales_price": ""}
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data["sales_price"])
+
     def test_porcentaje_fuera_de_rango_o_no_entero_es_invalido(self):
         for percent in (0, 100, 20.5):
-            serializer = product_serializer({"name": "Producto", "discount_percent": percent})
+            serializer = product_serializer(
+                {"name": "Producto", "sales_price": "80.00", "discount_percent": percent}
+            )
             self.assertFalse(serializer.is_valid(), percent)
             self.assertIn("discount_percent", serializer.errors)
 
-    def test_sales_price_no_es_campo_de_api(self):
-        serializer = product_serializer({"name": "Producto", "sales_price": "80.00"})
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("sales_price", serializer.errors)
+    def test_sales_price_es_campo_de_api(self):
+        serializer = product_serializer(
+            {"name": "Producto", "price": "100.00", "sales_price": "80.00"}
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data["sales_price"], Decimal("80.00"))
 
     def test_acepta_hasta_cinco_fotos(self):
         serializer = product_serializer({
@@ -71,11 +108,19 @@ class ProductOfferValidationTests(TestCase):
 
 
 class ProductOfferModelTests(TestCase):
-    def test_clean_acepta_porcentaje_valido_con_o_sin_precio(self):
-        Product(price=Decimal("100.00"), discount_percent=20).clean()
-        Product(discount_percent=20).clean()
+    def test_clean_acepta_porcentaje_valido_con_precio_de_oferta(self):
+        Product(price=Decimal("100.00"), sales_price=Decimal("80.00"), discount_percent=20).clean()
+        Product(sales_price=Decimal("80.00"), discount_percent=20).clean()
+
+    def test_clean_rechaza_porcentaje_sin_precio_de_oferta(self):
+        with self.assertRaises(ValidationError):
+            Product(discount_percent=20).clean()
 
     def test_clean_rechaza_porcentaje_fuera_de_rango(self):
         for percent in (0, 100, 20.5):
             with self.assertRaises(ValidationError):
-                Product(discount_percent=percent).clean()
+                Product(sales_price=Decimal("80.00"), discount_percent=percent).clean()
+
+    def test_clean_rechaza_oferta_mayor_al_precio(self):
+        with self.assertRaises(ValidationError):
+            Product(price=Decimal("100.00"), sales_price=Decimal("100.00")).clean()
