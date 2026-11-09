@@ -140,27 +140,47 @@ Reglas:
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/seasonal-categories/<pk>/` | Detalle |
 | GET/POST | `/catalog/tenants/<id>/products/` | Productos (`featured` marca productos destacados) |
 | GET/PATCH/PUT/DELETE | `/catalog/tenants/<id>/products/<pk>/` | Detalle |
+| POST | `/catalog/tenants/<id>/products/reorder-featured/` | Guardar el orden de los productos destacados |
 
 Un producto expone: `id`, `category` (puede ser `null`), `seasonal_category`
 (puede ser `null`), `name`, `description`, `brand`, `price` (puede ser `null`),
 `sales_price` (precio de oferta, puede ser `null`), `discount_percent` (entero
-opcional de 1 a 99), `featured` (booleano para destacarlo en la tienda), `image`
-y `image2`…`image5` (hasta cinco fotos; la primera es la portada), `is_active`,
+opcional de 1 a 99), `offer_ends_at` (fecha/hora ISO 8601 opcional), `featured`
+(booleano), `featured_order` (posición opcional), `photo_order` (lista de claves
+de foto), `image` y `image2`…`image5` (hasta cinco fotos), `is_active`,
 `created_at` y `updated_at`.
 
 La oferta se detecta con `sales_price`: debe ser mayor que cero y, si hay
 `price`, menor que el precio normal. `discount_percent` se usa únicamente cuando
 no hay precio normal para mostrar el porcentaje manual. Si se envía
-`discount_percent` también hay que enviar `sales_price`.
+`discount_percent` también hay que enviar `sales_price`. `offer_ends_at` solo se
+acepta si hay un precio de oferta. Al vencer, la oferta deja de contar en el
+storefront; el precio de oferta permanece guardado para que se pueda editar.
 
 Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
 `image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
-conservan la foto anterior. `sales_price` y `discount_percent` se pueden dejar
-vacíos para quitar la oferta; los valores válidos del porcentaje son enteros
-entre 1 y 99.
+conservan la foto anterior. `photo_order` acepta claves como `image3`, `image`,
+`image2`; en una petición multipart se envía como texto JSON. Las claves
+omitidas se agregan al final en su orden natural. `sales_price`,
+`discount_percent` y `offer_ends_at` se pueden dejar vacíos para quitar esos
+datos; los valores válidos del porcentaje son enteros entre 1 y 99.
 
 ```json
-{ "price": "100.00", "sales_price": "80.00", "discount_percent": 20, "featured": true }
+{
+  "price": "100.00",
+  "sales_price": "80.00",
+  "discount_percent": 20,
+  "offer_ends_at": "2026-11-30T23:59:00Z",
+  "featured": true,
+  "photo_order": ["image3", "image", "image2"]
+}
+```
+
+Para guardar manualmente el orden de destacados, enviar los IDs en el orden
+deseado. Los productos deben pertenecer a la tienda:
+
+```json
+{ "ids": [3, 1, 2] }
 ```
 
 ## Storefront público (`/public/`)
@@ -179,10 +199,12 @@ defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
 de ofertas y productos destacados. `seasonal_categories` lista las categorías de
 temporada de la tienda. Los productos con `featured: true` aparecen en la
 colección de destacados y los que tienen `seasonal_category` en la de temporada.
-El frontend muestra un carrusel de fotos por cada colección que tenga al menos
-dos fotos (con dos productos, una por vez; con tres o más, tres por tanda,
-repitiendo si hace falta) y un filtro con el mismo nombre en la barra de
-categorías.
+El frontend muestra los carruseles de temporada, ofertas y destacados cuando
+cada colección tiene al menos tres productos con foto. Cada tanda muestra tres
+fotos; la última se completa repitiendo desde el inicio cuando sea necesario.
+Con menos de tres, el carrusel se oculta pero su filtro sigue disponible. Al
+seleccionar **Temporada**, aparecen debajo del buscador subcategorías con su
+conteo; se puede filtrar por una o verlas todas.
 
 ## Pagos y suscripción (`/payments/`)
 

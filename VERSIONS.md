@@ -8,20 +8,28 @@
   categorías normales.
 - La tienda pública muestra hasta tres carruseles de fotos, en este orden:
   **Productos de temporada**, **Ofertas** y **Productos destacados**. Cada uno
-  aparece solo si su colección tiene al menos dos productos con foto; con una
-  sola foto queda únicamente el filtro de la colección.
-- Los carruseles avanzan solos. Con dos productos se ve una foto a la vez (1 y
-  1); con tres o más se ven tres fotos por tanda, repitiendo fotos si hace falta
-  para completar la tanda.
+  aparece solo si su colección tiene al menos tres productos con foto. Con uno
+  o dos, la colección sigue disponible desde sus filtros, sin mostrar carrusel.
+- Los carruseles avanzan solos y muestran tres fotos por tanda. Si la última
+  tanda queda incompleta, se repiten fotos de la colección hasta completar las
+  tres posiciones.
 - Debajo de cada carrusel hay un botón (**Ver ofertas**, **Ver productos de
   temporada**, **Ver productos destacados**) que activa el filtro de esa
   colección y oculta el carrusel.
 - La barra de categorías suma los filtros **Ofertas**, **Temporada** y
   **Destacados**, con la cantidad de productos de cada colección.
+- Al elegir **Temporada**, aparecen debajo del buscador las subcategorías de
+  temporada disponibles, con su cantidad de productos. Se puede elegir una o
+  volver a **Todas**.
 - Se restaura `Product.sales_price` como base de las ofertas. La migración
   `catalog/0014_restore_product_sales_price.py` reconstruye el precio de oferta
   de las ofertas que todavía tienen precio normal. `discount_percent` queda como
   porcentaje manual opcional cuando no hay precio normal.
+- `Product.offer_ends_at` permite programar el fin de una oferta. La tienda
+  muestra una cuenta regresiva, y al vencer deja de mostrarla en los carruseles
+  y el filtro de ofertas; el producto sigue en el catálogo con su precio normal.
+- La migración `catalog/0015_product_featured_order_product_offer_ends_at_and_more.py`
+  agrega la fecha de vencimiento, el orden de fotos y la posición de destacados.
 - Los serializers del catálogo y del storefront exponen `Product.sales_price`,
   `Product.featured`, `Product.seasonal_category`,
   `Tenant.featured_products_text` y `Tenant.seasonal_categories`.

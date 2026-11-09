@@ -4,6 +4,9 @@ from django.db import models
 
 from tenants.models import Tenant
 
+# Claves de las cinco fotos de un producto, en su orden natural.
+PHOTO_FIELDS = ("image", "image2", "image3", "image4", "image5")
+
 # Create your models here.
 class Category(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="categories")
@@ -53,6 +56,14 @@ class Product(models.Model):
     image5 = CloudinaryField("producto", blank=True, null=True)
     is_active = models.BooleanField(default=True)
     featured = models.BooleanField(default=False)
+    # Posición manual dentro de los destacados. Vacío = al final.
+    featured_order = models.PositiveIntegerField(blank=True, null=True)
+    # Fin opcional de la oferta. Después de esta fecha la oferta ya no se
+    # muestra, aunque el precio de oferta siga guardado.
+    offer_ends_at = models.DateTimeField(blank=True, null=True)
+    # Orden visible de las fotos (lista de claves de PHOTO_FIELDS). Las claves
+    # que falten se agregan al final en su orden natural.
+    photo_order = models.JSONField(blank=True, default=list)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,3 +103,15 @@ class Product(models.Model):
                 raise ValidationError({
                     "discount_percent": "Para usar un porcentaje de descuento, primero poné un precio de oferta."
                 })
+
+        if self.offer_ends_at is not None and self.sales_price is None:
+            raise ValidationError({
+                "offer_ends_at": "Para programar el fin de la oferta, primero poné un precio de oferta."
+            })
+
+        if self.photo_order:
+            if not isinstance(self.photo_order, list):
+                raise ValidationError({"photo_order": "El orden de las fotos no es válido."})
+            invalid = [key for key in self.photo_order if key not in PHOTO_FIELDS]
+            if invalid or len(set(self.photo_order)) != len(self.photo_order):
+                raise ValidationError({"photo_order": "El orden de las fotos no es válido."})

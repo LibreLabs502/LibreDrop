@@ -40,12 +40,15 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "price",
             "sales_price",
             "discount_percent",
+            "offer_ends_at",
             "featured",
+            "featured_order",
             "image",
             "image2",
             "image3",
             "image4",
             "image5",
+            "photo_order",
         ]
 
     def to_representation(self, instance):

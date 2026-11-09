@@ -37,6 +37,12 @@ urlpatterns = [
     ),
 
     path(
+        "tenants/<int:tenant_id>/products/reorder-featured/",
+        ProductViewSet.as_view({
+            "post": "reorder_featured",
+        }),
+    ),
+    path(
         "tenants/<int:tenant_id>/products/",
         ProductViewSet.as_view({
             "get": "list",

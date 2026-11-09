@@ -7,6 +7,21 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 - **Backend**: Django 6.1 + DRF + SimpleJWT + Postgres + Cloudinary (imágenes)
 - **Frontend**: React 18 + Vite + React Router
 
+## Funciones principales
+
+- Catálogos por tienda con categorías normales y de temporada, productos
+  destacados y hasta cinco fotos por producto.
+- Ofertas con precio normal, precio de oferta, porcentaje opcional y fecha de
+  vencimiento. La tienda muestra una cuenta regresiva mientras la oferta está
+  activa; al vencer, deja de contar como oferta.
+- Tienda pública con carruseles de temporada, ofertas y destacados. Cada uno
+  muestra tres fotos por tanda y solo aparece con tres o más productos con foto;
+  las colecciones siguen disponibles en los filtros aunque tengan menos.
+- Al elegir **Temporada**, aparecen sus subcategorías debajo del buscador para
+  filtrar los productos por ocasión.
+- Fotos, colores y contenido visual adaptados a la paleta de cada tienda y a
+  pantallas móviles.
+
 ## Estructura
 
 ```
@@ -51,3 +66,4 @@ API docs (Swagger): `http://localhost:8000/docs/`
 - [Despliegue (Render + Neon + Vercel)](docs/despliegue.md)
 - [API / Endpoints](docs/api.md)
 - [Arquitectura y multitenancy](docs/arquitectura.md)
+- [Historial de versiones](VERSIONS.md)

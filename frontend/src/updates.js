@@ -16,11 +16,13 @@ export const UPDATES = [
     items: [
       'Elegí qué productos destacar y asignalos a una categoría de temporada, como Navidad o Día de la Madre.',
       'Tu tienda muestra hasta tres carruseles de fotos: Productos de temporada, Ofertas y Productos destacados.',
-      'Cada carrusel aparece solo si su colección tiene al menos dos fotos; con una sola, solo queda el filtro.',
-      'Con dos productos se ve una foto a la vez (1 y 1); con tres o más se ven tres fotos por tanda, aunque se repitan para completarla.',
+      'Cada carrusel aparece solo si su colección tiene al menos tres productos con foto; con uno o dos, queda disponible el filtro.',
+      'Los carruseles muestran tres fotos por tanda y repiten productos para completar la última tanda si hace falta.',
       'Debajo de cada carrusel hay un botón para ver esa colección completa: “Ver ofertas”, “Ver productos de temporada” o “Ver productos destacados”.',
       'La barra de categorías suma los filtros Ofertas, Temporada y Destacados, con la cantidad de productos de cada uno.',
+      'Al entrar en Temporada, podés filtrar por sus subcategorías debajo del buscador.',
       'Las ofertas vuelven a usar el precio de oferta y, si cargás un precio normal, el descuento se calcula solo.',
+      'Programá cuándo termina una oferta: la tienda muestra cuánto falta y la retira automáticamente al vencer.',
     ],
   },
   {

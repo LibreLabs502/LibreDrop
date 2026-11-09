@@ -41,21 +41,31 @@ datos (fila única) y se editan desde el panel del superusuario.
 Las **ofertas** se guardan en `Product.sales_price` (precio de oferta). Si hay
 `price`, el frontend calcula el porcentaje y muestra ambos precios; sin precio
 normal usa `discount_percent` (entero opcional de 1 a 99) solo para mostrar el
-porcentaje. El filtro “Ofertas” se basa en `sales_price`. La migración 0010
-convirtió las ofertas existentes a porcentaje y retiró la columna; la migración
-0014 la restaura y reconstruye el precio de oferta cuando hay precio normal.
+porcentaje. `offer_ends_at` es opcional y exige un precio de oferta. La tienda
+muestra una cuenta regresiva y, al llegar la fecha, deja de contar el producto
+como oferta y vuelve a mostrar su precio normal. La migración 0010 convirtió las
+ofertas existentes a porcentaje y retiró la columna; la migración 0014 la
+restaura y reconstruye el precio de oferta cuando hay precio normal.
 
 Las **categorías de temporada** (`SeasonalCategory`) agrupan productos para la
-colección “Productos de temporada”. Los **productos destacados** usan
-`Product.featured`. La tienda pública muestra un carrusel de fotos por cada
-colección que tenga al menos dos fotos (con dos productos, una por vez; con tres
-o más, tres por tanda, repitiendo si hace falta para completarla), con un filtro
-equivalente en la barra de categorías.
+colección “Productos de temporada”. Al elegir el filtro **Temporada**, el
+frontend presenta las subcategorías debajo del buscador y permite filtrar por
+una o ver todas. Los **productos destacados** usan `Product.featured`; el orden
+opcional se guarda en `featured_order` y se usa en la tienda pública. El endpoint
+`POST /catalog/tenants/<id>/products/reorder-featured/` guarda una lista ordenada
+de IDs pertenecientes a la tienda.
+
+La tienda pública muestra carruseles de temporada, ofertas y destacados cuando
+cada colección tiene al menos tres productos con foto. Cada tanda presenta tres
+imágenes; las posiciones que falten en la última tanda se completan repitiendo
+productos desde el inicio. Con menos de tres productos el carrusel no aparece,
+pero el filtro de la colección sigue disponible.
 
 Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
-primera es la portada de la tarjeta; el resto se muestra en la ventana que abre
-el enlace **“Ver detalles…”**, ubicado debajo de la descripción y antes de los
-botones de compra.
+lista `photo_order` define el orden de entrega y cuál queda como portada; las
+claves ausentes se agregan en orden natural. El resto se muestra en la ventana
+que abre el enlace **“Ver detalles…”**, ubicado debajo de la descripción y antes
+de los botones de compra.
 
 Imágenes (logo, producto) se suben a Cloudinary y los serializers devuelven la
 URL completa con entrega optimizada `f_auto,q_auto` (WebP/AVIF + calidad
@@ -80,9 +90,10 @@ React SPA (Vite). Páginas:
   WhatsApp" o "Pedir por Instagram". En las redes sociales se abre una ventana con
   el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
   directo con el mensaje. Los productos con oferta muestran el precio rebajado,
-  el anterior tachado, el porcentaje de descuento y el filtro **“Ofertas”**.
-  Debajo de la descripción aparece **“Ver detalles…”**, que abre la galería con
-  las fotos subidas, el precio y los botones de compra. Responsive.
+  el anterior tachado, el porcentaje, la cuenta regresiva si hay vencimiento y
+  el filtro **“Ofertas”**. Al elegir **Temporada**, aparecen subcategorías debajo
+  del buscador. Debajo de la descripción aparece **“Ver detalles…”**, que abre
+  la galería con las fotos subidas, el precio y los botones de compra. Responsive.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,

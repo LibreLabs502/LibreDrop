@@ -5,16 +5,13 @@ import { carouselPage } from './carousel.js'
 
 const products = (count) => Array.from({ length: count }, (_, index) => index)
 
-test('con una sola foto no hay carrusel', () => {
+test('con cero o una foto no hay carrusel', () => {
   assert.deepEqual(carouselPage([], 0), { pageSize: 0, pageCount: 0, items: [] })
   assert.deepEqual(carouselPage(products(1), 0), { pageSize: 0, pageCount: 0, items: [] })
 })
 
-test('con dos productos se ve uno y uno, alternando', () => {
-  const list = products(2)
-  assert.deepEqual(carouselPage(list, 0), { pageSize: 1, pageCount: 2, items: [0] })
-  assert.deepEqual(carouselPage(list, 1), { pageSize: 1, pageCount: 2, items: [1] })
-  assert.deepEqual(carouselPage(list, 2), { pageSize: 1, pageCount: 2, items: [0] })
+test('con dos productos no hay carrusel y queda disponible la colección', () => {
+  assert.deepEqual(carouselPage(products(2), 0), { pageSize: 0, pageCount: 0, items: [] })
 })
 
 test('con tres productos se ven los tres en una sola tanda', () => {

@@ -100,8 +100,36 @@ class PublicStoreOffersTests(TestCase):
         self.assertEqual(product["price"], "100.00")
         self.assertEqual(product["sales_price"], "80.00")
         self.assertEqual(product["discount_percent"], 20)
-        for field in ("image", "image2", "image3", "image4", "image5", "featured", "seasonal_category"):
+        for field in (
+            "image",
+            "image2",
+            "image3",
+            "image4",
+            "image5",
+            "photo_order",
+            "featured",
+            "featured_order",
+            "offer_ends_at",
+            "seasonal_category",
+        ):
             self.assertIn(field, product)
+
+    def test_storefront_expone_fin_de_oferta_y_orden(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Oferta programada",
+            price="100.00",
+            sales_price="80.00",
+            offer_ends_at="2030-01-01T10:00:00Z",
+            featured=True,
+            featured_order=2,
+            photo_order=["image2", "image"],
+        )
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertEqual(product["offer_ends_at"], "2030-01-01T10:00:00Z")
+        self.assertTrue(product["featured"])
+        self.assertEqual(product["featured_order"], 2)
+        self.assertEqual(product["photo_order"], ["image2", "image"])
 
     def test_oferta_sin_precio_normal_expone_su_precio_de_oferta(self):
         Product.objects.create(

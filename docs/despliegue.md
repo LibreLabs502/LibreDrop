@@ -107,7 +107,10 @@ convirtió las ofertas guardadas a `discount_percent` y retiró
 reconstruye a partir del descuento cuando todavía hay precio normal, de modo que
 las ofertas existentes se conservan. Las migraciones 0008, 0009 y 0011–0013
 agregaron las cuatro fotos adicionales, `discount_percent`, `featured` y las
-categorías de temporada.
+categorías de temporada. La migración 0015 agrega `featured_order`,
+`offer_ends_at` y `photo_order`. La base debe tener aplicadas todas las
+migraciones antes de usar la tienda; una migración pendiente puede causar errores
+como `no existe la columna catalog_product.featured_order`.
 
 > **⚠️ Start Command**: si en Render definís un **Start Command** propio, este
 > **reemplaza el `ENTRYPOINT` del Dockerfile** y `entrypoint.sh` deja de correr

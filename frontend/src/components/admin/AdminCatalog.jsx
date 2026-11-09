@@ -5,6 +5,19 @@ import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 
 const EMPTY_CAT = { name: '' }
+
+// El backend guarda hasta 5 fotos en image, image2 … image5. El orden visible
+// se guarda aparte en `photo_order`; la primera del orden es la portada.
+const PHOTO_FIELDS = [
+  { key: 'image', label: 'Foto 1' },
+  { key: 'image2', label: 'Foto 2' },
+  { key: 'image3', label: 'Foto 3' },
+  { key: 'image4', label: 'Foto 4' },
+  { key: 'image5', label: 'Foto 5' },
+]
+
+const PHOTO_KEYS = PHOTO_FIELDS.map((photo) => photo.key)
+
 const EMPTY_PROD = {
   name: '',
   description: '',
@@ -12,30 +25,47 @@ const EMPTY_PROD = {
   price: '',
   sales_price: '',
   discount_percent: '',
+  offer_ends_at: '',
   category: '',
   seasonal_category: '',
   is_active: true,
   featured: false,
+  photo_order: PHOTO_KEYS,
 }
 
-// El backend guarda hasta 5 fotos en image, image2 … image5. La primera es la
-// portada que se ve en la tarjeta; el resto aparece en “Ver detalles”.
-const PHOTO_FIELDS = [
-  { key: 'image', label: 'Foto 1 (portada)' },
-  { key: 'image2', label: 'Foto 2' },
-  { key: 'image3', label: 'Foto 3' },
-  { key: 'image4', label: 'Foto 4' },
-  { key: 'image5', label: 'Foto 5' },
-]
+// datetime-local usa la hora local y no incluye zona horaria. Convertimos en
+// ambos sentidos para que el valor que viaja al backend sea un ISO completo.
+const toDateTimeInput = (value) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 16)
+}
+
+const fromDateTimeInput = (value) => (value ? new Date(value).toISOString() : '')
+
+const photoOrder = (product) =>
+  Array.isArray(product?.photo_order) && product.photo_order.length
+    ? PHOTO_KEYS.filter((key) => product.photo_order.includes(key)).concat(
+        PHOTO_KEYS.filter((key) => !product.photo_order.includes(key)),
+      )
+    : PHOTO_KEYS
 
 const EMPTY_FILES = {}
 
-function ProductPhotos({ images = {}, files = {}, onPick }) {
+function ProductPhotos({ images = {}, files = {}, order = PHOTO_KEYS, onPick }) {
+  const fields = order
+    .map((key) => PHOTO_FIELDS.find((photo) => photo.key === key))
+    .filter(Boolean)
+
   return (
     <div className="product-photos">
-      {PHOTO_FIELDS.map((photo) => (
+      {fields.map((photo, index) => (
         <div className="photo-field" key={photo.key}>
-          <span className="field-label">{photo.label}</span>
+          <span className="field-label">
+            {index === 0 ? 'Foto 1 (portada)' : `Foto ${index + 1}`}
+          </span>
           {images[photo.key] && (
             <img className="photo-preview" src={images[photo.key]} alt={photo.label} />
           )}
@@ -83,6 +113,7 @@ const offerError = (form) => {
   const hasPrice = !isEmpty(form.price)
   const hasSalesPrice = !isEmpty(form.sales_price)
   const hasDiscount = !isEmpty(form.discount_percent)
+  const hasEnd = !isEmpty(form.offer_ends_at)
   const price = Number(form.price)
   const salesPrice = Number(form.sales_price)
   const discount = Number(form.discount_percent)
@@ -105,6 +136,10 @@ const offerError = (form) => {
     }
   }
 
+  if (hasEnd && !hasSalesPrice) {
+    return 'Para programar el fin de la oferta, primero poné un precio de oferta.'
+  }
+
   return ''
 }
 
@@ -119,7 +154,24 @@ const offerPreview = (form) => {
     parts.push(`Descuento: ${Number(form.discount_percent)}%`)
   }
   parts.push(`Precio con descuento: ${formatPrice(form.sales_price)}`)
+  if (!isEmpty(form.offer_ends_at)) {
+    const end = new Date(form.offer_ends_at)
+    if (!Number.isNaN(end.getTime())) {
+      parts.push(`Termina: ${end.toLocaleString()}`)
+    }
+  }
   return parts.join(' · ')
+}
+
+const productPayload = (form) => {
+  const payload = { ...form }
+  if (!payload.category) delete payload.category
+  if (!payload.seasonal_category) delete payload.seasonal_category
+  payload.offer_ends_at = fromDateTimeInput(payload.offer_ends_at)
+  if (!Array.isArray(payload.photo_order) || payload.photo_order.length === 0) {
+    payload.photo_order = PHOTO_KEYS
+  }
+  return payload
 }
 
 export default function AdminCatalog() {
@@ -247,9 +299,7 @@ export default function AdminCatalog() {
       return
     }
     try {
-      const payload = { ...prodForm }
-      if (!payload.category) delete payload.category
-      if (!payload.seasonal_category) delete payload.seasonal_category
+      const payload = productPayload(prodForm)
       await catalogApi.products.create(current, payload, prodFiles)
       setProdForm(EMPTY_PROD)
       setProdFiles(EMPTY_FILES)
@@ -269,10 +319,12 @@ export default function AdminCatalog() {
       price: p.price ?? '',
       sales_price: p.sales_price ?? '',
       discount_percent: p.discount_percent ?? '',
+      offer_ends_at: toDateTimeInput(p.offer_ends_at),
       category: p.category || '',
       seasonal_category: p.seasonal_category || '',
       is_active: p.is_active,
       featured: p.featured ?? false,
+      photo_order: photoOrder(p),
     })
     setProdEditFiles(EMPTY_FILES)
     setProdEditImages(
@@ -288,9 +340,7 @@ export default function AdminCatalog() {
       return
     }
     try {
-      const payload = { ...prodEdit }
-      if (!payload.category) delete payload.category
-      if (!payload.seasonal_category) delete payload.seasonal_category
+      const payload = productPayload(prodEdit)
       await catalogApi.products.update(current, editingProd, payload, prodEditFiles)
       setEditingProd(null)
       setProdEditFiles(EMPTY_FILES)
@@ -411,6 +461,13 @@ export default function AdminCatalog() {
             />
             {offerPreview(prodForm) && <span className="field-hint">{offerPreview(prodForm)}</span>}
           </Field>
+          <Field label="Fin de la oferta" hint="Opcional. Después de esta fecha la oferta deja de mostrarse.">
+            <input
+              type="datetime-local"
+              value={prodForm.offer_ends_at}
+              onChange={(e) => setProdForm({ ...prodForm, offer_ends_at: e.target.value })}
+            />
+          </Field>
 
           <Field label="Categoría">
             <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
@@ -431,8 +488,9 @@ export default function AdminCatalog() {
           </Field>
           <div className="field photo-field-wide">
             <span className="field-label">Fotos (hasta 5)</span>
-            <span className="field-hint">La primera foto es la portada. Las demás se ven en “Ver detalles”.</span>
+            <span className="field-hint">La primera foto del orden actual se usa como portada.</span>
             <ProductPhotos
+              order={prodForm.photo_order}
               files={prodFiles}
               onPick={(key, file) => setProdFiles((prev) => ({ ...prev, [key]: file }))}
             />
@@ -451,29 +509,31 @@ export default function AdminCatalog() {
           />
         </Field>
         {productSearch && filteredProducts.length === 0 && <p className="muted">No se encontraron productos.</p>}
-        {filteredProducts.map((p) => (
-          <div className="row-item" key={p.id}>
-            <div className="row-item-main">
-              <b>{p.name}</b>
-              <span className="muted">
-                {[
-                  p.brand,
-                  hasOffer(p) && formatPrice(p.price) ? `Precio original: ${formatPrice(p.price)}` : null,
-                  hasOffer(p) && discountPercent(p) > 0 ? `Descuento: ${discountPercent(p)}%` : null,
-                  hasOffer(p)
-                    ? `Precio con descuento: ${formatPrice(p.sales_price)}`
-                    : formatPrice(p.price),
-                ].filter(Boolean).join(' · ')}
-              </span>
+        {filteredProducts.map((p) => {
+          return (
+            <div className="row-item" key={p.id}>
+              <div className="row-item-main">
+                <b>{p.name}</b>
+                <span className="muted">
+                  {[
+                    p.brand,
+                    hasOffer(p) && formatPrice(p.price) ? `Precio original: ${formatPrice(p.price)}` : null,
+                    hasOffer(p) && discountPercent(p) > 0 ? `Descuento: ${discountPercent(p)}%` : null,
+                    hasOffer(p)
+                      ? `Precio con descuento: ${formatPrice(p.sales_price)}`
+                      : formatPrice(p.price),
+                  ].filter(Boolean).join(' · ')}
+                </span>
+              </div>
+              <div className="catalog-product-actions">
+                <ToggleSwitch label="Activo" checked={p.is_active} onChange={() => toggleActive(p)} />
+                <ToggleSwitch label="Destacado" checked={p.featured} onChange={() => toggleFeatured(p)} />
+                <button className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
+                <button className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
+              </div>
             </div>
-            <div className="catalog-product-actions">
-              <ToggleSwitch label="Activo" checked={p.is_active} onChange={() => toggleActive(p)} />
-              <ToggleSwitch label="Destacado" checked={p.featured} onChange={() => toggleFeatured(p)} />
-              <button className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
-              <button className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </Card>
 
       {editingCat !== null && (
@@ -523,6 +583,9 @@ export default function AdminCatalog() {
                 <input type="number" step="1" min="1" max="99" placeholder="Automático" value={prodEdit.discount_percent} onChange={(event) => setProdEdit({ ...prodEdit, discount_percent: event.target.value })} />
                 {offerPreview(prodEdit) && <span className="field-hint">{offerPreview(prodEdit)}</span>}
               </Field>
+              <Field label="Fin de la oferta" hint="Opcional. Después de esta fecha la oferta deja de mostrarse.">
+                <input type="datetime-local" value={prodEdit.offer_ends_at} onChange={(event) => setProdEdit({ ...prodEdit, offer_ends_at: event.target.value })} />
+              </Field>
               <Field label="Categoría">
                 <select value={prodEdit.category} onChange={(event) => setProdEdit({ ...prodEdit, category: event.target.value })}>
                   <option value="">Sin categoría</option>{(categories || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
@@ -536,8 +599,13 @@ export default function AdminCatalog() {
               <Field label="Descripción"><textarea rows={3} value={prodEdit.description} onChange={(event) => setProdEdit({ ...prodEdit, description: event.target.value })} /></Field>
               <div className="field photo-field-wide">
                 <span className="field-label">Fotos (hasta 5)</span>
-                <span className="field-hint">Podés reemplazar una foto eligiendo un archivo nuevo en su lugar.</span>
-                <ProductPhotos images={prodEditImages} files={prodEditFiles} onPick={(key, file) => setProdEditFiles((prev) => ({ ...prev, [key]: file }))} />
+                <span className="field-hint">Podés reemplazar una foto eligiendo un archivo nuevo. Se conserva el orden actual.</span>
+                <ProductPhotos
+                  images={prodEditImages}
+                  files={prodEditFiles}
+                  order={prodEdit.photo_order}
+                  onPick={(key, file) => setProdEditFiles((prev) => ({ ...prev, [key]: file }))}
+                />
               </div>
               <div className="catalog-modal-toggles">
                 <ToggleSwitch label="Activo" checked={prodEdit.is_active} onChange={(value) => setProdEdit({ ...prodEdit, is_active: value })} />

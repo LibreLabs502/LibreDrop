@@ -46,6 +46,14 @@ python manage.py migrate
 python manage.py runserver   # :8000
 ```
 
+`migrate` aplica las migraciones pendientes del catálogo y de las demás apps.
+La migración `catalog.0015` agrega los campos de fin de oferta y orden de fotos
+y destacados. Para revisar el estado del catálogo:
+
+```bash
+python manage.py showmigrations catalog
+```
+
 ## Frontend
 
 ```bash
