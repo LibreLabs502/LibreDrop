@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { carouselPage } from '../carousel'
 import { productImages } from '../images'
-import { discountPercent, effectivePrice, hasOffer } from '../pricing'
+import { discountPercent, effectivePrice, hasOffer, offerCountdown } from '../pricing'
 import { themeStyle } from '../theme'
 
 // Redes sociales de la tienda: cada una con su logo (ícono SVG).
@@ -61,15 +62,24 @@ const copyText = async (text) => {
   }
 }
 
-function PriceTag({ product }) {
-  if (hasOffer(product)) {
-    const percent = discountPercent(product)
+function PriceTag({ product, now = Date.now() }) {
+  if (hasOffer(product, now)) {
+    const percent = discountPercent(product, now)
     const oldPrice = formatPrice(product.price)
+    const offerPrice = formatPrice(effectivePrice(product, now))
+    const countdown = offerCountdown(product, now)
     return (
       <span className="product-price-row offer-price-list">
         {oldPrice && <span className="product-price-old">Precio original: {oldPrice}</span>}
-        <span className="product-offer-badge">Descuento: {percent}%</span>
-        {oldPrice && <span className="product-price">Precio con descuento: {formatPrice(effectivePrice(product))}</span>}
+        <span className="product-offer-badge">
+          {percent > 0 ? `Descuento del: ${percent}%` : 'Oferta'}
+        </span>
+        {offerPrice && (
+          <span className="product-price">
+            {oldPrice ? `Precio con descuento: ${offerPrice}` : offerPrice}
+          </span>
+        )}
+        {countdown && <span className="product-offer-countdown">Termina en {countdown}</span>}
       </span>
     )
   }
@@ -77,17 +87,78 @@ function PriceTag({ product }) {
   return price ? <span className="product-price">{price}</span> : null
 }
 
+// Carrusel compartido por las colecciones de la tienda. Solo muestra fotos:
+// al tocar una, se abre la ventana de detalles del producto. Con menos de tres
+// fotos queda disponible el filtro de la colección; desde tres muestra tandas
+// de tres, repitiendo fotos si hace falta para completar la última.
+function ProductPhotoCarousel({
+  title,
+  eyebrow,
+  products,
+  onOpen,
+  onSeeAll,
+  actionLabel,
+  interval = 4000,
+}) {
+  const [slide, setSlide] = useState(0)
+  const photos = products.filter((product) => productImages(product).length > 0)
+  const { pageSize, pageCount, items } = carouselPage(photos, slide)
+
+  useEffect(() => {
+    if (pageCount <= 1) return undefined
+    const timer = window.setInterval(
+      () => setSlide((index) => (index + 1) % pageCount),
+      interval,
+    )
+    return () => window.clearInterval(timer)
+  }, [pageCount, interval])
+
+  if (!pageCount) return null
+
+  return (
+    <section className="store-carousel" aria-label={title}>
+      <div className="store-carousel-heading">
+        {eyebrow && <span>{eyebrow}</span>}
+        <h2>{title}</h2>
+      </div>
+      <div
+        key={`${title}-${slide % pageCount}`}
+        className={`store-carousel-photos${pageSize === 3 ? ' has-three' : ''}`}
+      >
+        {items.map((product) => {
+          const photo = productImages(product)[0]
+          return photo ? (
+            <button
+              type="button"
+              className="store-carousel-frame"
+              key={product.id}
+              onClick={() => onOpen(product)}
+              aria-label={`Ver ${product.name}`}
+            >
+              <img src={photo} alt={product.name} />
+            </button>
+          ) : null
+        })}
+      </div>
+      <button type="button" className="store-carousel-link" onClick={onSeeAll}>
+        {actionLabel}
+      </button>
+    </section>
+  )
+}
+
 export default function PublicStore() {
   const { slug } = useParams()
   const [store, setStore] = useState(null)
   const [error, setError] = useState('')
   const [category, setCategory] = useState('all')
+  const [seasonalSubcategory, setSeasonalSubcategory] = useState('all')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
   const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
   const [infoOpen, setInfoOpen] = useState(false)
-  const [offerSlide, setOfferSlide] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
   // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
@@ -153,6 +224,15 @@ export default function PublicStore() {
     }
   }, [slug])
 
+  useEffect(() => {
+    const hasUpcomingEnd = store?.products?.some(
+      (product) => product.offer_ends_at && new Date(product.offer_ends_at).getTime() > now,
+    )
+    if (!hasUpcomingEnd) return undefined
+    const timer = window.setTimeout(() => setNow(Date.now()), 1000)
+    return () => window.clearTimeout(timer)
+  }, [store, now])
+
   const themeVars = useMemo(() => themeStyle(store?.theme), [store])
 
   // Colorea el fondo del body para que toda la página comparta el tema.
@@ -167,24 +247,51 @@ export default function PublicStore() {
     }
   }, [themeVars])
 
-  const offerCount = useMemo(
-    () => (store ? store.products.filter(hasOffer).length : 0),
-    [store],
-  )
   const offerProducts = useMemo(
-    () => (store ? store.products.filter(hasOffer) : []),
+    () => (store ? store.products.filter((product) => hasOffer(product, now)) : []),
+    [store, now],
+  )
+  const seasonalProducts = useMemo(
+    () => (store ? store.products.filter((item) => item.seasonal_category) : []),
     [store],
   )
-  const offerPageSize = offerProducts.length >= 3 ? 3 : 1
-  const offerPageCount = Math.ceil(offerProducts.length / offerPageSize)
-  const carouselProducts = offerProducts.length >= 3
-    ? Array.from({ length: 3 }, (_, offset) => offerProducts[(offerSlide * 3 + offset) % offerProducts.length])
-    : offerProducts.length > 0 ? [offerProducts[offerSlide % offerProducts.length]] : []
-  useEffect(() => {
-    if (offerPageCount <= 1 || category === 'offers') return undefined
-    const timer = window.setInterval(() => setOfferSlide((index) => (index + 1) % offerPageCount), 3500)
-    return () => window.clearInterval(timer)
-  }, [offerPageCount, category])
+  const seasonalCategories = useMemo(() => {
+    if (!store) return []
+    return (store.seasonal_categories || []).filter((season) =>
+      seasonalProducts.some((product) => String(product.seasonal_category) === String(season.id)),
+    )
+  }, [store, seasonalProducts])
+  const featuredProducts = useMemo(
+    () => (store ? store.products.filter((item) => item.featured).sort((a, b) => {
+      const aOrder = a.featured_order
+      const bOrder = b.featured_order
+      const aHasOrder = aOrder !== null && aOrder !== undefined
+      const bHasOrder = bOrder !== null && bOrder !== undefined
+      if (aHasOrder && bHasOrder) return aOrder - bOrder
+      if (aHasOrder) return -1
+      if (bHasOrder) return 1
+      return a.name.localeCompare(b.name)
+    }) : []),
+    [store],
+  )
+  const offerCarouselProducts = useMemo(
+    () => offerProducts.filter((product) => productImages(product).length > 0),
+    [offerProducts],
+  )
+  const seasonalCarouselProducts = useMemo(
+    () => seasonalProducts.filter((product) => productImages(product).length > 0),
+    [seasonalProducts],
+  )
+  const featuredCarouselProducts = useMemo(
+    () => featuredProducts.filter((product) => productImages(product).length > 0),
+    [featuredProducts],
+  )
+  const showStoreHighlights = category === 'all' && !query.trim()
+
+  const chooseCategory = (nextCategory) => {
+    setCategory(nextCategory)
+    setSeasonalSubcategory('all')
+  }
 
   const products = useMemo(() => {
     if (!store) return []
@@ -192,15 +299,22 @@ export default function PublicStore() {
     return store.products.filter((p) => {
       const inCategory =
         category === 'offers'
-          ? hasOffer(p)
-          : category === 'all' || String(p.category) === String(category)
+          ? hasOffer(p, now)
+          : category === 'seasonal'
+            ? Boolean(p.seasonal_category) && (
+                seasonalSubcategory === 'all' ||
+                String(p.seasonal_category) === String(seasonalSubcategory)
+              )
+            : category === 'featured'
+              ? Boolean(p.featured)
+              : category === 'all' || String(p.category) === String(category)
       const matches =
         !q ||
         p.name.toLowerCase().includes(q) ||
         (p.brand || '').toLowerCase().includes(q)
       return inCategory && matches
     })
-  }, [store, category, query])
+  }, [store, category, seasonalSubcategory, query, now])
 
   const openProduct = (product) => {
     setActiveImage(0)
@@ -333,22 +447,37 @@ export default function PublicStore() {
         </div>
       </header>
 
-      {offerProducts.length > 0 && category !== 'offers' && (
-        <section className="store-offer-carousel" aria-label="Carrusel de ofertas">
-          <h2 className="store-offer-title">{store.sale_text || 'Productos con ofertas'}</h2>
-          <div key={`offers-${offerSlide}`} className={`store-offer-photos${carouselProducts.length >= 3 ? ' has-three' : ''}`}>
-            {carouselProducts.map((product) => {
-              const photo = productImages(product)[0]
-              return photo ? (
-                <div className="store-offer-frame" key={product.id}>
-                  <h3>{product.name}</h3>
-                  <img src={photo} alt={product.name} />
-                </div>
-              ) : null
-            })}
-          </div>
-          <button type="button" className="store-offer-link" onClick={() => setCategory('offers')}>Ver ofertas</button>
-        </section>
+      {showStoreHighlights && seasonalCarouselProducts.length > 0 && (
+        <ProductPhotoCarousel
+          title="Productos de temporada"
+          eyebrow="PARA CADA OCASIÓN"
+          products={seasonalCarouselProducts}
+          onOpen={openProduct}
+          onSeeAll={() => chooseCategory('seasonal')}
+          actionLabel="Ver productos de temporada"
+        />
+      )}
+
+      {showStoreHighlights && offerCarouselProducts.length > 0 && (
+        <ProductPhotoCarousel
+          title={store.sale_text || 'Productos con ofertas'}
+          eyebrow="OFERTAS"
+          products={offerCarouselProducts}
+          onOpen={openProduct}
+          onSeeAll={() => chooseCategory('offers')}
+          actionLabel="Ver ofertas"
+        />
+      )}
+
+      {showStoreHighlights && featuredCarouselProducts.length > 0 && (
+        <ProductPhotoCarousel
+          title={store.featured_products_text || 'Productos destacados'}
+          eyebrow="SELECCIÓN DE LA TIENDA"
+          products={featuredCarouselProducts}
+          onOpen={openProduct}
+          onSeeAll={() => chooseCategory('featured')}
+          actionLabel="Ver productos destacados"
+        />
       )}
 
       <div className="store-toolbar">
@@ -374,22 +503,38 @@ export default function PublicStore() {
             </button>
           )}
           <nav className="store-cats" ref={catsRef}>
-            <button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>
+            <button className={category === 'all' ? 'active' : ''} onClick={() => chooseCategory('all')}>
               Todos
             </button>
-            {offerCount > 0 && (
+            {offerProducts.length > 0 && (
               <button
-                className={`offers-filter${category === 'offers' ? ' active' : ''}`}
-                onClick={() => setCategory('offers')}
+                className={`store-filter${category === 'offers' ? ' active' : ''}`}
+                onClick={() => chooseCategory('offers')}
               >
-                Ofertas <span className="offers-count">{offerCount}</span>
+                Ofertas <span className="store-filter-count">{offerProducts.length}</span>
+              </button>
+            )}
+            {seasonalProducts.length > 0 && (
+              <button
+                className={`store-filter${category === 'seasonal' ? ' active' : ''}`}
+                onClick={() => chooseCategory('seasonal')}
+              >
+                Temporada <span className="store-filter-count">{seasonalProducts.length}</span>
+              </button>
+            )}
+            {featuredProducts.length > 0 && (
+              <button
+                className={`store-filter${category === 'featured' ? ' active' : ''}`}
+                onClick={() => chooseCategory('featured')}
+              >
+                Destacados <span className="store-filter-count">{featuredProducts.length}</span>
               </button>
             )}
             {store.categories.map((c) => (
               <button
                 key={c.id}
                 className={String(category) === String(c.id) ? 'active' : ''}
-                onClick={() => setCategory(c.id)}
+                onClick={() => chooseCategory(c.id)}
               >
                 {c.name}
               </button>
@@ -425,6 +570,39 @@ export default function PublicStore() {
         />
       </div>
 
+      {category === 'seasonal' && seasonalCategories.length > 0 && (
+        <nav className="store-seasonal-subcategories" aria-label="Subcategorías de temporada">
+          <span className="store-seasonal-subcategories-label">Explorá por temporada</span>
+          <div className="store-seasonal-subcategory-list">
+            <button
+              type="button"
+              className={seasonalSubcategory === 'all' ? 'active' : ''}
+              onClick={() => setSeasonalSubcategory('all')}
+              aria-pressed={seasonalSubcategory === 'all'}
+            >
+              Todas <span>{seasonalProducts.length}</span>
+            </button>
+            {seasonalCategories.map((season) => {
+              const count = seasonalProducts.filter(
+                (product) => String(product.seasonal_category) === String(season.id),
+              ).length
+              const active = String(seasonalSubcategory) === String(season.id)
+              return (
+                <button
+                  key={season.id}
+                  type="button"
+                  className={active ? 'active' : ''}
+                  onClick={() => setSeasonalSubcategory(String(season.id))}
+                  aria-pressed={active}
+                >
+                  {season.name} <span>{count}</span>
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
       <section className="store-grid">
         {products.length === 0 && <p className="muted">No hay productos.</p>}
         {products.map((p) => {
@@ -437,7 +615,7 @@ export default function PublicStore() {
                 {p.brand && <span className="product-brand">{p.brand}</span>}
                 <h3 className="product-name-link" onClick={() => openProduct(p)}>{p.name}</h3>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
-                <PriceTag product={p} />
+                <PriceTag product={p} now={now} />
                 <button type="button" className="product-details-link" onClick={() => openProduct(p)}>
                   Ver detalles…
                 </button>
@@ -485,7 +663,7 @@ export default function PublicStore() {
               <h2>{selected.name}</h2>
               {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
-              <PriceTag product={selected} />
+              <PriceTag product={selected} now={now} />
               {buildPurchaseLinks(store, productOrderMessage(store, selected)).map((c) =>
                 renderPurchaseButton(c, selected),
               )}

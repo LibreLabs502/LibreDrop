@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from catalog.models import Product
+from catalog.models import Product, SeasonalCategory
 from tenants.models import Membership, Tenant
 from tenants.theme import DEFAULT_PALETTE, PALETTES
 
@@ -86,25 +86,112 @@ class PublicStoreOffersTests(TestCase):
         self.client = APIClient()
         self.tenant = Tenant.objects.create(name="Tienda Ofertas")
 
-    def test_storefront_expone_porcentaje_y_no_precio_de_oferta(self):
-        Product.objects.create(tenant=self.tenant, name="Producto en oferta", price="100.00", discount_percent=20)
+    def test_storefront_expone_precio_de_oferta_y_descuento(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Producto en oferta",
+            price="100.00",
+            sales_price="80.00",
+            discount_percent=20,
+        )
         res = self.client.get(f"/public/{self.tenant.slug}/")
         self.assertEqual(res.status_code, 200)
         product = res.json()["products"][0]
         self.assertEqual(product["price"], "100.00")
+        self.assertEqual(product["sales_price"], "80.00")
         self.assertEqual(product["discount_percent"], 20)
-        self.assertNotIn("sales_price", product)
-        for field in ("image", "image2", "image3", "image4", "image5"):
+        for field in (
+            "image",
+            "image2",
+            "image3",
+            "image4",
+            "image5",
+            "photo_order",
+            "featured",
+            "featured_order",
+            "offer_ends_at",
+            "seasonal_category",
+        ):
             self.assertIn(field, product)
 
-    def test_oferta_sin_precio_se_publica_solo_como_porcentaje(self):
-        Product.objects.create(tenant=self.tenant, name="Oferta sin precio", discount_percent=20)
+    def test_storefront_expone_fin_de_oferta_y_orden(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Oferta programada",
+            price="100.00",
+            sales_price="80.00",
+            offer_ends_at="2030-01-01T10:00:00Z",
+            featured=True,
+            featured_order=2,
+            photo_order=["image2", "image"],
+        )
+        product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertEqual(product["offer_ends_at"], "2030-01-01T10:00:00Z")
+        self.assertTrue(product["featured"])
+        self.assertEqual(product["featured_order"], 2)
+        self.assertEqual(product["photo_order"], ["image2", "image"])
+
+    def test_oferta_sin_precio_normal_expone_su_precio_de_oferta(self):
+        Product.objects.create(
+            tenant=self.tenant,
+            name="Oferta sin precio",
+            sales_price="80.00",
+            discount_percent=20,
+        )
         product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
         self.assertIsNone(product["price"])
+        self.assertEqual(product["sales_price"], "80.00")
         self.assertEqual(product["discount_percent"], 20)
-        self.assertNotIn("sales_price", product)
 
-    def test_producto_sin_oferta_publica_porcentaje_null(self):
+    def test_producto_sin_oferta_publica_precio_de_oferta_null(self):
         Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")
         product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
+        self.assertIsNone(product["sales_price"])
         self.assertIsNone(product["discount_percent"])
+
+
+class PublicStoreCollectionsTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tenant = Tenant.objects.create(
+            name="Tienda Colecciones",
+            sale_text="Rebajas",
+            featured_products_text="Favoritos",
+        )
+        self.season = SeasonalCategory.objects.create(
+            tenant=self.tenant,
+            name="Navidad",
+        )
+
+    def test_expone_titulos_y_categorias_de_temporada(self):
+        res = self.client.get(f"/public/{self.tenant.slug}/")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["sale_text"], "Rebajas")
+        self.assertEqual(data["featured_products_text"], "Favoritos")
+        self.assertEqual(
+            data["seasonal_categories"],
+            [{"id": self.season.id, "name": "Navidad"}],
+        )
+
+    def test_expone_productos_destacados_y_de_temporada(self):
+        featured = Product.objects.create(
+            tenant=self.tenant,
+            name="Destacado",
+            price="50.00",
+            featured=True,
+        )
+        seasonal = Product.objects.create(
+            tenant=self.tenant,
+            name="De temporada",
+            price="60.00",
+            seasonal_category=self.season,
+        )
+        products = {
+            item["name"]: item
+            for item in self.client.get(f"/public/{self.tenant.slug}/").json()["products"]
+        }
+        self.assertTrue(products[featured.name]["featured"])
+        self.assertIsNone(products[featured.name]["seasonal_category"])
+        self.assertFalse(products[seasonal.name]["featured"])
+        self.assertEqual(products[seasonal.name]["seasonal_category"], self.season.id)

@@ -1,5 +1,41 @@
 # Versiones
 
+## v1.1 — Colecciones de temporada, ofertas y destacados
+
+- Panel → Catálogo: marcá productos para destacarlos y asignales una categoría
+  de temporada —por ejemplo Navidad o Día de la Madre—.
+- Panel → Catálogo: las categorías de temporada se crean y editan como las
+  categorías normales.
+- La tienda pública muestra hasta tres carruseles de fotos, en este orden:
+  **Productos de temporada**, **Ofertas** y **Productos destacados**. Cada uno
+  aparece solo si su colección tiene al menos tres productos con foto. Con uno
+  o dos, la colección sigue disponible desde sus filtros, sin mostrar carrusel.
+- Los carruseles avanzan solos y muestran tres fotos por tanda. Si la última
+  tanda queda incompleta, se repiten fotos de la colección hasta completar las
+  tres posiciones.
+- Debajo de cada carrusel hay un botón (**Ver ofertas**, **Ver productos de
+  temporada**, **Ver productos destacados**) que activa el filtro de esa
+  colección y oculta el carrusel.
+- La barra de categorías suma los filtros **Ofertas**, **Temporada** y
+  **Destacados**, con la cantidad de productos de cada colección.
+- Al elegir **Temporada**, aparecen debajo del buscador las subcategorías de
+  temporada disponibles, con su cantidad de productos. Se puede elegir una o
+  volver a **Todas**.
+- Se restaura `Product.sales_price` como base de las ofertas. La migración
+  `catalog/0014_restore_product_sales_price.py` reconstruye el precio de oferta
+  de las ofertas que todavía tienen precio normal. `discount_percent` queda como
+  porcentaje manual opcional cuando no hay precio normal.
+- `Product.offer_ends_at` permite programar el fin de una oferta. La tienda
+  muestra una cuenta regresiva, y al vencer deja de mostrarla en los carruseles
+  y el filtro de ofertas; el producto sigue en el catálogo con su precio normal.
+- La migración `catalog/0015_product_featured_order_product_offer_ends_at_and_more.py`
+  agrega la fecha de vencimiento, el orden de fotos y la posición de destacados.
+- Los serializers del catálogo y del storefront exponen `Product.sales_price`,
+  `Product.featured`, `Product.seasonal_category`,
+  `Tenant.featured_products_text` y `Tenant.seasonal_categories`.
+- Las secciones usan la paleta de la tienda, se adaptan a móviles y respetan la
+  preferencia de reducir movimiento.
+
 ## v1 — Catálogo más rápido y ofertas renovadas
 
 - Se conserva la carga de **hasta cinco fotos por producto** y la vista
@@ -36,7 +72,8 @@
 ## v0.10 — Ofertas y Novedades con historial
 
 - La oferta por precio fijo (`Product.sales_price`) descrita en esta versión
-  fue reemplazada en v1 por el porcentaje `discount_percent`.
+  fue reemplazada en v1 por el porcentaje `discount_percent` y restaurada en
+  v1.1 como base de las ofertas.
 
 ### Historial de Novedades
 

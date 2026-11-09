@@ -14,5 +14,7 @@ class PublicStoreView(generics.RetrieveAPIView):
     def get_queryset(self): # type: ignore
         return Tenant.objects.prefetch_related(
             "categories",
+            "seasonalcategories",
             "products__category",
+            "products__seasonal_category",
         )

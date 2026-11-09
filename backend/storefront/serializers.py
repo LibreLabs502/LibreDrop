@@ -6,12 +6,21 @@ from tenants.channels import effective_channels
 from tenants.models import Tenant
 from tenants.serializers import ThemeSerializer
 from tenants.theme import theme_payload
-from catalog.models import Category, Product
+from catalog.models import Category, Product, SeasonalCategory
 
 
 class PublicCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
+        fields = [
+            "id",
+            "name",
+        ]
+
+
+class PublicSeasonalCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SeasonalCategory
         fields = [
             "id",
             "name",
@@ -24,16 +33,22 @@ class PublicProductSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "category",
+            "seasonal_category",
             "name",
             "description",
             "brand",
             "price",
+            "sales_price",
             "discount_percent",
+            "offer_ends_at",
+            "featured",
+            "featured_order",
             "image",
             "image2",
             "image3",
             "image4",
             "image5",
+            "photo_order",
         ]
 
     def to_representation(self, instance):
@@ -47,6 +62,9 @@ class PublicProductSerializer(serializers.ModelSerializer):
 
 class PublicTenantSerializer(serializers.ModelSerializer):
     categories = PublicCategorySerializer(many=True, read_only=True)
+    seasonal_categories = PublicSeasonalCategorySerializer(
+        source="seasonalcategories", many=True, read_only=True
+    )
     products = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     # Solo los canales activados que además tienen un destino válido: nunca
@@ -63,6 +81,7 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "logo",
             "purchase_button_text",
             "sale_text",
+            "featured_products_text",
             "whatsapp",
             "instagram_url",
             "facebook_url",
@@ -70,6 +89,7 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "linkedin_url",
             "purchase_channels",
             "categories",
+            "seasonal_categories",
             "products",
             "theme",
         ]
@@ -86,7 +106,7 @@ class PublicTenantSerializer(serializers.ModelSerializer):
     def get_products(self, tenant):
         products = tenant.products.filter(
             is_active=True
-        ).select_related("category")
+        ).select_related("category", "seasonal_category")
 
         return PublicProductSerializer(
             products,

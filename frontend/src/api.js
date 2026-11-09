@@ -220,7 +220,7 @@ export const billingApi = {
 // acepta).
 const cleanProductPayload = (data) => {
   const clean = { ...(data || {}) }
-  for (const key of ['price', 'discount_percent']) {
+  for (const key of ['price', 'sales_price', 'discount_percent', 'offer_ends_at']) {
     if (clean[key] === '') clean[key] = null
   }
   return clean
@@ -237,7 +237,18 @@ const productFiles = (files) => {
 const hasProductFiles = (files) => Object.values(files).some(Boolean)
 
 const productFormBody = (data, files) =>
-  formDataFrom(data, productFiles(files), ['price', 'discount_percent'])
+  formDataFrom(
+    {
+      ...data,
+      // En multipart las listas no se interpretan como una lista JSON: el
+      // backend recibe el orden de las fotos como texto y lo decodifica.
+      photo_order: Array.isArray(data?.photo_order)
+        ? JSON.stringify(data.photo_order)
+        : data?.photo_order,
+    },
+    productFiles(files),
+    ['price', 'sales_price', 'discount_percent', 'offer_ends_at'],
+  )
 
 export const catalogApi = {
   categories: {
@@ -248,6 +259,15 @@ export const catalogApi = {
       api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'PATCH', body: data }),
     remove: (tenantId, id) =>
       api(`/catalog/tenants/${tenantId}/categories/${id}/`, { method: 'DELETE' }),
+  },
+  seasonalCategories: {
+    list: (tenantId) => api(`/catalog/tenants/${tenantId}/seasonal-categories/`, { auth: true }),
+    create: (tenantId, data) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/`, { method: 'POST', body: data }),
+    update: (tenantId, id, data) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/${id}/`, { method: 'PATCH', body: data }),
+    remove: (tenantId, id) =>
+      api(`/catalog/tenants/${tenantId}/seasonal-categories/${id}/`, { method: 'DELETE' }),
   },
   products: {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),
@@ -269,6 +289,11 @@ export const catalogApi = {
     },
     remove: (tenantId, id) =>
       api(`/catalog/tenants/${tenantId}/products/${id}/`, { method: 'DELETE' }),
+    reorderFeatured: (tenantId, ids) =>
+      api(`/catalog/tenants/${tenantId}/products/reorder-featured/`, {
+        method: 'POST',
+        body: { ids },
+      }),
   },
 }
 
