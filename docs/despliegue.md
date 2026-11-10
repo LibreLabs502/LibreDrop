@@ -102,10 +102,10 @@ imprime la lista de migraciones pendientes y termina con `MIGRATIONS_OK`
 (buscalo en los logs de Render).
 
 Las migraciones de catálogo se aplican igual que el resto. La migración 0010
-convirtió las ofertas guardadas a `discount_percent` y retiró
-`Product.sales_price`; la migración 0014 restaura el precio de oferta y lo
-reconstruye a partir del descuento cuando todavía hay precio normal, de modo que
-las ofertas existentes se conservan. Las migraciones 0008, 0009 y 0011–0013
+convirtió las ofertas guardadas a `discount_percent` y retiró temporalmente
+`Product.sales_price`; la migración 0014 lo restauró. La nueva migración 0016
+conserva los porcentajes de las ofertas actuales y elimina de nuevo esa columna.
+Las migraciones 0008, 0009 y 0011–0013
 agregaron las cuatro fotos adicionales, `discount_percent`, `featured` y las
 categorías de temporada. La migración 0015 agrega `featured_order`,
 `offer_ends_at` y `photo_order`. La base debe tener aplicadas todas las

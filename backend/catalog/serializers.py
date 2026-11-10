@@ -102,10 +102,12 @@ class ProductSerializer(serializers.ModelSerializer):
     price = NullableDecimalField(
         max_digits=10, decimal_places=2, required=False, allow_null=True
     )
-    sales_price = NullableDecimalField(
-        max_digits=10, decimal_places=2, required=False, allow_null=True
+    discounted_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True, allow_null=True
     )
-    discount_percent = NullableIntegerField(required=False, allow_null=True)
+    discount_percent = NullableIntegerField(
+        required=False, allow_null=True, min_value=1, max_value=99
+    )
     offer_ends_at = NullableDateTimeField(required=False, allow_null=True)
     photo_order = JSONListField(child=serializers.CharField(), required=False)
 
@@ -119,7 +121,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "brand",
             "price",
-            "sales_price",
+            "discounted_price",
             "discount_percent",
             "offer_ends_at",
             "image",
@@ -141,26 +143,19 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        price = attrs.get("price", getattr(self.instance, "price", None))
-        sales_price = attrs.get("sales_price", getattr(self.instance, "sales_price", None))
+        if "sales_price" in self.initial_data:
+            raise serializers.ValidationError({
+                "sales_price": (
+                    "El precio de oferta ya no se ingresa; usá discount_percent."
+                )
+            })
+
         discount_percent = attrs.get(
             "discount_percent", getattr(self.instance, "discount_percent", None)
         )
         offer_ends_at = attrs.get(
             "offer_ends_at", getattr(self.instance, "offer_ends_at", None)
         )
-
-        if sales_price is not None:
-            if sales_price <= 0:
-                raise serializers.ValidationError({
-                    "sales_price": "El precio de oferta debe ser mayor que cero."
-                })
-            # Sin precio normal se permite la oferta; el porcentaje se toma del
-            # campo manual o se muestra solo “Oferta”.
-            if price is not None and sales_price >= price:
-                raise serializers.ValidationError({
-                    "sales_price": "El precio de oferta debe ser menor que el precio normal."
-                })
 
         if discount_percent is not None:
             if (
@@ -172,14 +167,9 @@ class ProductSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "discount_percent": "El porcentaje de descuento debe estar entre 1 y 99."
                 })
-            if sales_price is None:
-                raise serializers.ValidationError({
-                    "discount_percent": "Para usar un porcentaje de descuento, primero poné un precio de oferta."
-                })
-
-        if offer_ends_at is not None and sales_price is None:
+        if offer_ends_at is not None and discount_percent is None:
             raise serializers.ValidationError({
-                "offer_ends_at": "Para programar el fin de la oferta, primero poné un precio de oferta."
+                "offer_ends_at": "Para programar el fin de la oferta, primero ingresá un porcentaje de descuento."
             })
 
         photo_order = attrs.get("photo_order")

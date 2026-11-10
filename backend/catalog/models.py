@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from cloudinary.models import CloudinaryField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -45,9 +47,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     brand = models.CharField(max_length=255, blank=True)
     price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    sales_price = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    # Porcentaje manual para tiendas que quieren mostrar un descuento sin
-    # cargar el precio normal. Si hay precio normal, se calcula solo.
+    # El descuento es la fuente de verdad; el precio rebajado se calcula.
     discount_percent = models.PositiveSmallIntegerField(blank=True, null=True)
     image = CloudinaryField("producto")
     image2 = CloudinaryField("producto", blank=True, null=True)
@@ -58,8 +58,8 @@ class Product(models.Model):
     featured = models.BooleanField(default=False)
     # Posición manual dentro de los destacados. Vacío = al final.
     featured_order = models.PositiveIntegerField(blank=True, null=True)
-    # Fin opcional de la oferta. Después de esta fecha la oferta ya no se
-    # muestra, aunque el precio de oferta siga guardado.
+    # Fin opcional de la oferta. Después de esta fecha deja de mostrarse,
+    # aunque el porcentaje siga guardado.
     offer_ends_at = models.DateTimeField(blank=True, null=True)
     # Orden visible de las fotos (lista de claves de PHOTO_FIELDS). Las claves
     # que falten se agregan al final en su orden natural.
@@ -75,20 +75,19 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def discounted_price(self):
+        if (
+            self.price is None
+            or self.discount_percent is None
+            or not 1 <= self.discount_percent <= 99
+        ):
+            return None
+        discounted = self.price * (Decimal("100") - Decimal(self.discount_percent)) / Decimal("100")
+        return discounted.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     def clean(self):
         super().clean()
-        if self.sales_price is not None:
-            if self.sales_price <= 0:
-                raise ValidationError({
-                    "sales_price": "El precio de oferta debe ser mayor que cero."
-                })
-            # Sin precio normal se permite la oferta; en ese caso el porcentaje
-            # se toma de discount_percent o se muestra solo “Oferta”.
-            if self.price is not None and self.sales_price >= self.price:
-                raise ValidationError({
-                    "sales_price": "El precio de oferta debe ser menor que el precio normal."
-                })
-
         if self.discount_percent is not None:
             if (
                 not isinstance(self.discount_percent, int)
@@ -99,14 +98,9 @@ class Product(models.Model):
                 raise ValidationError({
                     "discount_percent": "El porcentaje de descuento debe estar entre 1 y 99."
                 })
-            if self.sales_price is None:
-                raise ValidationError({
-                    "discount_percent": "Para usar un porcentaje de descuento, primero poné un precio de oferta."
-                })
-
-        if self.offer_ends_at is not None and self.sales_price is None:
+        if self.offer_ends_at is not None and self.discount_percent is None:
             raise ValidationError({
-                "offer_ends_at": "Para programar el fin de la oferta, primero poné un precio de oferta."
+                "offer_ends_at": "Para programar el fin de la oferta, primero ingresá un porcentaje de descuento."
             })
 
         if self.photo_order:

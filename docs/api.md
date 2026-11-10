@@ -144,31 +144,32 @@ Reglas:
 
 Un producto expone: `id`, `category` (puede ser `null`), `seasonal_category`
 (puede ser `null`), `name`, `description`, `brand`, `price` (puede ser `null`),
-`sales_price` (precio de oferta, puede ser `null`), `discount_percent` (entero
-opcional de 1 a 99), `offer_ends_at` (fecha/hora ISO 8601 opcional), `featured`
-(booleano), `featured_order` (posición opcional), `photo_order` (lista de claves
-de foto), `image` y `image2`…`image5` (hasta cinco fotos), `is_active`,
-`created_at` y `updated_at`.
+`discount_percent` (entero opcional de 1 a 99), `discounted_price` (calculado,
+de solo lectura; es `null` si no hay `price` o descuento), `offer_ends_at`
+(fecha/hora ISO 8601 opcional), `featured` (booleano), `featured_order`
+(posición opcional), `photo_order` (lista de claves de foto), `image` e
+`image2`…`image5` (hasta cinco fotos), `is_active`, `created_at` y `updated_at`.
 
-La oferta se detecta con `sales_price`: debe ser mayor que cero y, si hay
-`price`, menor que el precio normal. `discount_percent` se usa únicamente cuando
-no hay precio normal para mostrar el porcentaje manual. Si se envía
-`discount_percent` también hay que enviar `sales_price`. `offer_ends_at` solo se
-acepta si hay un precio de oferta. Al vencer, la oferta deja de contar en el
-storefront; el precio de oferta permanece guardado para que se pueda editar.
+`discount_percent` es el único dato de oferta. Si hay `price`, el precio
+rebajado se calcula como `price * (100 - discount_percent) / 100` y se redondea
+a dos decimales. Por ejemplo, precio `10.00` con descuento `20` produce
+`discounted_price: "8.00"`. Sin precio normal, se guarda y muestra solo el
+porcentaje; `discounted_price` queda `null`. `offer_ends_at` solo se acepta si
+hay un porcentaje. Al vencer, la oferta deja de contar en el storefront y el
+producto vuelve a mostrar su precio normal.
 
 Las fotos del panel se envían como `multipart/form-data` con las claves `image`,
 `image2`, `image3`, `image4` e `image5`. Las claves sin archivo se omiten y
 conservan la foto anterior. `photo_order` acepta claves como `image3`, `image`,
 `image2`; en una petición multipart se envía como texto JSON. Las claves
-omitidas se agregan al final en su orden natural. `sales_price`,
-`discount_percent` y `offer_ends_at` se pueden dejar vacíos para quitar esos
-datos; los valores válidos del porcentaje son enteros entre 1 y 99.
+omitidas se agregan al final en su orden natural. `discount_percent` y
+`offer_ends_at` se pueden dejar vacíos para quitar esos datos; los valores
+válidos del porcentaje son enteros entre 1 y 99. `sales_price` ya no es un
+campo válido de entrada.
 
 ```json
 {
   "price": "100.00",
-  "sales_price": "80.00",
   "discount_percent": 20,
   "offer_ends_at": "2026-11-30T23:59:00Z",
   "featured": true,

@@ -1,5 +1,19 @@
 # Versiones
 
+## v1.2 — Descuentos calculados por porcentaje
+
+- El formulario de productos ya no pide un precio de oferta. Ingresá el precio
+  normal y un descuento entero de 1 a 99; el precio rebajado se calcula solo.
+- Si el producto no tiene precio normal, la tienda muestra únicamente el
+  porcentaje y no inventa un monto.
+- El API devuelve `discounted_price` como campo calculado y ya no expone
+  `sales_price` como dato de producto.
+- La migración `catalog/0016_remove_product_sales_price.py` conserva el
+  porcentaje de las ofertas existentes antes de eliminar la columna. Cuando se
+  puede, lo deriva de `price` y el antiguo precio de oferta; si una oferta sin
+  precio normal tampoco tenía porcentaje, conserva su visibilidad con el mínimo
+  válido de 1% porque no existe una base para recuperar el porcentaje real.
+
 ## v1.1 — Colecciones de temporada, ofertas y destacados
 
 - Panel → Catálogo: marcá productos para destacarlos y asignales una categoría
@@ -21,16 +35,14 @@
 - Al elegir **Temporada**, aparecen debajo del buscador las subcategorías de
   temporada disponibles, con su cantidad de productos. Se puede elegir una o
   volver a **Todas**.
-- Se restaura `Product.sales_price` como base de las ofertas. La migración
-  `catalog/0014_restore_product_sales_price.py` reconstruye el precio de oferta
-  de las ofertas que todavía tienen precio normal. `discount_percent` queda como
-  porcentaje manual opcional cuando no hay precio normal.
+- La migración v1.1 restauró temporalmente `Product.sales_price`; v1.2 lo elimina
+  de nuevo y usa `discount_percent` como única entrada de oferta.
 - `Product.offer_ends_at` permite programar el fin de una oferta. La tienda
   muestra una cuenta regresiva, y al vencer deja de mostrarla en los carruseles
   y el filtro de ofertas; el producto sigue en el catálogo con su precio normal.
 - La migración `catalog/0015_product_featured_order_product_offer_ends_at_and_more.py`
   agrega la fecha de vencimiento, el orden de fotos y la posición de destacados.
-- Los serializers del catálogo y del storefront exponen `Product.sales_price`,
+- Los serializers del catálogo y del storefront exponen el precio calculado,
   `Product.featured`, `Product.seasonal_category`,
   `Tenant.featured_products_text` y `Tenant.seasonal_categories`.
 - Las secciones usan la paleta de la tienda, se adaptan a móviles y respetan la

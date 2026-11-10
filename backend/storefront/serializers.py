@@ -28,6 +28,10 @@ class PublicSeasonalCategorySerializer(serializers.ModelSerializer):
 
 
 class PublicProductSerializer(serializers.ModelSerializer):
+    discounted_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True, allow_null=True
+    )
+
     class Meta:
         model = Product
         fields = [
@@ -38,7 +42,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             "description",
             "brand",
             "price",
-            "sales_price",
+            "discounted_price",
             "discount_percent",
             "offer_ends_at",
             "featured",

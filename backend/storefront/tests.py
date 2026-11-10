@@ -93,15 +93,15 @@ class PublicStoreOffersTests(TestCase):
         Product.objects.create(
             tenant=self.tenant,
             name="Producto en oferta",
-            price="100.00",
-            sales_price="80.00",
+            price="10.00",
             discount_percent=20,
         )
         res = self.client.get(f"/public/{self.tenant.slug}/")
         self.assertEqual(res.status_code, 200)
         product = res.json()["products"][0]
-        self.assertEqual(product["price"], "100.00")
-        self.assertEqual(product["sales_price"], "80.00")
+        self.assertEqual(product["price"], "10.00")
+        self.assertEqual(product["discounted_price"], "8.00")
+        self.assertNotIn("sales_price", product)
         self.assertEqual(product["discount_percent"], 20)
         for field in (
             "image",
@@ -122,7 +122,7 @@ class PublicStoreOffersTests(TestCase):
             tenant=self.tenant,
             name="Oferta programada",
             price="100.00",
-            sales_price="80.00",
+            discount_percent=20,
             offer_ends_at="2030-01-01T10:00:00Z",
             featured=True,
             featured_order=2,
@@ -134,22 +134,21 @@ class PublicStoreOffersTests(TestCase):
         self.assertEqual(product["featured_order"], 2)
         self.assertEqual(product["photo_order"], ["image2", "image"])
 
-    def test_oferta_sin_precio_normal_expone_su_precio_de_oferta(self):
+    def test_oferta_sin_precio_normal_expone_solo_el_porcentaje(self):
         Product.objects.create(
             tenant=self.tenant,
             name="Oferta sin precio",
-            sales_price="80.00",
             discount_percent=20,
         )
         product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
         self.assertIsNone(product["price"])
-        self.assertEqual(product["sales_price"], "80.00")
+        self.assertIsNone(product["discounted_price"])
         self.assertEqual(product["discount_percent"], 20)
 
-    def test_producto_sin_oferta_publica_precio_de_oferta_null(self):
+    def test_producto_sin_oferta_expone_precio_rebajado_null(self):
         Product.objects.create(tenant=self.tenant, name="Sin oferta", price="50.00")
         product = self.client.get(f"/public/{self.tenant.slug}/").json()["products"][0]
-        self.assertIsNone(product["sales_price"])
+        self.assertIsNone(product["discounted_price"])
         self.assertIsNone(product["discount_percent"])
 
 

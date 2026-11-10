@@ -10,6 +10,16 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v1.2',
+    date: 'Noviembre 2026',
+    title: 'Ofertas más simples',
+    items: [
+      'Ingresá el precio normal y el porcentaje de descuento; el precio rebajado se calcula automáticamente.',
+      'Si no ingresás un precio normal, tus clientes solo verán el porcentaje de descuento.',
+      'El campo de precio de oferta ya no aparece al crear o editar productos.',
+    ],
+  },
+  {
     version: 'v1.1',
     date: 'Noviembre 2026',
     title: 'Temporada, ofertas y destacados',
