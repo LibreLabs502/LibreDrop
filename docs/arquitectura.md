@@ -38,14 +38,14 @@ activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
 `suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
 datos (fila única) y se editan desde el panel del superusuario.
 
-Las **ofertas** se guardan en `Product.sales_price` (precio de oferta). Si hay
-`price`, el frontend calcula el porcentaje y muestra ambos precios; sin precio
-normal usa `discount_percent` (entero opcional de 1 a 99) solo para mostrar el
-porcentaje. `offer_ends_at` es opcional y exige un precio de oferta. La tienda
+Las **ofertas** se guardan únicamente en `Product.discount_percent` (entero de
+1 a 99). Si hay `price`, `Product.discounted_price` calcula el precio rebajado
+redondeado a dos decimales; sin precio normal, queda `null` y la tienda muestra
+solo el porcentaje. `offer_ends_at` es opcional y exige un porcentaje. La tienda
 muestra una cuenta regresiva y, al llegar la fecha, deja de contar el producto
-como oferta y vuelve a mostrar su precio normal. La migración 0010 convirtió las
-ofertas existentes a porcentaje y retiró la columna; la migración 0014 la
-restaura y reconstruye el precio de oferta cuando hay precio normal.
+como oferta y vuelve a mostrar su precio normal. La migración 0016 deriva el
+porcentaje del precio de oferta anterior cuando puede y elimina
+`Product.sales_price`.
 
 Las **categorías de temporada** (`SeasonalCategory`) agrupan productos para la
 colección “Productos de temporada”. Al elegir el filtro **Temporada**, el

@@ -11,9 +11,9 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 
 - Catálogos por tienda con categorías normales y de temporada, productos
   destacados y hasta cinco fotos por producto.
-- Ofertas con precio normal, precio de oferta, porcentaje opcional y fecha de
-  vencimiento. La tienda muestra una cuenta regresiva mientras la oferta está
-  activa; al vencer, deja de contar como oferta.
+- Ofertas con precio normal y porcentaje de descuento; el precio rebajado se
+  calcula automáticamente. La oferta puede tener fecha de vencimiento y la
+  tienda muestra una cuenta regresiva mientras está activa.
 - Tienda pública con carruseles de temporada, ofertas y destacados. Cada uno
   muestra tres fotos por tanda y solo aparece con tres o más productos con foto;
   las colecciones siguen disponibles en los filtros aunque tengan menos.

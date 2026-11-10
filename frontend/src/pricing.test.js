@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import {
   discountPercent,
+  discountedPrice,
   effectivePrice,
   formatCountdown,
   hasOffer,
@@ -10,54 +11,38 @@ import {
   offerExpired,
 } from './pricing.js'
 
-test('sin precio de oferta no hay oferta', () => {
-  assert.equal(hasOffer({ price: '100', sales_price: null }), false)
-  assert.equal(hasOffer({ price: '100' }), false)
-  assert.equal(hasOffer({ sales_price: '0' }), false)
-  assert.equal(hasOffer({ price: '100', discount_percent: 20 }), false)
+test('el porcentaje entero es el dato que define una oferta', () => {
+  assert.equal(hasOffer({ price: '10', discount_percent: 20 }), true)
+  assert.equal(hasOffer({ price: '10' }), false)
+  assert.equal(hasOffer({ price: '10', discount_percent: 0 }), false)
+  assert.equal(hasOffer({ price: '10', discount_percent: 100 }), false)
+  assert.equal(hasOffer({ price: '10', discount_percent: 20.5 }), false)
 })
 
-test('una oferta válida debe ser menor al precio normal', () => {
-  assert.equal(hasOffer({ price: '100', sales_price: '80' }), true)
-  assert.equal(hasOffer({ price: '100', sales_price: '100' }), false)
-  assert.equal(hasOffer({ price: '100', sales_price: '120' }), false)
-  assert.equal(hasOffer({ price: '100', sales_price: '0' }), false)
+test('calcula el porcentaje de descuento y el precio rebajado', () => {
+  const product = { price: '10.00', discount_percent: 20 }
+  assert.equal(discountPercent(product), 20)
+  assert.equal(discountedPrice(product), 8)
+  assert.equal(effectivePrice(product), 8)
 })
 
-test('se permite oferta sin precio normal', () => {
-  assert.equal(hasOffer({ price: null, sales_price: '80' }), true)
-  assert.equal(hasOffer({ sales_price: '80', discount_percent: 20 }), true)
+test('redondea el precio rebajado a dos decimales', () => {
+  assert.equal(discountedPrice({ price: '99.99', discount_percent: 25 }), 74.99)
+  assert.equal(discountedPrice({ price: '10.05', discount_percent: 50 }), 5.03)
 })
 
-test('calcula el porcentaje de descuento redondeado', () => {
-  assert.equal(discountPercent({ price: '100', sales_price: '80' }), 20)
-  assert.equal(discountPercent({ price: '99.99', sales_price: '74.99' }), 25)
-  assert.equal(discountPercent({ price: '100' }), 0)
+test('sin precio normal muestra el porcentaje sin inventar un precio', () => {
+  const product = { price: null, discount_percent: 20 }
+  assert.equal(hasOffer(product), true)
+  assert.equal(discountPercent(product), 20)
+  assert.equal(discountedPrice(product), null)
+  assert.equal(effectivePrice(product), null)
 })
 
-test('sin precio normal usa el porcentaje manual', () => {
-  assert.equal(discountPercent({ sales_price: '80', discount_percent: 20 }), 20)
-  assert.equal(discountPercent({ sales_price: '80', discount_percent: '35' }), 35)
-  assert.equal(discountPercent({ sales_price: '80' }), 0)
-  assert.equal(discountPercent({ sales_price: '80', discount_percent: 0 }), 0)
-  assert.equal(discountPercent({ sales_price: '80', discount_percent: 120 }), 0)
-})
-
-test('con precio normal el porcentaje manual no reemplaza al calculado', () => {
-  assert.equal(discountPercent({ price: '100', sales_price: '80', discount_percent: 50 }), 20)
-})
-
-test('el precio efectivo usa el de oferta cuando existe', () => {
-  assert.equal(effectivePrice({ price: '100', sales_price: '80' }), 80)
-  assert.equal(effectivePrice({ price: null, sales_price: '80' }), 80)
-  assert.equal(effectivePrice({ price: '100' }), 100)
-  assert.equal(effectivePrice({ price: null }), null)
-})
-
-test('una oferta vencida deja de contar como oferta', () => {
+test('una oferta vencida deja de contar y muestra el precio normal', () => {
   const product = {
-    price: '100',
-    sales_price: '80',
+    price: '10.00',
+    discount_percent: 20,
     offer_ends_at: '2030-01-01T10:00:00Z',
   }
   const before = new Date('2030-01-01T09:59:59Z').getTime()
@@ -68,12 +53,8 @@ test('una oferta vencida deja de contar como oferta', () => {
   assert.equal(hasOffer(product, before), true)
   assert.equal(hasOffer(product, after), false)
   assert.equal(discountPercent(product, after), 0)
-  assert.equal(effectivePrice(product, after), 100)
+  assert.equal(effectivePrice(product, after), 10)
   assert.equal(offerCountdown(product, after), null)
-})
-
-test('una oferta sin fecha de fin no vence', () => {
-  assert.equal(offerExpired({ sales_price: '80' }, Date.now()), false)
 })
 
 test('la cuenta regresiva usa la unidad más cómoda', () => {
@@ -88,11 +69,11 @@ test('la cuenta regresiva usa la unidad más cómoda', () => {
 test('la cuenta regresiva solo aparece en ofertas vigentes', () => {
   const now = new Date('2030-01-01T09:00:00Z').getTime()
   const product = {
-    price: '100',
-    sales_price: '80',
+    price: '10',
+    discount_percent: 20,
     offer_ends_at: '2030-01-01T10:00:00Z',
   }
   assert.equal(offerCountdown(product, now), '1 h 0 min')
-  assert.equal(offerCountdown({ price: '100', sales_price: '80' }, now), null)
-  assert.equal(offerCountdown({ price: '100' }, now), null)
+  assert.equal(offerCountdown({ price: '10', discount_percent: 20 }, now), null)
+  assert.equal(offerCountdown({ price: '10' }, now), null)
 })

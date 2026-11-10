@@ -220,7 +220,7 @@ export const billingApi = {
 // acepta).
 const cleanProductPayload = (data) => {
   const clean = { ...(data || {}) }
-  for (const key of ['price', 'sales_price', 'discount_percent', 'offer_ends_at']) {
+  for (const key of ['price', 'discount_percent', 'offer_ends_at']) {
     if (clean[key] === '') clean[key] = null
   }
   return clean
@@ -247,7 +247,7 @@ const productFormBody = (data, files) =>
         : data?.photo_order,
     },
     productFiles(files),
-    ['price', 'sales_price', 'discount_percent', 'offer_ends_at'],
+    ['price', 'discount_percent', 'offer_ends_at'],
   )
 
 export const catalogApi = {
@@ -273,9 +273,14 @@ export const catalogApi = {
     list: (tenantId) => api(`/catalog/tenants/${tenantId}/products/`),
     create: (tenantId, data, files) => {
       const form = hasProductFiles(productFiles(files))
+      // En la creación las fotos se guardan en sus campos naturales; no hace
+      // falta enviar photo_order (y algunos navegadores alteran listas en
+      // multipart). El orden personalizado se conserva al editar productos.
+      const productData = { ...data }
+      delete productData.photo_order
       return api(`/catalog/tenants/${tenantId}/products/`, {
         method: 'POST',
-        body: form ? productFormBody(data, files) : cleanProductPayload(data),
+        body: form ? productFormBody(productData, files) : cleanProductPayload(productData),
         form,
       })
     },
