@@ -67,6 +67,8 @@ INSTALLED_APPS = [
     'tenants',
     'storefront',
     'payments',
+    'orders',
+    'customers',
     'cloudinary_storage',
     'cloudinary',
     'rest_framework',
