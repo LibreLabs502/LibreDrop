@@ -90,13 +90,13 @@ function ToggleSwitch({ checked, onChange, label, disabled = false }) {
   )
 }
 
-function EditModal({ title, children, onClose, onSubmit, wide = false }) {
+function EditModal({ title, eyebrow = 'Editar catálogo', children, onClose, onSubmit, wide = false }) {
   return (
     <div className="modal-backdrop catalog-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className={`modal catalog-edit-modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <button type="button" className="modal-close" onClick={onClose} aria-label="Cerrar">×</button>
         <form onSubmit={onSubmit} className="catalog-modal-form">
-          <header className="catalog-modal-heading"><span>Editar catálogo</span><h2>{title}</h2></header>
+          <header className="catalog-modal-heading"><span>{eyebrow}</span><h2>{title}</h2></header>
           {children}
         </form>
       </section>
@@ -165,6 +165,8 @@ export default function AdminCatalog() {
   const [seasonalCategories, setSeasonalCategories] = useState([])
   const [products, setProducts] = useState(null)
   const [productSearch, setProductSearch] = useState('')
+  const [activeCatalogSection, setActiveCatalogSection] = useState('categories')
+  const [creatingProduct, setCreatingProduct] = useState(false)
   const [catForm, setCatForm] = useState(EMPTY_CAT)
   const [editingCat, setEditingCat] = useState(null)
   const [catEdit, setCatEdit] = useState(EMPTY_CAT)
@@ -190,18 +192,19 @@ export default function AdminCatalog() {
   useEffect(load, [load])
 
   useEffect(() => {
-    if (editingCat === null && editingSeasonalCat === null && editingProd === null) return undefined
+    if (editingCat === null && editingSeasonalCat === null && editingProd === null && !creatingProduct) return undefined
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') {
         setEditingCat(null)
         setEditingSeasonalCat(null)
         setEditingProd(null)
+        setCreatingProduct(false)
         setError('')
       }
     }
     window.addEventListener('keydown', closeOnEscape)
     return () => window.removeEventListener('keydown', closeOnEscape)
-  }, [editingCat, editingSeasonalCat, editingProd])
+  }, [editingCat, editingSeasonalCat, editingProd, creatingProduct])
 
   const filteredProducts = (products || []).filter((product) => {
     const search = productSearch.trim().toLocaleLowerCase()
@@ -288,6 +291,7 @@ export default function AdminCatalog() {
       await catalogApi.products.create(current, payload, prodFiles)
       setProdForm(EMPTY_PROD)
       setProdFiles(EMPTY_FILES)
+      setCreatingProduct(false)
       setOk('Producto creado.')
       load()
     } catch (err) {
@@ -370,121 +374,34 @@ export default function AdminCatalog() {
 
   return (
     <div className="stack">
-      <Card title={`Categorías (${(categories || []).length})`}>
-        <form onSubmit={createCategory} className="row add-row">
-          <Field label="Nombre *">
-            <input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
-          </Field>
-          <button className="btn">Agregar</button>
-        </form>
-        {(categories || []).map((c) => (
-          <div className="row-item" key={c.id}>
-            <div className="row-item-main"><b>{c.name}</b></div>
-            <span className="btn-group">
-              <button className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name }); setError('') }}>Editar</button>
-              <button className="btn small danger" onClick={() => removeCategory(c)}>Eliminar</button>
-            </span>
-          </div>
-        ))}
-      </Card>
+      <nav className="catalog-section-tabs" aria-label="Secciones del catálogo">
+        <button type="button" className={activeCatalogSection === 'categories' ? 'active' : ''} onClick={() => setActiveCatalogSection('categories')} aria-pressed={activeCatalogSection === 'categories'}>
+          Categorías <span>{(categories || []).length}</span>
+        </button>
+        <button type="button" className={activeCatalogSection === 'seasonal' ? 'active' : ''} onClick={() => setActiveCatalogSection('seasonal')} aria-pressed={activeCatalogSection === 'seasonal'}>
+          Temporada <span>{seasonalCategories.length}</span>
+        </button>
+        <button type="button" className={activeCatalogSection === 'products' ? 'active' : ''} onClick={() => setActiveCatalogSection('products')} aria-pressed={activeCatalogSection === 'products'}>
+          Productos <span>{(products || []).length}</span>
+        </button>
+      </nav>
 
-      <Card title={`Categorías de temporada (${seasonalCategories.length})`}>
-        <form onSubmit={createSeasonalCategory} className="row add-row">
-          <Field label="Nombre de la temporada *">
-            <input value={seasonalCatForm.name} onChange={(e) => setSeasonalCatForm({ name: e.target.value })} placeholder="Navidad, Día de la madre…" />
-          </Field>
-          <button className="btn">Agregar</button>
-        </form>
-        {seasonalCategories.map((item) => (
-          <div className="row-item" key={item.id}>
-            <div className="row-item-main"><b>{item.name}</b><span className="seasonal-category-tag">Temporada</span></div>
-            <span className="btn-group">
-              <button type="button" className="btn small ghost" onClick={() => { setEditingSeasonalCat(item.id); setSeasonalCatEdit({ name: item.name }); setError('') }}>Editar</button>
-              <button type="button" className="btn small danger" onClick={() => removeSeasonalCategory(item)}>Eliminar</button>
-            </span>
-          </div>
-        ))}
-      </Card>
-
-      <Card title={`Productos (${filteredProducts.length}${productSearch ? ` de ${(products || []).length}` : ''})`}>
-        <form onSubmit={createProduct} className="grid2">
-          <Field label="Nombre *">
-            <input value={prodForm.name} onChange={(e) => setProdForm({ ...prodForm, name: e.target.value })} />
-          </Field>
-          <Field label="Marca">
-            <input value={prodForm.brand} onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })} />
-          </Field>
-          <Field label="Precio normal" hint="Dejalo vacío si el producto no tiene precio.">
+      {activeCatalogSection === 'products' && (
+        <Card
+          title={`Productos (${filteredProducts.length}${productSearch ? ` de ${(products || []).length}` : ''})`}
+          actions={<button type="button" className="btn" onClick={() => { setCreatingProduct(true); setError('') }}>Agregar producto</button>}
+        >
+          <Field label="Buscar producto">
             <input
-              type="number"
-              step="0.01"
-              placeholder="Sin precio"
-              value={prodForm.price}
-              onChange={(e) => setProdForm({ ...prodForm, price: e.target.value })}
+              type="search"
+              placeholder="Buscar por nombre, marca o descripción…"
+              value={productSearch}
+              onChange={(event) => setProductSearch(event.target.value)}
             />
           </Field>
-          <Field label="% de descuento" hint="Ingresá un entero entre 1 y 99. Si hay precio normal, calculamos el precio rebajado; sin precio, mostramos solo el porcentaje.">
-            <input
-              type="number"
-              step="1"
-              min="1"
-              max="99"
-              placeholder="Sin descuento"
-              value={prodForm.discount_percent}
-              onChange={(e) => setProdForm({ ...prodForm, discount_percent: e.target.value })}
-            />
-            {offerPreview(prodForm) && <span className="field-hint">{offerPreview(prodForm)}</span>}
-          </Field>
-          <Field label="Fin de la oferta" hint="Opcional. Después de esta fecha la oferta deja de mostrarse.">
-            <input
-              type="datetime-local"
-              value={prodForm.offer_ends_at}
-              onChange={(e) => setProdForm({ ...prodForm, offer_ends_at: e.target.value })}
-            />
-          </Field>
-
-          <Field label="Categoría">
-            <select value={prodForm.category} onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}>
-              <option value="">Sin categoría</option>
-              {(categories || []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Categoría de temporada">
-            <select value={prodForm.seasonal_category} onChange={(e) => setProdForm({ ...prodForm, seasonal_category: e.target.value })}>
-              <option value="">Sin temporada</option>
-              {seasonalCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
-          </Field>
-          <Field label="Descripción">
-            <input value={prodForm.description} onChange={(e) => setProdForm({ ...prodForm, description: e.target.value })} />
-          </Field>
-          <div className="field photo-field-wide">
-            <span className="field-label">Fotos (hasta 5)</span>
-            <span className="field-hint">La primera foto del orden actual se usa como portada.</span>
-            <ProductPhotos
-              order={prodForm.photo_order}
-              files={prodFiles}
-              onPick={(key, file) => setProdFiles((prev) => ({ ...prev, [key]: file }))}
-            />
-          </div>
-          <ToggleSwitch label="Activo" checked={prodForm.is_active} onChange={(value) => setProdForm({ ...prodForm, is_active: value })} />
-          <ToggleSwitch label="Destacado" checked={prodForm.featured} onChange={(value) => setProdForm({ ...prodForm, featured: value })} />
-          <button className="btn">Crear producto</button>
-        </form>
-
-        <Field label="Buscar producto">
-          <input
-            type="search"
-            placeholder="Buscar por nombre, marca o descripción…"
-            value={productSearch}
-            onChange={(event) => setProductSearch(event.target.value)}
-          />
-        </Field>
-        {productSearch && filteredProducts.length === 0 && <p className="muted">No se encontraron productos.</p>}
-        {filteredProducts.map((p) => {
-          return (
+          {productSearch && filteredProducts.length === 0 && <p className="muted">No se encontraron productos.</p>}
+          {!productSearch && filteredProducts.length === 0 && <p className="muted">Todavía no hay productos. Agregá el primero para empezar tu catálogo.</p>}
+          {filteredProducts.map((p) => (
             <div className="row-item" key={p.id}>
               <div className="row-item-main">
                 <b>{p.name}</b>
@@ -502,13 +419,119 @@ export default function AdminCatalog() {
               <div className="catalog-product-actions">
                 <ToggleSwitch label="Activo" checked={p.is_active} onChange={() => toggleActive(p)} />
                 <ToggleSwitch label="Destacado" checked={p.featured} onChange={() => toggleFeatured(p)} />
-                <button className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
-                <button className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
+                <button type="button" className="btn small ghost" onClick={() => startEditProd(p)}>Editar</button>
+                <button type="button" className="btn small danger" onClick={() => removeProduct(p)}>Eliminar</button>
               </div>
             </div>
-          )
-        })}
-      </Card>
+          ))}
+        </Card>
+      )}
+
+      {activeCatalogSection === 'categories' && (
+        <Card title={`Categorías (${(categories || []).length})`}>
+          <form onSubmit={createCategory} className="row add-row">
+            <Field label="Nombre *">
+              <input value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
+            </Field>
+            <button className="btn">Agregar categoría</button>
+          </form>
+          {(categories || []).length === 0 && <p className="muted">Todavía no hay categorías.</p>}
+          {(categories || []).map((c) => (
+            <div className="row-item" key={c.id}>
+              <div className="row-item-main"><b>{c.name}</b></div>
+              <span className="btn-group">
+                <button type="button" className="btn small ghost" onClick={() => { setEditingCat(c.id); setCatEdit({ name: c.name }); setError('') }}>Editar</button>
+                <button type="button" className="btn small danger" onClick={() => removeCategory(c)}>Eliminar</button>
+              </span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {activeCatalogSection === 'seasonal' && (
+        <Card title={`Categorías de temporada (${seasonalCategories.length})`}>
+          <form onSubmit={createSeasonalCategory} className="row add-row">
+            <Field label="Nombre de la temporada *">
+              <input value={seasonalCatForm.name} onChange={(e) => setSeasonalCatForm({ name: e.target.value })} placeholder="Navidad, Día de la madre…" />
+            </Field>
+            <button className="btn">Agregar temporada</button>
+          </form>
+          {seasonalCategories.length === 0 && <p className="muted">Todavía no hay categorías de temporada.</p>}
+          {seasonalCategories.map((item) => (
+            <div className="row-item" key={item.id}>
+              <div className="row-item-main"><b>{item.name}</b><span className="seasonal-category-tag">Temporada</span></div>
+              <span className="btn-group">
+                <button type="button" className="btn small ghost" onClick={() => { setEditingSeasonalCat(item.id); setSeasonalCatEdit({ name: item.name }); setError('') }}>Editar</button>
+                <button type="button" className="btn small danger" onClick={() => removeSeasonalCategory(item)}>Eliminar</button>
+              </span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {creatingProduct && (
+        <EditModal
+          wide
+          title="Agregar producto"
+          eyebrow="Nuevo producto"
+          onClose={() => { setCreatingProduct(false); setError('') }}
+          onSubmit={createProduct}
+        >
+          <div className="catalog-modal-content">
+            <Alert>{error}</Alert>
+            <div className="catalog-modal-grid">
+              <Field label="Nombre *">
+                <input autoFocus value={prodForm.name} onChange={(event) => setProdForm({ ...prodForm, name: event.target.value })} />
+              </Field>
+              <Field label="Marca">
+                <input value={prodForm.brand} onChange={(event) => setProdForm({ ...prodForm, brand: event.target.value })} />
+              </Field>
+              <Field label="Precio normal" hint="Dejalo vacío si el producto no tiene precio.">
+                <input type="number" step="0.01" placeholder="Sin precio" value={prodForm.price} onChange={(event) => setProdForm({ ...prodForm, price: event.target.value })} />
+              </Field>
+              <Field label="% de descuento" hint="Ingresá un entero entre 1 y 99. Si hay precio normal, calculamos el precio rebajado; sin precio, mostramos solo el porcentaje.">
+                <input type="number" step="1" min="1" max="99" placeholder="Sin descuento" value={prodForm.discount_percent} onChange={(event) => setProdForm({ ...prodForm, discount_percent: event.target.value })} />
+                {offerPreview(prodForm) && <span className="field-hint">{offerPreview(prodForm)}</span>}
+              </Field>
+              <Field label="Fin de la oferta" hint="Opcional. Después de esta fecha la oferta deja de mostrarse.">
+                <input type="datetime-local" value={prodForm.offer_ends_at} onChange={(event) => setProdForm({ ...prodForm, offer_ends_at: event.target.value })} />
+              </Field>
+              <Field label="Categoría">
+                <select value={prodForm.category} onChange={(event) => setProdForm({ ...prodForm, category: event.target.value })}>
+                  <option value="">Sin categoría</option>
+                  {(categories || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Categoría de temporada">
+                <select value={prodForm.seasonal_category} onChange={(event) => setProdForm({ ...prodForm, seasonal_category: event.target.value })}>
+                  <option value="">Sin temporada</option>
+                  {seasonalCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Descripción">
+                <textarea rows={3} value={prodForm.description} onChange={(event) => setProdForm({ ...prodForm, description: event.target.value })} />
+              </Field>
+              <div className="field photo-field-wide">
+                <span className="field-label">Fotos (hasta 5)</span>
+                <span className="field-hint">La primera foto del orden actual se usa como portada.</span>
+                <ProductPhotos
+                  order={prodForm.photo_order}
+                  files={prodFiles}
+                  onPick={(key, file) => setProdFiles((prev) => ({ ...prev, [key]: file }))}
+                />
+              </div>
+              <div className="catalog-modal-toggles">
+                <ToggleSwitch label="Activo" checked={prodForm.is_active} onChange={(value) => setProdForm({ ...prodForm, is_active: value })} />
+                <ToggleSwitch label="Destacado" checked={prodForm.featured} onChange={(value) => setProdForm({ ...prodForm, featured: value })} />
+              </div>
+            </div>
+            <div className="catalog-modal-actions">
+              <button className="btn">Crear producto</button>
+              <button type="button" className="btn ghost" onClick={() => { setCreatingProduct(false); setError('') }}>Cancelar</button>
+            </div>
+          </div>
+        </EditModal>
+      )}
 
       {editingCat !== null && (
         <EditModal title="Editar categoría" onClose={() => setEditingCat(null)} onSubmit={(event) => { event.preventDefault(); saveCategory() }}>

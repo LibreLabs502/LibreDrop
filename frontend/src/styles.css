@@ -690,7 +690,17 @@ input:focus, select:focus, textarea:focus {
 .catalog-switch input:focus-visible + .switch-track { outline: 3px solid rgba(37, 99, 235, 0.3); outline-offset: 2px; }
 .catalog-product-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
 .catalog-product-actions .catalog-switch { min-width: 112px; }
+.catalog-section-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px; border: 1px solid var(--border); border-radius: 14px; background: #f5f7fa; }
+.catalog-section-tabs button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 1px solid transparent; border-radius: 10px; color: var(--muted); background: transparent; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+.catalog-section-tabs button span { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: rgba(100, 116, 139, .12); font-size: 11px; }
+.catalog-section-tabs button:hover { color: var(--text); background: rgba(255, 255, 255, .75); }
+.catalog-section-tabs button.active { border-color: var(--border); color: var(--primary); background: #fff; box-shadow: 0 2px 8px rgba(15, 23, 42, .07); }
+.catalog-section-tabs button.active span { color: var(--primary); background: rgba(37, 99, 235, .1); }
 @media (max-width: 600px) {
+  .catalog-section-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; }
+  .catalog-section-tabs button { justify-content: center; gap: 5px; padding: 7px 5px; font-size: 12px; }
+  .catalog-section-tabs button span { min-width: 19px; height: 19px; padding: 0 4px; font-size: 10px; }
+  .catalog-section-tabs + .card .card-head { align-items: flex-start; }
   .catalog-modal-backdrop { align-items: flex-end; padding: 8px; }
   .catalog-edit-modal, .catalog-edit-modal.wide { width: 100%; max-height: 92vh; border-radius: 18px 18px 10px 10px; }
   .catalog-modal-heading { padding: 20px 18px 14px; }
