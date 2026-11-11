@@ -1379,7 +1379,7 @@ input:focus, select:focus, textarea:focus {
 .store-navbar-inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 18px; width: min(1180px, 100%); min-height: 72px; margin: 0 auto; }
 .store-navbar-links { display: flex; align-items: center; gap: clamp(12px, 2.2vw, 28px); width: 44%; overflow-x: auto; scrollbar-width: none; }
 .store-navbar-links::-webkit-scrollbar { display: none; }
-.store-navbar-links button { padding: 12px 0; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; transition: color .18s ease; }
+.store-navbar-links button { flex: 0 0 auto; padding: 12px 4px; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; transition: color .18s ease; }
 .store-navbar-links button:hover { color: var(--store-primary); }
 .store-mobile-menu-toggle { display: none; }
 .store-wordmark { position: absolute; left: 50%; display: grid; place-items: center; max-width: 230px; padding: 0; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: clamp(15px, 1.35vw, 18px); font-weight: 850; letter-spacing: .015em; line-height: 1.12; text-align: center; text-transform: none; text-wrap: balance; text-shadow: 0 1px 12px rgba(0, 0, 0, .16); transform: translateX(-50%); cursor: pointer; }
@@ -1659,7 +1659,7 @@ input:focus, select:focus, textarea:focus {
   .store-hero-actions { justify-content: center; margin-top: 16px; }
   .store-hero-actions .btn-buy { min-width: 118px; }
   .store-hero-dots { bottom: 18px; }
-  .store-navbar { width: 100vw; margin: 0 0 -62px calc(50% - 50vw); padding: 0 12px; }
+  .store-navbar { width: 100vw; margin: 0 0 -62px calc(50% - 50vw); padding: 0 8px; }
   .store-navbar-inner { min-height: 62px; gap: 5px; }
   .store-mobile-menu-toggle { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; padding: 0; border: 1px solid transparent; border-radius: 50%; color: var(--store-on-primary); background: transparent; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
   .store-mobile-menu-toggle:active { transform: scale(.94); }
@@ -1669,7 +1669,7 @@ input:focus, select:focus, textarea:focus {
   .store-navbar .store-navbar-links.mobile-open button { padding: 13px 14px; border-bottom: 1px solid var(--store-border); color: var(--store-text); font-size: 13px; text-align: left; white-space: normal; }
   .store-navbar .store-navbar-links.mobile-open button:last-child { border-bottom: 0; }
   .store-navbar .store-navbar-links.mobile-open button:hover { border-radius: 9px; color: var(--store-primary); background: var(--store-bg); }
-  .store-wordmark { max-width: 118px; font-size: 13px; letter-spacing: 0; }
+  .store-wordmark { max-width: 130px; font-size: 13px; letter-spacing: 0; }
   .store-wordmark img { max-width: 96px; height: 40px; }
   .store-search-toggle { gap: 4px; padding: 8px 7px; font-size: 11px; }
   .store-search-panel { width: calc(100vw - 24px); padding: 13px; }
@@ -1746,11 +1746,12 @@ input:focus, select:focus, textarea:focus {
 .store-cats-arrow:disabled { opacity: 0.35; cursor: default; }
 
 .store-cats button {
+  flex: 0 0 auto;
   border: 1px solid var(--store-secondary);
   background: var(--store-secondary);
   color: var(--store-text);
   border-radius: 999px;
-  padding: 9px 17px;
+  padding: 9px 20px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1931,7 +1932,7 @@ input:focus, select:focus, textarea:focus {
   font-size: 13px;
 }
 .product-card-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
-.product-card-badge { padding: 6px 10px; border-radius: 999px; color: var(--store-text); background: var(--store-surface); box-shadow: 0 3px 10px rgba(15, 23, 42, .12); font-size: 11px; font-weight: 850; line-height: 1; }
+.product-card-badge { padding: 6px 12px; border-radius: 999px; color: var(--store-text); background: var(--store-surface); box-shadow: 0 3px 10px rgba(15, 23, 42, .12); font-size: 11px; font-weight: 850; line-height: 1; }
 .product-card-badge.offer { color: #fff; background: #dc2626; }
 .product-card-badge.featured { color: var(--store-primary-ink, var(--store-primary)); }
 .product-quick-view {
@@ -2107,13 +2108,14 @@ input:focus, select:focus, textarea:focus {
   .product-price { font-size: 15px; }
   .btn-buy { font-size: 11px; padding: 8px 6px; white-space: normal; line-height: 1.25; }
   .product-card-badges { top: 7px; left: 7px; gap: 4px; }
-  .product-card-badge { padding: 5px 7px; font-size: 9px; }
+  .product-card-badge { padding: 5px 9px; font-size: 9px; }
   .product-quick-view { right: 7px; bottom: 7px; padding: 6px 8px; font-size: 9px; }
   .store-collection-heading { align-items: center; margin-bottom: 12px; }
   .store-collection-heading p { max-width: 225px; font-size: 12px; }
   .store-product-count { padding: 6px 9px; font-size: 10px; }
   .store-toolbar { padding: 9px; border-radius: 15px; }
   .store-toolbar { gap: 8px; }
+  .store-cats button { padding: 9px 18px; }
   .store-mobile-menu-toggle { width: 34px; height: 34px; flex-basis: 34px; }
   .store-search-toggle span { display: none; }
   .store-search-toggle { width: 36px; height: 36px; padding: 0; }
