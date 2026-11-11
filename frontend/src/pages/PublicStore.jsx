@@ -68,16 +68,21 @@ function PriceTag({ product, now = Date.now() }) {
     const offerPrice = formatPrice(effectivePrice(product, now))
     const countdown = offerCountdown(product, now)
     return (
-      <span className="product-price-row offer-price-list">
-        {oldPrice && <span className="product-price-old">Precio original: {oldPrice}</span>}
-        <span className="product-offer-badge">
-          {percent > 0 ? `Descuento: ${percent}%` : 'Oferta'}
-        </span>
+      <div className="product-price-row offer-price-list">
+        {oldPrice && <div className="product-price-line product-price-old">Precio original: {oldPrice}</div>}
+        <div className="product-price-line">
+          <span className="product-offer-badge">
+            {percent > 0 ? `Descuento: ${percent}%` : 'Oferta'}
+          </span>
+        </div>
         {offerPrice && (
-          <span className="product-price">Precio con descuento: {offerPrice}</span>
+          <div className="product-price-line product-discounted-price">
+            <span className="product-price-label">Precio con descuento:</span>
+            <span className="product-price">{offerPrice}</span>
+          </div>
         )}
-        {countdown && <span className="product-offer-countdown">Termina en {countdown}</span>}
-      </span>
+        {countdown && <div className="product-price-line product-offer-countdown">Termina en {countdown}</div>}
+      </div>
     )
   }
   const price = formatPrice(product.price)

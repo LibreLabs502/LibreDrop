@@ -1985,10 +1985,15 @@ input:focus, select:focus, textarea:focus {
 }
 .store-all-products { margin-top: 16px; scroll-margin-top: 88px; }
 
-.offer-price-list { width: 100%; min-width: 0; flex-direction: column; align-items: flex-start; gap: 6px; }
+.offer-price-list { display: block; width: 100%; min-width: 0; }
 .offer-price-list > * { max-width: 100%; }
+.offer-price-line { display: block; width: 100%; margin-top: 6px; }
+.offer-price-line:first-child { margin-top: 0; }
 .offer-price-list .product-price,
 .offer-price-list .product-price-old { white-space: normal; overflow-wrap: anywhere; }
+.product-discounted-price { min-width: 0; }
+.product-price-label { display: block; color: var(--store-muted); font-size: 12px; font-weight: 650; line-height: 1.3; }
+.offer-price-list .product-price { display: block; }
 
 .product-price-old {
   color: var(--store-muted);
