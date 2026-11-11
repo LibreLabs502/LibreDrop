@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
-import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
+import { buildPurchaseLinks, waLink, ICONS } from '../channels'
 import { productImages } from '../images'
 import { discountPercent, effectivePrice, hasOffer, offerCountdown } from '../pricing'
 import { themeStyle } from '../theme'
@@ -61,6 +61,39 @@ const copyText = async (text) => {
   }
 }
 
+const readStoredCart = (slug) => {
+  if (!slug || typeof window === 'undefined') return []
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(`libredrop_cart_${slug}`) || '[]')
+    if (!Array.isArray(saved)) return []
+    return saved
+      .filter((item) => item && item.productId !== undefined && Number.isFinite(Number(item.quantity)))
+      .map((item) => ({ productId: String(item.productId), quantity: Math.max(1, Math.min(99, Math.floor(Number(item.quantity)))) }))
+  } catch {
+    return []
+  }
+}
+
+const cartOrderMessage = (store, lines) => {
+  const items = lines.map(({ product, quantity, unitPrice }) =>
+    `• ${quantity} × ${product.name}${unitPrice === null ? '' : ` — ${formatPrice(unitPrice)} c/u`}`,
+  )
+  const allItemsHavePrice = lines.every((line) => line.unitPrice !== null)
+  const total = lines.reduce((sum, line) => sum + (line.unitPrice === null ? 0 : line.unitPrice * line.quantity), 0)
+  const subtotal = allItemsHavePrice ? `\nSubtotal: ${formatPrice(total)}` : ''
+  return `Hola ${store?.name || ''}, quiero realizar este pedido:\n${items.join('\n')}${subtotal}`
+}
+
+function CartIcon({ size = 19 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden="true">
+      <path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9.5" cy="19.5" r="1.2" fill="currentColor" />
+      <circle cx="17.5" cy="19.5" r="1.2" fill="currentColor" />
+    </svg>
+  )
+}
+
 function PriceTag({ product, now = Date.now() }) {
   if (hasOffer(product, now)) {
     const percent = discountPercent(product, now)
@@ -97,7 +130,7 @@ function ArrowIcon({ direction = 'right' }) {
   )
 }
 
-function StoreHeroCarousel({ products, eyebrow, title, store, now, onBuy, onOpen }) {
+function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, onAddToCart, onOpen }) {
   const [slide, setSlide] = useState(0)
   const visibleProducts = products.filter((product) => productImages(product).length > 0)
 
@@ -115,7 +148,6 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, onBuy, onOpen
 
   const product = visibleProducts[slide % visibleProducts.length]
   const cover = productImages(product)[0]
-  const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, product))
 
   return (
     <section id="store-hero" className="store-hero-carousel" aria-label={title}>
@@ -128,7 +160,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, onBuy, onOpen
           {product.description && <p className="store-hero-product-desc">{product.description}</p>}
           <PriceTag product={product} now={now} />
           <div className="store-hero-actions">
-            {buyLinks.map((channel) => onBuy(channel, product))}
+            {canPurchase && <button type="button" className="btn-buy store-add-to-cart" onClick={() => onAddToCart(product)}><CartIcon size={17} />Agregar al carrito</button>}
             <button type="button" className="store-hero-details" onClick={() => onOpen(product)}>Ver producto</button>
           </div>
         </div>
@@ -229,7 +261,31 @@ export default function PublicStore() {
   const [selected, setSelected] = useState(null)
   const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
+  const [cartState, setCartState] = useState(() => ({ slug, items: readStoredCart(slug) }))
+  const [cartOpen, setCartOpen] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const cartItems = cartState.slug === slug ? cartState.items : []
+
+  useEffect(() => {
+    if (cartState.slug !== slug) setCartState({ slug, items: readStoredCart(slug) })
+  }, [slug, cartState.slug])
+
+  useEffect(() => {
+    if (!slug || cartState.slug !== slug) return
+    try {
+      window.localStorage.setItem(`libredrop_cart_${slug}`, JSON.stringify(cartState.items))
+    } catch {
+      // El carrito sigue funcionando en memoria si el navegador bloquea storage.
+    }
+  }, [cartState, slug])
+
+  const updateCartItems = (update) => {
+    setCartState((current) => {
+      const items = current.slug === slug ? current.items : []
+      return { slug, items: update(items) }
+    })
+  }
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
   // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
@@ -387,6 +443,22 @@ export default function PublicStore() {
     { type: 'offers', id: 'rail-offers', title: store?.sale_text || 'Ofertas especiales', eyebrow: 'PRECIOS ESPECIALES', products: offerCarouselProducts },
     { type: 'featured', id: 'rail-featured', title: store?.featured_products_text || 'Productos destacados', eyebrow: 'SELECCIÓN DE LA TIENDA', products: featuredCarouselProducts },
   ].filter((collection) => collection.type !== heroCollection?.type && collection.products.length > 0)
+  const cartLines = useMemo(() => {
+    if (!store) return []
+    return cartItems
+      .map((item) => {
+        const product = store.products.find((candidate) => String(candidate.id) === item.productId)
+        if (!product) return null
+        return { product, quantity: item.quantity, unitPrice: effectivePrice(product, now) }
+      })
+      .filter(Boolean)
+  }, [store, cartItems, now])
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const cartTotal = cartLines.reduce((total, line) => total + (line.unitPrice === null ? 0 : line.unitPrice * line.quantity), 0)
+  const cartHasUnpricedProduct = cartLines.some((line) => line.unitPrice === null)
+  const cartMessage = cartLines.length ? cartOrderMessage(store, cartLines) : ''
+  const cartChannelLinks = cartLines.length ? buildPurchaseLinks(store, cartMessage) : []
+  const hasPurchaseChannels = buildPurchaseLinks(store, 'pedido').length > 0
 
   const chooseCategory = (nextCategory) => {
     setCategory(nextCategory)
@@ -445,19 +517,42 @@ export default function PublicStore() {
     setSelected(product)
   }
 
-  const openOrder = (product, channel) => {
-    const message = productOrderMessage(store, product)
+  const addToCart = (product) => {
+    updateCartItems((items) => {
+      const existing = items.find((item) => item.productId === String(product.id))
+      if (existing) {
+        return items.map((item) => item.productId === String(product.id)
+          ? { ...item, quantity: Math.min(99, item.quantity + 1) }
+          : item)
+      }
+      return [...items, { productId: String(product.id), quantity: 1 }]
+    })
     setSelected(null)
-    setOrder({ product, channel, message, copied: null })
+  }
+
+  const changeCartQuantity = (productId, quantity) => {
+    updateCartItems((items) => items.map((item) => item.productId === String(productId)
+      ? { ...item, quantity: Math.max(1, Math.min(99, quantity)) }
+      : item))
+  }
+
+  const removeFromCart = (productId) => {
+    updateCartItems((items) => items.filter((item) => item.productId !== String(productId)))
+  }
+
+  const openOrder = (channel) => {
+    const message = cartMessage
+    setCheckoutOpen(false)
+    if (channel.key === 'whatsapp') {
+      window.open(channel.href, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setOrder({ channel, message, copied: null })
     // Aprovechamos el clic del usuario para copiar automáticamente. Si el
     // navegador lo bloquea, el modal muestra el botón para copiar a mano.
     copyText(message).then((copied) => {
       setOrder((prev) =>
-        prev &&
-        prev.channel.key === channel.key &&
-        String(prev.product.id) === String(product.id)
-          ? { ...prev, copied }
-          : prev,
+        prev && prev.channel.key === channel.key ? { ...prev, copied } : prev,
       )
     })
   }
@@ -469,30 +564,11 @@ export default function PublicStore() {
     })
   }
 
-  const renderPurchaseButton = (channel, product) => {
-    const content = (
-      <>
-        <svg viewBox={channel.viewBox} width="18" height="18" fill="currentColor" aria-hidden="true">
-          <path d={channel.icon} />
-        </svg>
-        {channel.action} {channel.label}
-      </>
-    )
-    // WhatsApp sigue abriendo el chat con el mensaje ya escrito. Las redes
-    // sociales no permiten eso, así que abrimos la guía para copiar y pegar.
-    if (channel.key === 'whatsapp') {
-      return (
-        <a key={channel.key} className="btn-buy" href={channel.href} target="_blank" rel="noreferrer">
-          {content}
-        </a>
-      )
-    }
-    return (
-      <button key={channel.key} type="button" className="btn-buy" onClick={() => openOrder(product, channel)}>
-        {content}
-      </button>
-    )
-  }
+  const renderAddToCartButton = (product) => (
+    <button type="button" className="btn-buy store-add-to-cart" onClick={() => addToCart(product)}>
+      <CartIcon size={17} />Agregar al carrito
+    </button>
+  )
 
   if (error) {
     return (
@@ -610,6 +686,17 @@ export default function PublicStore() {
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             <span>Buscar</span>
           </button>
+          <button
+            type="button"
+            className="store-cart-toggle"
+            onClick={() => { setSearchOpen(false); setQuery(''); setCartOpen(true) }}
+            aria-label={`Abrir carrito, ${cartCount} ${cartCount === 1 ? 'producto' : 'productos'}`}
+            aria-haspopup="dialog"
+          >
+            <CartIcon />
+            <span>Carrito</span>
+            {cartCount > 0 && <span className="store-cart-count" aria-live="polite">{cartCount > 99 ? '99+' : cartCount}</span>}
+          </button>
         </div>
         {searchOpen && (
           <div className="store-search-panel">
@@ -622,6 +709,88 @@ export default function PublicStore() {
           </div>
         )}
       </nav>
+
+      {cartOpen && (
+        <div className="store-cart-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setCartOpen(false) }}>
+          <aside className="store-cart-drawer" role="dialog" aria-modal="true" aria-labelledby="store-cart-title">
+            <header className="store-cart-head">
+              <div>
+                <span className="store-section-eyebrow">TU SELECCIÓN</span>
+                <h2 id="store-cart-title">Tu carrito <span>{cartCount}</span></h2>
+              </div>
+              <button type="button" className="store-cart-close" onClick={() => setCartOpen(false)} aria-label="Cerrar carrito">×</button>
+            </header>
+            {cartLines.length === 0 ? (
+              <div className="store-cart-empty">
+                <span className="store-cart-empty-icon"><CartIcon size={28} /></span>
+                <h3>Tu carrito está vacío</h3>
+                <p>Agregá los productos que te gusten y aparecerán acá.</p>
+                <button type="button" className="btn-buy store-cart-continue" onClick={() => setCartOpen(false)}>Seguir explorando</button>
+              </div>
+            ) : (
+              <>
+                <div className="store-cart-lines">
+                  {cartLines.map(({ product, quantity, unitPrice }) => (
+                    <article className="store-cart-line" key={product.id}>
+                      {productImages(product)[0]
+                        ? <img src={productImages(product)[0]} alt="" />
+                        : <span className="store-cart-line-placeholder" aria-hidden="true" />}
+                      <div className="store-cart-line-info">
+                        <b>{product.name}</b>
+                        <span>{unitPrice === null ? 'Precio a consultar' : formatPrice(unitPrice)}</span>
+                        <div className="store-cart-quantity" aria-label={`Cantidad de ${product.name}`}>
+                          <button type="button" onClick={() => quantity === 1 ? removeFromCart(product.id) : changeCartQuantity(product.id, quantity - 1)} aria-label={quantity === 1 ? `Quitar ${product.name}` : `Reducir cantidad de ${product.name}`}>{quantity === 1 ? '−' : '−'}</button>
+                          <span>{quantity}</span>
+                          <button type="button" onClick={() => changeCartQuantity(product.id, quantity + 1)} aria-label={`Aumentar cantidad de ${product.name}`}>+</button>
+                        </div>
+                      </div>
+                      <button type="button" className="store-cart-remove" onClick={() => removeFromCart(product.id)} aria-label={`Eliminar ${product.name} del carrito`}>×</button>
+                    </article>
+                  ))}
+                </div>
+                <footer className="store-cart-foot">
+                  <div className="store-cart-total">
+                    <span>{cartHasUnpricedProduct ? 'Subtotal parcial' : 'Subtotal'}</span>
+                    <b>{cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'A consultar'}</b>
+                  </div>
+                  {cartHasUnpricedProduct && <p>Hay productos sin precio publicado; se confirmará el total por mensaje.</p>}
+                  <button type="button" className="btn-buy store-cart-checkout" onClick={() => { setCartOpen(false); setCheckoutOpen(true) }} disabled={!cartChannelLinks.length}>
+                    Continuar con el pedido
+                  </button>
+                  {!cartChannelLinks.length && <p>Esta tienda todavía no tiene un canal de compra configurado.</p>}
+                </footer>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <div className="store-checkout-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setCheckoutOpen(false) }}>
+          <section className="store-checkout-card" role="dialog" aria-modal="true" aria-labelledby="store-checkout-title">
+            <button type="button" className="store-cart-close store-checkout-close" onClick={() => setCheckoutOpen(false)} aria-label="Cerrar">×</button>
+            <div className="store-checkout-brand">
+              {store.logo
+                ? <img src={store.logo} alt="" />
+                : <span className="store-checkout-logo-fallback">{String(store.name || 'T')[0].toUpperCase()}</span>}
+              <span>{store.name}</span>
+            </div>
+            <p className="store-checkout-kicker">Tu pedido está listo</p>
+            <h2 id="store-checkout-title">¿Por qué medio querés enviarlo?</h2>
+            <p className="store-checkout-summary">{cartCount} {cartCount === 1 ? 'producto' : 'productos'} · {cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'total a consultar'}</p>
+            <div className="store-checkout-channels">
+              {cartChannelLinks.map((channel) => (
+                <button type="button" key={channel.key} className={`store-checkout-channel ${channel.key}`} onClick={() => openOrder(channel)}>
+                  <svg viewBox={channel.viewBox} width="20" height="20" fill="currentColor" aria-hidden="true"><path d={channel.icon} /></svg>
+                  <span>Enviar por {channel.label}</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              ))}
+            </div>
+            <button type="button" className="store-checkout-back" onClick={() => { setCheckoutOpen(false); setCartOpen(true) }}>Volver al carrito</button>
+          </section>
+        </div>
+      )}
 
       {!isSearching && <section className={`storefront-feature${heroCollection ? '' : ' no-carousel'}`}>
         <div className="store-intro">
@@ -658,7 +827,8 @@ export default function PublicStore() {
             title={heroCollection.title}
             store={store}
             now={now}
-            onBuy={renderPurchaseButton}
+            canPurchase={hasPurchaseChannels}
+            onAddToCart={addToCart}
             onOpen={openProduct}
           />
         )}
@@ -805,7 +975,6 @@ export default function PublicStore() {
       <div className="store-grid">
         {products.length === 0 && <p className="muted">No hay productos.</p>}
         {products.map((p, index) => {
-          const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, p))
           const cover = productImages(p)[0]
           return (
             <article className="product-card" key={p.id} style={{ '--card-index': Math.min(index, 8) }}>
@@ -828,9 +997,9 @@ export default function PublicStore() {
                 <button type="button" className="product-name-link" onClick={() => openProduct(p)}>{p.name}</button>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
                 <PriceTag product={p} now={now} />
-                {buyLinks.length > 0 && (
+                {hasPurchaseChannels && (
                   <div className="product-buy">
-                    {buyLinks.map((c) => renderPurchaseButton(c, p))}
+                    {renderAddToCartButton(p)}
                   </div>
                 )}
               </div>
@@ -874,9 +1043,7 @@ export default function PublicStore() {
               {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
               <PriceTag product={selected} now={now} />
-              {buildPurchaseLinks(store, productOrderMessage(store, selected)).map((c) =>
-                renderPurchaseButton(c, selected),
-              )}
+              {hasPurchaseChannels && renderAddToCartButton(selected)}
             </div>
           </div>
         </div>
