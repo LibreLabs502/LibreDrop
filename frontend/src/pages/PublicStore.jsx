@@ -74,9 +74,7 @@ function PriceTag({ product, now = Date.now() }) {
           {percent > 0 ? `Descuento: ${percent}%` : 'Oferta'}
         </span>
         {offerPrice && (
-          <span className="product-price">
-            {oldPrice ? `Precio con descuento: ${offerPrice}` : offerPrice}
-          </span>
+          <span className="product-price">Precio con descuento: {offerPrice}</span>
         )}
         {countdown && <span className="product-offer-countdown">Termina en {countdown}</span>}
       </span>
