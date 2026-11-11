@@ -46,6 +46,7 @@ urlpatterns = [
     path('tenants/', include("tenants.urls")),
     path('auth/', include("accounts.urls")),
     path('catalog/', include("catalog.urls")),
+    path('customers/', include("customers.urls")),
     path('', include("payments.urls")),
     path('health/', health, name="health"),
     path('version/', version, name="version"),

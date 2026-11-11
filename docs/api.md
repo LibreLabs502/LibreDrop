@@ -223,6 +223,25 @@ productos que coinciden. El cuadro de búsqueda flota bajo el navbar, que queda
 visible con el color de la paleta de la tienda. El cuadro se cierra al tocar
 fuera y no mueve la posición de scroll.
 
+## Clientes (`/customers/`)
+
+Los clientes se consultan y administran dentro del contexto de una tienda. Se
+requiere JWT de un miembro de esa tienda y una suscripción con acceso vigente;
+el backend asigna la tienda al crear el registro y no permite cambiarla desde
+el payload.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/customers/tenants/<tenant_id>/` | Lista los clientes de la tienda. |
+| POST | `/customers/tenants/<tenant_id>/` | Crea un cliente asociado a la tienda. |
+| GET | `/customers/tenants/<tenant_id>/<id>/` | Consulta un cliente de esa tienda. |
+| PUT/PATCH | `/customers/tenants/<tenant_id>/<id>/` | Actualiza sus datos. |
+| DELETE | `/customers/tenants/<tenant_id>/<id>/` | Elimina el cliente. |
+
+Campos de creación: `full_name`, `phone_number` y `address` son obligatorios;
+`email` es opcional. El endpoint todavía no es público ni crea pedidos: la
+captura desde la tienda se conectará cuando se implemente el flujo de compras.
+
 ## Pagos y suscripción (`/payments/`)
 
 Flujo manual: el dueño deposita/transfiere la suscripción a la cuenta de
