@@ -54,6 +54,10 @@ y destacados. Para revisar el estado del catálogo:
 python manage.py showmigrations catalog
 ```
 
+Si quitás la categoría normal o de temporada de un producto, guardá el cambio
+desde el formulario para que se elimine la relación en la API. Las categorías
+son opcionales y se pueden volver a asignar después.
+
 ## Frontend
 
 ```bash
@@ -66,6 +70,13 @@ Vite proxya `/api/*` al backend en `:8000` (ver `frontend/vite.config.js`).
 Tokens JWT se guardan en `localStorage` (`libredrop_access`, `libredrop_refresh`).
 El access token (1 día) se renueva solo con el refresh token (30 días) cuando
 vence, así la sesión no se pierde.
+
+El acceso `/admin/` ofrece el inicio de sesión y el registro guiado en tres
+pasos. El registro usa el endpoint existente y, cuando termina, continúa al
+panel de activación de la tienda. En la tienda pública, la portada prioriza
+Temporada, Ofertas y Destacados; las otras colecciones quedan en filas
+desplazables. La búsqueda se abre desde el navbar y muestra resultados sin
+desplazar la página.
 
 ## Producción
 

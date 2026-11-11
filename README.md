@@ -11,16 +11,19 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 
 - Catálogos por tienda con categorías normales y de temporada, productos
   destacados y hasta cinco fotos por producto.
+- Registro guiado en tres pasos para crear la cuenta, con una bienvenida en el
+  acceso y transiciones al entrar al panel y al confirmar la activación.
 - Ofertas con precio normal y porcentaje de descuento; el precio rebajado se
   calcula automáticamente. La oferta puede tener fecha de vencimiento y la
   tienda muestra una cuenta regresiva mientras está activa.
-- Tienda pública con carruseles de temporada, ofertas y destacados. Cada uno
-  muestra tres fotos por tanda y solo aparece con tres o más productos con foto;
-  las colecciones siguen disponibles en los filtros aunque tengan menos.
+- Tienda pública con portada de marca, un carrusel principal priorizado por
+  temporada, ofertas y destacados, y filas desplazables para las colecciones
+  restantes. Incluye navegación adaptable, búsqueda y filtros de productos.
 - Al elegir **Temporada**, aparecen sus subcategorías debajo del buscador para
   filtrar los productos por ocasión.
-- Fotos, colores y contenido visual adaptados a la paleta de cada tienda y a
-  pantallas móviles.
+- Los botones de compra abren los canales configurados por cada tienda; no hay
+  carrito. Fotos, colores y contenido visual se adaptan a la paleta de cada
+  tienda y a pantallas móviles.
 
 ## Estructura
 

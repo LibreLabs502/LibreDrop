@@ -10,6 +10,22 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v1.3',
+    date: 'Noviembre 2026',
+    title: 'Una tienda pública con más estilo',
+    items: [
+      'La tienda ahora tiene una portada de ancho completo con el logo, una bienvenida y un carrusel principal.',
+      'La portada prioriza productos de temporada, luego ofertas y después productos destacados.',
+      'Las otras colecciones aparecen en filas desplazables con controles para recorrerlas y verlas todas.',
+      'Agregamos navegación principal con búsqueda y menú hamburguesa en teléfonos; los filtros de productos siguen disponibles debajo.',
+      'Al abrir la búsqueda, el navbar permanece en su posición y el campo no mueve la página.',
+      'El diseño usa la paleta de cada tienda, con transiciones al entrar y al cambiar productos del carrusel.',
+      'Se mantienen los botones de compra configurados por la tienda, sin agregar carrito.',
+      'El acceso ofrece una bienvenida y el registro guía en tres pasos: datos personales y correo, nombre de usuario y contraseña.',
+      'Después de enviar un comprobante se abre WhatsApp con un mensaje preparado; al comprobar la activación, aparece el saludo antes del panel.',
+    ],
+  },
+  {
     version: 'v1.2',
     date: 'Noviembre 2026',
     title: 'Ofertas más simples',

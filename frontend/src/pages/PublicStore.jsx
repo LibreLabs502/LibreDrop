@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatPrice, storefrontApi } from '../api'
 import { buildPurchaseLinks, productOrderMessage, waLink, ICONS } from '../channels'
-import { carouselPage } from '../carousel'
 import { productImages } from '../images'
 import { discountPercent, effectivePrice, hasOffer, offerCountdown } from '../pricing'
 import { themeStyle } from '../theme'
@@ -87,62 +86,130 @@ function PriceTag({ product, now = Date.now() }) {
   return price ? <span className="product-price">{price}</span> : null
 }
 
-// Carrusel compartido por las colecciones de la tienda. Solo muestra fotos:
-// al tocar una, se abre la ventana de detalles del producto. Con menos de tres
-// fotos queda disponible el filtro de la colección; desde tres muestra tandas
-// de tres, repitiendo fotos si hace falta para completar la última.
-function ProductPhotoCarousel({
-  title,
-  eyebrow,
-  products,
-  onOpen,
-  onSeeAll,
-  actionLabel,
-  interval = 4000,
-}) {
+function ArrowIcon({ direction = 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path d={direction === 'left' ? 'M14.5 5 7.5 12l7 7' : 'm9.5 5 7 7-7 7'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function StoreHeroCarousel({ products, eyebrow, title, store, now, onBuy, onOpen }) {
   const [slide, setSlide] = useState(0)
-  const photos = products.filter((product) => productImages(product).length > 0)
-  const { pageSize, pageCount, items } = carouselPage(photos, slide)
+  const visibleProducts = products.filter((product) => productImages(product).length > 0)
 
   useEffect(() => {
-    if (pageCount <= 1) return undefined
-    const timer = window.setInterval(
-      () => setSlide((index) => (index + 1) % pageCount),
-      interval,
-    )
-    return () => window.clearInterval(timer)
-  }, [pageCount, interval])
+    setSlide(0)
+  }, [store?.id, eyebrow])
 
-  if (!pageCount) return null
+  useEffect(() => {
+    if (visibleProducts.length < 2) return undefined
+    const timer = window.setInterval(() => setSlide((index) => (index + 1) % visibleProducts.length), 5500)
+    return () => window.clearInterval(timer)
+  }, [visibleProducts.length])
+
+  if (!visibleProducts.length) return null
+
+  const product = visibleProducts[slide % visibleProducts.length]
+  const cover = productImages(product)[0]
+  const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, product))
 
   return (
-    <section className="store-carousel" aria-label={title}>
-      <div className="store-carousel-heading">
-        {eyebrow && <span>{eyebrow}</span>}
-        <h2>{title}</h2>
+    <section id="store-hero" className="store-hero-carousel" aria-label={title}>
+      <div className="store-hero-glow" aria-hidden="true" />
+      <div className="store-hero-slide" key={product.id}>
+        <div className="store-hero-copy">
+          <span className="store-hero-eyebrow">{eyebrow}</span>
+          <p className="store-hero-kicker">{title}</p>
+          <h1>{product.name}</h1>
+          {product.description && <p className="store-hero-product-desc">{product.description}</p>}
+          <PriceTag product={product} now={now} />
+          <div className="store-hero-actions">
+            {buyLinks.map((channel) => onBuy(channel, product))}
+            <button type="button" className="store-hero-details" onClick={() => onOpen(product)}>Ver producto</button>
+          </div>
+        </div>
+        <button type="button" className="store-hero-image" onClick={() => onOpen(product)} aria-label={`Ver ${product.name}`}>
+          <img src={cover} alt={product.name} />
+          {hasOffer(product, now) && <span className="store-hero-offer">-{discountPercent(product, now)}% OFF</span>}
+        </button>
       </div>
-      <div
-        key={`${title}-${slide % pageCount}`}
-        className={`store-carousel-photos${pageSize === 3 ? ' has-three' : ''}`}
-      >
-        {items.map((product) => {
-          const photo = productImages(product)[0]
-          return photo ? (
-            <button
-              type="button"
-              className="store-carousel-frame"
-              key={product.id}
-              onClick={() => onOpen(product)}
-              aria-label={`Ver ${product.name}`}
-            >
-              <img src={photo} alt={product.name} />
+      {visibleProducts.length > 1 && (
+        <div className="store-hero-dots" aria-label="Elegir producto destacado">
+          {visibleProducts.map((item, index) => (
+            <button key={item.id} type="button" className={index === slide ? 'active' : ''} onClick={() => setSlide(index)} aria-label={`Ver ${item.name}`} aria-pressed={index === slide} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll }) {
+  const railRef = useRef(null)
+  const [railEdges, setRailEdges] = useState({ left: false, right: false })
+  const updateRailEdges = useCallback(() => {
+    const rail = railRef.current
+    if (!rail) return
+    const maxScroll = rail.scrollWidth - rail.clientWidth
+    setRailEdges((current) => {
+      const next = { left: rail.scrollLeft > 1, right: rail.scrollLeft < maxScroll - 1 }
+      return current.left === next.left && current.right === next.right ? current : next
+    })
+  }, [])
+
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return undefined
+    updateRailEdges()
+    rail.addEventListener('scroll', updateRailEdges, { passive: true })
+    const observer = new ResizeObserver(updateRailEdges)
+    observer.observe(rail)
+    return () => {
+      rail.removeEventListener('scroll', updateRailEdges)
+      observer.disconnect()
+    }
+  }, [products.length, updateRailEdges])
+
+  const scrollRail = (direction) => {
+    if (!railRef.current) return
+    railRef.current.scrollBy({ left: direction * railRef.current.clientWidth * .8, behavior: 'smooth' })
+  }
+
+  if (!products.length) return null
+
+  return (
+    <section className="store-collection-rail-section" id={id}>
+      <header className="store-rail-heading">
+        <div>
+          <span className="store-section-eyebrow">{eyebrow}</span>
+          <h2>{title}</h2>
+        </div>
+        <div className="store-rail-actions">
+          <button type="button" className="store-see-all" onClick={onSeeAll}>Ver todas <ArrowIcon /></button>
+          <button type="button" className="store-rail-arrow" onClick={() => scrollRail(-1)} disabled={!railEdges.left} aria-label={`Anterior: ${title}`}><ArrowIcon direction="left" /></button>
+          <button type="button" className="store-rail-arrow" onClick={() => scrollRail(1)} disabled={!railEdges.right} aria-label={`Siguiente: ${title}`}><ArrowIcon /></button>
+        </div>
+      </header>
+      <div className="store-product-rail" ref={railRef}>
+        {products.map((product) => {
+          const cover = productImages(product)[0]
+          return (
+            <button key={product.id} type="button" className="store-rail-product" onClick={() => onOpen(product)}>
+              <span className="store-rail-product-media">
+                <img src={cover} alt="" />
+                {hasOffer(product, now) && <span className="store-rail-badge">-{discountPercent(product, now)}%</span>}
+              </span>
+              <span className="store-rail-product-info">
+                {product.brand && <span className="product-brand">{product.brand}</span>}
+                <strong>{product.name}</strong>
+                <PriceTag product={product} now={now} />
+                <span className="store-rail-choose">Ver opciones <ArrowIcon /></span>
+              </span>
             </button>
-          ) : null
+          )
         })}
       </div>
-      <button type="button" className="store-carousel-link" onClick={onSeeAll}>
-        {actionLabel}
-      </button>
     </section>
   )
 }
@@ -154,16 +221,33 @@ export default function PublicStore() {
   const [category, setCategory] = useState('all')
   const [seasonalSubcategory, setSeasonalSubcategory] = useState('all')
   const [query, setQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selected, setSelected] = useState(null)
   const [activeImage, setActiveImage] = useState(0)
   const [order, setOrder] = useState(null)
-  const [infoOpen, setInfoOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
 
   // Categorías: con muchas, se navegan con flechitas en vez de la barra de
   // scroll (que ocultamos por CSS). Las flechas solo aparecen si desbordan.
   const catsRef = useRef(null)
+  const searchInputRef = useRef(null)
+  const navbarRef = useRef(null)
   const [catsNav, setCatsNav] = useState({ overflow: false, left: false, right: false })
+  const [navbarScrolled, setNavbarScrolled] = useState(false)
+
+  useEffect(() => {
+    const updateNavbar = () => {
+      setNavbarScrolled(window.scrollY > 8)
+    }
+    updateNavbar()
+    window.addEventListener('scroll', updateNavbar, { passive: true })
+    window.addEventListener('resize', updateNavbar)
+    return () => {
+      window.removeEventListener('scroll', updateNavbar)
+      window.removeEventListener('resize', updateNavbar)
+    }
+  }, [])
 
   const updateCatsNav = useCallback(() => {
     const el = catsRef.current
@@ -286,12 +370,49 @@ export default function PublicStore() {
     () => featuredProducts.filter((product) => productImages(product).length > 0),
     [featuredProducts],
   )
-  const showStoreHighlights = category === 'all' && !query.trim()
+  const isSearching = searchOpen || Boolean(query.trim())
+  const showStoreHighlights = category === 'all' && !isSearching
+  const heroCollection = seasonalCarouselProducts.length
+    ? { type: 'seasonal', products: seasonalCarouselProducts, eyebrow: 'COLECCIÓN DE TEMPORADA', title: 'Para cada ocasión' }
+    : offerCarouselProducts.length
+      ? { type: 'offers', products: offerCarouselProducts, eyebrow: 'OFERTAS ESPECIALES', title: store?.sale_text || 'Encontrá tu favorito' }
+      : featuredCarouselProducts.length
+        ? { type: 'featured', products: featuredCarouselProducts, eyebrow: 'PRODUCTOS DESTACADOS', title: store?.featured_products_text || 'Nuestra selección' }
+        : null
+  const secondaryCollections = [
+    { type: 'seasonal', id: 'rail-seasonal', title: 'Productos de temporada', eyebrow: 'PARA CADA OCASIÓN', products: seasonalCarouselProducts },
+    { type: 'offers', id: 'rail-offers', title: store?.sale_text || 'Ofertas especiales', eyebrow: 'PRECIOS ESPECIALES', products: offerCarouselProducts },
+    { type: 'featured', id: 'rail-featured', title: store?.featured_products_text || 'Productos destacados', eyebrow: 'SELECCIÓN DE LA TIENDA', products: featuredCarouselProducts },
+  ].filter((collection) => collection.type !== heroCollection?.type && collection.products.length > 0)
 
   const chooseCategory = (nextCategory) => {
     setCategory(nextCategory)
     setSeasonalSubcategory('all')
   }
+
+  const scrollToStoreSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const openSearch = () => {
+    const nextOpen = !searchOpen
+    setSearchOpen(nextOpen)
+    if (!nextOpen) setQuery('')
+    chooseCategory('all')
+  }
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus({ preventScroll: true })
+  }, [searchOpen])
+
+  useEffect(() => {
+    if (!searchOpen) return undefined
+    const closeSearchOutside = (event) => {
+      if (!event.target.closest('.store-search-panel, .store-search-toggle')) setSearchOpen(false)
+    }
+    document.addEventListener('pointerdown', closeSearchOutside)
+    return () => document.removeEventListener('pointerdown', closeSearchOutside)
+  }, [searchOpen])
 
   const products = useMemo(() => {
     if (!store) return []
@@ -387,99 +508,169 @@ export default function PublicStore() {
 
   const socials = SOCIAL_LINKS.filter((s) => store[s.key])
   const selectedImages = selected ? productImages(selected) : []
+  const currentCategory = store.categories.find((item) => String(item.id) === String(category))
+  const specialNavItems = [
+    seasonalCarouselProducts.length > 0 && { label: 'Temporada', type: 'seasonal' },
+    offerCarouselProducts.length > 0 && { label: 'Ofertas', type: 'offers' },
+    featuredCarouselProducts.length > 0 && { label: 'Destacados', type: 'featured' },
+  ].filter(Boolean)
+  const topNavItems = store.categories.slice(0, 4).map((item) => ({ label: item.name, type: 'category', value: item.id }))
+  if (topNavItems.length < 4) {
+    const specialsNeeded = Math.max(0, 3 - topNavItems.length)
+    topNavItems.push(...specialNavItems.slice(0, specialsNeeded))
+    if (topNavItems.length < 4) topNavItems.push({ label: 'Ver todo', type: 'all' })
+  }
+  const collectionTitle = query.trim()
+    ? `Resultados para “${query.trim()}”`
+    : searchOpen
+      ? 'Buscá tus productos favoritos'
+    : category === 'offers'
+      ? 'Ofertas especiales'
+      : category === 'seasonal'
+        ? 'Colección de temporada'
+        : category === 'featured'
+          ? 'Selección destacada'
+          : currentCategory?.name || 'Nuestra colección'
 
   return (
     <div className="store-page" style={themeVars}>
-      <header className="store-hero store-hero-brand">
-        <div className="store-hero-row">
-          {store.logo ? (
-            <img className="store-logo-lg" src={store.logo} alt={store.name} />
-          ) : (
-            <div className="store-logo-lg store-logo-fallback">{String(store.name || 'T')[0].toUpperCase()}</div>
-          )}
-          <div className="store-hero-info">
-            <h1
-              className="store-name-link"
-              role="button"
-              tabIndex={0}
-              title="Ver descripción completa"
-              onClick={() => setInfoOpen(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  setInfoOpen(true)
-                }
-              }}
-            >
-              {store.name}
-            </h1>
-            {store.description && <p className="store-hero-desc">{store.description}</p>}
-            {socials.length > 0 && (
-              <div className="store-socials">
-                {socials.map((s) => (
-                  <a
-                    key={s.key}
-                    className="store-social-link"
-                    href={store[s.key]}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={s.label}
-                    title={s.label}
-                  >
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-                      <path d={s.path} />
-                    </svg>
-                  </a>
-                ))}
-              </div>
-            )}
+      <nav ref={navbarRef} className={`store-navbar${navbarScrolled ? ' is-scrolled' : ''}${searchOpen ? ' search-open' : ''}${isSearching ? ' is-searching' : ''}`} aria-label="Navegación de la tienda">
+        <div className="store-navbar-inner">
+          <div id="store-main-menu" className={`store-navbar-links${mobileMenuOpen ? ' mobile-open' : ''}`}>
+            {topNavItems.map((item) => (
+              <button
+                type="button"
+                key={`${item.type}-${item.value || item.label}`}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  if (item.type === 'category') {
+                    chooseCategory(item.value)
+                    setQuery('')
+                    setSearchOpen(false)
+                    scrollToStoreSection('all-products')
+                  } else if (item.type === 'all') {
+                    chooseCategory('all')
+                    setQuery('')
+                    setSearchOpen(false)
+                    scrollToStoreSection('all-products')
+                  } else {
+                    setSearchOpen(false)
+                    if (showStoreHighlights) {
+                      const target = heroCollection?.type === item.type ? 'store-hero' : `rail-${item.type}`
+                      scrollToStoreSection(target)
+                    } else {
+                      chooseCategory(item.type)
+                      setQuery('')
+                      scrollToStoreSection('all-products')
+                    }
+                  }
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
+          <button
+            type="button"
+            className={`store-mobile-menu-toggle${mobileMenuOpen ? ' active' : ''}`}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="store-main-menu"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              {mobileMenuOpen ? (
+                <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+          {!searchOpen && (
+            <button type="button" className="store-wordmark" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={`Inicio de ${store.name}`}>
+              <span>{store.name}</span>
+            </button>
+          )}
+          <button type="button" className={`store-search-toggle${searchOpen ? ' active' : ''}`} onClick={openSearch} aria-label={searchOpen ? 'Cerrar búsqueda' : 'Buscar productos'}>
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            <span>Buscar</span>
+          </button>
+        </div>
+        {searchOpen && (
+          <div className="store-search-panel">
+            <label className="store-search-label" htmlFor="store-search-input">¿Qué estás buscando?</label>
+            <div className="store-search-input-wrap">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+              <input id="store-search-input" ref={searchInputRef} className="store-search" type="search" placeholder="Buscar productos…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <button type="button" onClick={() => { setQuery(''); setSearchOpen(false) }} aria-label="Cerrar búsqueda">×</button>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {!isSearching && <section className={`storefront-feature${heroCollection ? '' : ' no-carousel'}`}>
+        <div className="store-intro">
+          <span className="store-intro-decoration one" aria-hidden="true" />
+          <span className="store-intro-decoration two" aria-hidden="true" />
+          {store.logo ? (
+            <img className="store-intro-logo" src={store.logo} alt={`Logo de ${store.name}`} />
+          ) : (
+            <span className="store-intro-logo store-intro-logo-fallback" aria-hidden="true">{String(store.name || 'T')[0].toUpperCase()}</span>
+          )}
+          <span className="store-intro-eyebrow">BIENVENIDO A</span>
+          <h1>{store.name}</h1>
+          <p>{store.description || 'Descubrí productos hechos para vos.'}</p>
+          {socials.length > 0 && (
+            <div className="store-socials store-intro-socials">
+              {socials.map((s) => (
+                <a key={s.key} className="store-social-link" href={store[s.key]} target="_blank" rel="noreferrer" aria-label={s.label} title={s.label}>
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d={s.path} /></svg>
+                </a>
+              ))}
+            </div>
+          )}
           {store.whatsapp && (
-            <a
-              className="btn-store-contact"
-              href={waLink(store.whatsapp, `Hola ${store.name}, tengo una consulta.`)}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="store-intro-contact" href={waLink(store.whatsapp, `Hola ${store.name}, tengo una consulta.`)} target="_blank" rel="noreferrer">
               Contactar por WhatsApp
             </a>
           )}
         </div>
+
+        {showStoreHighlights && heroCollection && (
+          <StoreHeroCarousel
+            products={heroCollection.products}
+            eyebrow={heroCollection.eyebrow}
+            title={heroCollection.title}
+            store={store}
+            now={now}
+            onBuy={renderPurchaseButton}
+            onOpen={openProduct}
+          />
+        )}
+      </section>}
+
+      {showStoreHighlights && secondaryCollections.map((collection) => (
+        <CollectionRail
+          key={collection.id}
+          {...collection}
+          now={now}
+          onOpen={openProduct}
+          onSeeAll={() => {
+            chooseCategory(collection.type === 'offers' ? 'offers' : collection.type === 'seasonal' ? 'seasonal' : 'featured')
+            scrollToStoreSection('all-products')
+          }}
+        />
+      ))}
+
+      <section className="store-all-products" id="all-products">
+      <header className="store-collection-heading">
+        <div>
+          <span className="store-section-eyebrow">DESCUBRE LA TIENDA</span>
+          <h2>{collectionTitle === 'Nuestra colección' ? 'Todos nuestros productos' : collectionTitle}</h2>
+          <p>{query.trim() ? 'Encontrá algo que te encante.' : searchOpen ? 'Escribí en el buscador para ver los resultados.' : 'Elegí tus favoritos y consultá por tu canal preferido.'}</p>
+        </div>
+        <span className="store-product-count">{products.length} {products.length === 1 ? 'producto' : 'productos'}</span>
       </header>
-
-      {showStoreHighlights && seasonalCarouselProducts.length > 0 && (
-        <ProductPhotoCarousel
-          title="Productos de temporada"
-          eyebrow="PARA CADA OCASIÓN"
-          products={seasonalCarouselProducts}
-          onOpen={openProduct}
-          onSeeAll={() => chooseCategory('seasonal')}
-          actionLabel="Ver productos de temporada"
-        />
-      )}
-
-      {showStoreHighlights && offerCarouselProducts.length > 0 && (
-        <ProductPhotoCarousel
-          title={store.sale_text || 'Productos con ofertas'}
-          eyebrow="OFERTAS"
-          products={offerCarouselProducts}
-          onOpen={openProduct}
-          onSeeAll={() => chooseCategory('offers')}
-          actionLabel="Ver ofertas"
-        />
-      )}
-
-      {showStoreHighlights && featuredCarouselProducts.length > 0 && (
-        <ProductPhotoCarousel
-          title={store.featured_products_text || 'Productos destacados'}
-          eyebrow="SELECCIÓN DE LA TIENDA"
-          products={featuredCarouselProducts}
-          onOpen={openProduct}
-          onSeeAll={() => chooseCategory('featured')}
-          actionLabel="Ver productos destacados"
-        />
-      )}
-
       <div className="store-toolbar">
         <div className="store-cats-wrap">
           {catsNav.overflow && (
@@ -561,13 +752,6 @@ export default function PublicStore() {
             </button>
           )}
         </div>
-        <input
-          className="store-search"
-          type="search"
-          placeholder="Buscar productos…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
       </div>
 
       {category === 'seasonal' && seasonalCategories.length > 0 && (
@@ -603,22 +787,32 @@ export default function PublicStore() {
         </nav>
       )}
 
-      <section className="store-grid">
+      <div className="store-grid">
         {products.length === 0 && <p className="muted">No hay productos.</p>}
-        {products.map((p) => {
+        {products.map((p, index) => {
           const buyLinks = buildPurchaseLinks(store, productOrderMessage(store, p))
           const cover = productImages(p)[0]
           return (
-            <article className="product-card" key={p.id}>
-              {cover && <img src={cover} alt={p.name} />}
+            <article className="product-card" key={p.id} style={{ '--card-index': Math.min(index, 8) }}>
+              <div className="product-media">
+                {cover ? (
+                  <button type="button" className="product-image-button" onClick={() => openProduct(p)} aria-label={`Ver ${p.name}`}>
+                    <img className="product-cover" src={cover} alt={p.name} />
+                    <span className="product-quick-view">Vista rápida <span aria-hidden="true">↗</span></span>
+                  </button>
+                ) : (
+                  <div className="product-image-placeholder">Foto próximamente</div>
+                )}
+                <div className="product-card-badges">
+                  {hasOffer(p, now) && <span className="product-card-badge offer">-{discountPercent(p, now)}%</span>}
+                  {p.featured && <span className="product-card-badge featured">Destacado</span>}
+                </div>
+              </div>
               <div className="product-body">
                 {p.brand && <span className="product-brand">{p.brand}</span>}
-                <h3 className="product-name-link" onClick={() => openProduct(p)}>{p.name}</h3>
+                <button type="button" className="product-name-link" onClick={() => openProduct(p)}>{p.name}</button>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
                 <PriceTag product={p} now={now} />
-                <button type="button" className="product-details-link" onClick={() => openProduct(p)}>
-                  Ver detalles…
-                </button>
                 {buyLinks.length > 0 && (
                   <div className="product-buy">
                     {buyLinks.map((c) => renderPurchaseButton(c, p))}
@@ -628,6 +822,7 @@ export default function PublicStore() {
             </article>
           )
         })}
+      </div>
       </section>
 
       {selected && (
@@ -729,17 +924,6 @@ export default function PublicStore() {
         </div>
       )}
 
-      {infoOpen && (
-        <div className="product-modal-overlay" onClick={() => setInfoOpen(false)}>
-          <div className="product-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="product-modal-close" onClick={() => setInfoOpen(false)} aria-label="Cerrar">×</button>
-            <div className="product-modal-body">
-              <h2>{store.name}</h2>
-              {store.description && <p>{store.description}</p>}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

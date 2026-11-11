@@ -31,6 +31,14 @@ repite la petición (el frontend lo hace solo, así la sesión dura hasta 30 dí
 Nota: las URLs de imágenes (logo, producto) que devuelven los serializers son de
 Cloudinary con `f_auto,q_auto`.
 
+En el frontend v1.3, `/admin/` muestra una bienvenida con las opciones **Iniciar
+sesión** y **Crear tienda**. El alta está dividida en tres pasos (nombre,
+apellido y correo; nombre de usuario; contraseña y confirmación), pero envía el
+mismo payload a `POST /auth/register/`; el wizard no requiere endpoints nuevos.
+Al completarse, el frontend inicia sesión automáticamente y el registro continúa
+en el bloqueo de activación/pago porque el API crea la tienda sin una
+suscripción activa.
+
 ## Tenants (`/tenants/`)
 
 | Método | Ruta | Descripción |
@@ -200,12 +208,20 @@ defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
 de ofertas y productos destacados. `seasonal_categories` lista las categorías de
 temporada de la tienda. Los productos con `featured: true` aparecen en la
 colección de destacados y los que tienen `seasonal_category` en la de temporada.
-El frontend muestra los carruseles de temporada, ofertas y destacados cuando
-cada colección tiene al menos tres productos con foto. Cada tanda muestra tres
-fotos; la última se completa repitiendo desde el inicio cuando sea necesario.
-Con menos de tres, el carrusel se oculta pero su filtro sigue disponible. Al
-seleccionar **Temporada**, aparecen debajo del buscador subcategorías con su
-conteo; se puede filtrar por una o verlas todas.
+El frontend v1.3 presenta una sola colección principal en este orden de
+prioridad: **Temporada**, **Ofertas**, **Destacados**. La colección principal
+usa el carrusel automático con su producto, imagen, precio y canales de compra.
+Las colecciones restantes aparecen en filas horizontales con flechas y el botón
+**Ver todas**. Si no hay productos con foto en ninguna colección, se muestra la
+bienvenida de la tienda sin carrusel. Debajo aparecen los filtros de categoría y
+la lista de productos.
+
+La navegación principal de la tienda incluye enlaces a categorías, búsqueda y
+un menú hamburguesa en teléfonos. Al buscar, la portada de bienvenida y las
+filas de colecciones se ocultan; **Descubre la tienda** muestra el término y los
+productos que coinciden. El cuadro de búsqueda flota bajo el navbar, que queda
+visible con el color de la paleta de la tienda. El cuadro se cierra al tocar
+fuera y no mueve la posición de scroll.
 
 ## Pagos y suscripción (`/payments/`)
 
@@ -223,6 +239,12 @@ activa/renueva el plan.
 | PUT/PATCH | `/payments/billing/` | superusuario | Editar la cuenta bancaria |
 
 `status`: `pending` | `approved` | `rejected` (solo lectura en el serializer).
+
+En el frontend, al enviar correctamente el comprobante se abre WhatsApp con un
+mensaje preparado para pedir la activación. El texto queda listo para que el
+usuario lo envíe. Mientras el pago está pendiente, **“¿Ya me activaron?
+Comprobar”** vuelve a cargar las tiendas; si encuentra una suscripción activa,
+el frontend muestra el saludo de bienvenida antes de entrar al panel.
 
 Datos de la cuenta (`billing`): `bank`, `account_type`, `account_number`,
 `holder`, `updated_at`. Viven en la base de datos (fila única) para poder

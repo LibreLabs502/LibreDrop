@@ -4,6 +4,7 @@ import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field } from '../ui'
 import BankDetails from './BankDetails'
+import { hasAdminSubscriptionAccess } from '../../subscriptionAccess'
 
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
 
@@ -12,7 +13,7 @@ const SUBSCRIPTION_DESC = 'Pago de suscripción'
  * no puede entrar al panel hasta que el superusuario active su pago.
  */
 export default function PaymentGate() {
-  const { user, logout } = useAuth()
+  const { user, logout, showWelcomeTransition } = useAuth()
   const { currentTenant, reload } = useTenant()
   const [description, setDescription] = useState(SUBSCRIPTION_DESC)
   const [file, setFile] = useState(null)
@@ -20,6 +21,8 @@ export default function PaymentGate() {
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
   const [billing, setBilling] = useState(null)
+  const [checking, setChecking] = useState(false)
+  const [checkMessage, setCheckMessage] = useState('')
 
   useEffect(() => {
     billingApi
@@ -32,6 +35,24 @@ export default function PaymentGate() {
 
   const tenant = currentTenant
 
+  const checkActivation = async () => {
+    setChecking(true)
+    setCheckMessage('')
+    const stores = await reload()
+    setChecking(false)
+    if (!stores) {
+      setCheckMessage('No pudimos comprobar la activación. Inténtalo de nuevo.')
+      return
+    }
+
+    const updatedTenant = stores.find((store) => store.id === tenant.id)
+    if (hasAdminSubscriptionAccess(updatedTenant?.subscription, !!user?.is_superuser)) {
+      showWelcomeTransition()
+      return
+    }
+    setCheckMessage('Tu pago aún está en revisión. Vuelve a comprobarlo en un momento.')
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
@@ -40,16 +61,21 @@ export default function PaymentGate() {
       return
     }
     setBusy(true)
+    // Abrimos la pestaña desde el gesto del usuario para que el navegador no
+    // bloquee WhatsApp después de esperar la respuesta del servidor.
+    const whatsappTab = window.open('about:blank', '_blank')
     try {
       // POST del pago con comprobante.
       await paymentsApi.create(tenant.id, { description }, file)
       setSent(true)
-      // Después del POST, se abre el WhatsApp para avisar la activación.
-      window.open(
-        waLink(SUPPORT_WHATSAPP, `Hola LibreLabs, soy ${tenant.name}. Me gustaría activar mi cuenta.`),
-        '_blank',
-      )
+      if (whatsappTab) {
+        whatsappTab.location.href = waLink(
+          SUPPORT_WHATSAPP,
+          `Hola LibreLabs, soy ${tenant.name}. Me gustaría activar mi cuenta.`,
+        )
+      }
     } catch (err) {
+      whatsappTab?.close()
       setError(err.message)
     } finally {
       setBusy(false)
@@ -82,10 +108,11 @@ export default function PaymentGate() {
               >
                 Consultar por WhatsApp
               </a>
-              <button className="btn small" onClick={() => reload()}>
-                ¿Ya me activaron? Comprobar
+              <button className="btn small" disabled={checking} onClick={checkActivation}>
+                {checking ? 'Comprobando…' : '¿Ya me activaron? Comprobar'}
               </button>
             </div>
+            {checkMessage && <p className="muted" role="status">{checkMessage}</p>}
           </Card>
         ) : (
           <Card title="Activa tu cuenta">

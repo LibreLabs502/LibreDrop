@@ -240,6 +240,10 @@ const productFormBody = (data, files) =>
   formDataFrom(
     {
       ...data,
+      // En multipart las relaciones vacías se representan con cadena vacía;
+      // ProductSerializer la normaliza a null para poder quitarlas en PATCH.
+      category: data?.category === null ? '' : data?.category,
+      seasonal_category: data?.seasonal_category === null ? '' : data?.seasonal_category,
       // En multipart las listas no se interpretan como una lista JSON: el
       // backend recibe el orden de las fotos como texto y lo decodifica.
       photo_order: Array.isArray(data?.photo_order)
@@ -247,7 +251,7 @@ const productFormBody = (data, files) =>
         : data?.photo_order,
     },
     productFiles(files),
-    ['price', 'discount_percent', 'offer_ends_at'],
+    ['price', 'discount_percent', 'offer_ends_at', 'category', 'seasonal_category'],
   )
 
 export const catalogApi = {

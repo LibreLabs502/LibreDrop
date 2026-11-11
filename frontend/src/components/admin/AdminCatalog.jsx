@@ -149,8 +149,9 @@ const offerPreview = (form) => {
 
 const productPayload = (form) => {
   const payload = { ...form }
-  if (!payload.category) delete payload.category
-  if (!payload.seasonal_category) delete payload.seasonal_category
+  // PATCH necesita null explícito para borrar una relación existente.
+  payload.category = payload.category || null
+  payload.seasonal_category = payload.seasonal_category || null
   payload.offer_ends_at = fromDateTimeInput(payload.offer_ends_at)
   if (!Array.isArray(payload.photo_order) || payload.photo_order.length === 0) {
     payload.photo_order = PHOTO_KEYS
