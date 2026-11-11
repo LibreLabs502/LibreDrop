@@ -1372,7 +1372,8 @@ input:focus, select:focus, textarea:focus {
 .store-navbar-links button { padding: 12px 0; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: 12px; font-weight: 750; white-space: nowrap; cursor: pointer; transition: color .18s ease; }
 .store-navbar-links button:hover { color: var(--store-primary); }
 .store-mobile-menu-toggle { display: none; }
-.store-wordmark { position: absolute; left: 50%; display: grid; place-items: center; max-width: 230px; padding: 0; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: 15px; font-weight: 800; letter-spacing: .075em; text-align: center; text-transform: uppercase; transform: translateX(-50%); cursor: pointer; }
+.store-wordmark { position: absolute; left: 50%; display: grid; place-items: center; max-width: 230px; padding: 0; border: 0; color: var(--store-text); background: transparent; font: inherit; font-size: clamp(15px, 1.35vw, 18px); font-weight: 850; letter-spacing: .015em; line-height: 1.12; text-align: center; text-transform: none; text-wrap: balance; text-shadow: 0 1px 12px rgba(0, 0, 0, .16); transform: translateX(-50%); cursor: pointer; }
+.store-wordmark span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .store-wordmark img { display: block; width: auto; max-width: 155px; height: 48px; object-fit: contain; mix-blend-mode: multiply; }
 .store-search-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-left: auto; padding: 10px 12px; border: 1px solid transparent; border-radius: 999px; color: var(--store-text); background: transparent; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; transition: color .18s ease, border-color .18s ease, background .18s ease; }
 .store-search-toggle:hover, .store-search-toggle.active { border-color: var(--store-border); color: var(--store-primary); background: var(--store-surface); }
@@ -1658,7 +1659,7 @@ input:focus, select:focus, textarea:focus {
   .store-navbar .store-navbar-links.mobile-open button { padding: 13px 14px; border-bottom: 1px solid var(--store-border); color: var(--store-text); font-size: 13px; text-align: left; white-space: normal; }
   .store-navbar .store-navbar-links.mobile-open button:last-child { border-bottom: 0; }
   .store-navbar .store-navbar-links.mobile-open button:hover { border-radius: 9px; color: var(--store-primary); background: var(--store-bg); }
-  .store-wordmark { max-width: 110px; font-size: 12px; }
+  .store-wordmark { max-width: 118px; font-size: 13px; letter-spacing: 0; }
   .store-wordmark img { max-width: 96px; height: 40px; }
   .store-search-toggle { gap: 4px; padding: 8px 7px; font-size: 11px; }
   .store-search-panel { width: calc(100vw - 24px); padding: 13px; }
@@ -1987,18 +1988,18 @@ input:focus, select:focus, textarea:focus {
 
 .offer-price-list { display: block; width: 100%; min-width: 0; }
 .offer-price-list > * { max-width: 100%; }
-.offer-price-line { display: block; width: 100%; margin-top: 11px; line-height: 1.4; }
-.offer-price-line:first-child { margin-top: 0; }
+.product-price-line { display: block; width: 100%; margin-top: 15px; line-height: 1.45; }
+.product-price-line:first-child { margin-top: 0; }
 .offer-price-list .product-price,
 .offer-price-list .product-price-old { white-space: normal; overflow-wrap: anywhere; }
 .product-discounted-price { min-width: 0; }
-.product-price-label { display: block; margin-bottom: 4px; color: var(--store-muted); font-size: 12px; font-weight: 650; line-height: 1.4; }
-.offer-price-list .product-price { display: block; line-height: 1.4; }
+.product-price-label { display: block; margin-bottom: 5px; color: var(--store-muted); font-size: 13px; font-weight: 650; line-height: 1.45; }
+.offer-price-list .product-price { display: block; font-size: 16px; line-height: 1.45; }
 
 .product-price-old {
   color: var(--store-muted);
   text-decoration: line-through;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -2009,7 +2010,7 @@ input:focus, select:focus, textarea:focus {
   color: #fff;
   border-radius: 999px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.25;

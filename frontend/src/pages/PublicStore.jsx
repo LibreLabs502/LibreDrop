@@ -517,8 +517,15 @@ export default function PublicStore() {
     offerCarouselProducts.length > 0 && { label: 'Ofertas', type: 'offers' },
     featuredCarouselProducts.length > 0 && { label: 'Destacados', type: 'featured' },
   ].filter(Boolean)
-  const topNavItems = store.categories.slice(0, 4).map((item) => ({ label: item.name, type: 'category', value: item.id }))
-  if (topNavItems.length < 4) {
+  const maxNavCategoryCharacters = 18
+  const useCompactNav = store.categories.some((item) => item.name.trim().length > maxNavCategoryCharacters)
+  const shortCategoryNavItems = store.categories
+    .filter((item) => item.name.trim().length <= maxNavCategoryCharacters)
+    .map((item) => ({ label: item.name, type: 'category', value: item.id }))
+  const topNavItems = useCompactNav
+    ? [{ label: 'Inicio', type: 'home' }, ...shortCategoryNavItems]
+    : store.categories.slice(0, 4).map((item) => ({ label: item.name, type: 'category', value: item.id }))
+  if (!useCompactNav && topNavItems.length < 4) {
     const specialsNeeded = Math.max(0, 3 - topNavItems.length)
     topNavItems.push(...specialNavItems.slice(0, specialsNeeded))
     if (topNavItems.length < 4) topNavItems.push({ label: 'Ver todo', type: 'all' })
@@ -546,7 +553,12 @@ export default function PublicStore() {
                 key={`${item.type}-${item.value || item.label}`}
                 onClick={() => {
                   setMobileMenuOpen(false)
-                  if (item.type === 'category') {
+                  if (item.type === 'home') {
+                    chooseCategory('all')
+                    setQuery('')
+                    setSearchOpen(false)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  } else if (item.type === 'category') {
                     chooseCategory(item.value)
                     setQuery('')
                     setSearchOpen(false)
