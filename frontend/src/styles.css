@@ -1985,7 +1985,10 @@ input:focus, select:focus, textarea:focus {
 }
 .store-all-products { margin-top: 16px; scroll-margin-top: 88px; }
 
-.offer-price-list { flex-direction: column; align-items: flex-start; gap: 6px; }
+.offer-price-list { width: 100%; min-width: 0; flex-direction: column; align-items: flex-start; gap: 6px; }
+.offer-price-list > * { max-width: 100%; }
+.offer-price-list .product-price,
+.offer-price-list .product-price-old { white-space: normal; overflow-wrap: anywhere; }
 
 .product-price-old {
   color: var(--store-muted);
@@ -1995,6 +1998,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .product-offer-badge {
+  display: inline-flex;
+  max-width: 100%;
   background: #dc2626;
   color: #fff;
   border-radius: 999px;
@@ -2002,7 +2007,8 @@ input:focus, select:focus, textarea:focus {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.02em;
-  white-space: nowrap;
+  line-height: 1.25;
+  white-space: normal;
 }
 .product-offer-countdown { color: var(--store-primary-ink, var(--store-primary)); font-size: 12px; font-weight: 750; }
 
