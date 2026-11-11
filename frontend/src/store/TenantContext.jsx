@@ -28,8 +28,10 @@ export function TenantProvider({ children }) {
         else localStorage.removeItem(TENANT_KEY)
         return first
       })
+      return list
     } catch (e) {
       setError(e.message)
+      return null
     } finally {
       setLoading(false)
     }

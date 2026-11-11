@@ -55,11 +55,13 @@ opcional se guarda en `featured_order` y se usa en la tienda pública. El endpoi
 `POST /catalog/tenants/<id>/products/reorder-featured/` guarda una lista ordenada
 de IDs pertenecientes a la tienda.
 
-La tienda pública muestra carruseles de temporada, ofertas y destacados cuando
-cada colección tiene al menos tres productos con foto. Cada tanda presenta tres
-imágenes; las posiciones que falten en la última tanda se completan repitiendo
-productos desde el inicio. Con menos de tres productos el carrusel no aparece,
-pero el filtro de la colección sigue disponible.
+La tienda pública prioriza un solo carrusel principal: primero **Temporada**,
+después **Ofertas** y finalmente **Destacados**. La imagen cambia
+automáticamente y el contenido permite abrir el detalle o usar los canales de
+compra configurados. Las otras colecciones aparecen como filas horizontales
+desplazables con flechas y una acción para ver la colección completa. Estas
+filas pueden mostrar cualquier cantidad de productos con foto; si una colección
+no tiene fotos, no se muestra su fila.
 
 Cada producto puede tener hasta **5 fotos** en `image` + `image2`…`image5`. La
 lista `photo_order` define el orden de entrega y cuál queda como portada; las
@@ -83,8 +85,23 @@ React SPA (Vite). Páginas:
   actualización; al abrirla desde el botón **Novedades** o **Ver Novedades** se
   ve el historial completo separado por número y fecha. Se controla desde
   `frontend/src/updates.js` y se recuerda por usuario con `localStorage`.
-- `/tienda/<slug>` — tienda pública: cabecera con logo/nombre, botón
-  "Contactar por WhatsApp", chips de categorías, buscador, modal de detalle y
+- `/admin` sin sesión — bienvenida con opciones **Iniciar sesión** y **Crear
+  tienda**. El registro se presenta en tres pasos (nombre, apellido y correo;
+  usuario; contraseña y confirmación), pero conserva el endpoint de registro
+  actual, que crea la cuenta y la tienda automáticamente. El inicio de sesión y
+  el registro muestran un saludo animado antes del panel.
+- `/admin` sin plan activo — formulario de pago. Después de subir el comprobante,
+  el navegador abre WhatsApp con un mensaje de activación preparado. El botón
+  **“¿Ya me activaron? Comprobar”** recarga las tiendas; si encuentra la
+  suscripción activa, muestra el saludo de bienvenida antes de entrar al panel.
+- `/tienda/<slug>` — tienda pública: portada de ancho completo con logo,
+  bienvenida y colección principal; navbar de tienda con búsqueda, categorías y
+  menú hamburguesa en teléfono; descripción de tienda centrada; colección de
+  temporada/ofertas/destacados priorizada y filas para las colecciones
+  restantes. Al buscar, la bienvenida y las colecciones se ocultan, el navbar
+  permanece visible y **Descubre la tienda** muestra los resultados sin mover
+  la posición de scroll. La búsqueda se cierra al tocar fuera. También hay
+  filtros de categorías sobre los productos, modal de detalle y
   **botones de compra por canal**: el texto es configurable por tienda
   (`purchase_button_text`, por defecto "Comprar por"), así que puede verse "Comprar por
   WhatsApp" o "Pedir por Instagram". En las redes sociales se abre una ventana con
@@ -92,8 +109,8 @@ React SPA (Vite). Páginas:
   directo con el mensaje. Los productos con oferta muestran el precio rebajado,
   el anterior tachado, el porcentaje, la cuenta regresiva si hay vencimiento y
   el filtro **“Ofertas”**. Al elegir **Temporada**, aparecen subcategorías debajo
-  del buscador. Debajo de la descripción aparece **“Ver detalles…”**, que abre
-  la galería con las fotos subidas, el precio y los botones de compra. Responsive.
+  del buscador. La tienda se adapta a la paleta, tiene transiciones y responde a
+  móviles; mantiene compra directa por canales sin carrito.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,

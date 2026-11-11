@@ -46,6 +46,15 @@ class NullableDateTimeField(serializers.DateTimeField):
         return super().validate_empty_values(data)
 
 
+class NullablePrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    """Relación nullable que acepta ``""`` de formularios multipart como None."""
+
+    def to_internal_value(self, data):
+        if data == "":
+            return None
+        return super().to_internal_value(data)
+
+
 class JSONListField(serializers.ListField):
     """Lista que también acepta su representación JSON en un formulario.
 
@@ -99,6 +108,12 @@ class SeasonalCategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category = NullablePrimaryKeyRelatedField(
+        queryset=Category.objects.all(), required=False, allow_null=True
+    )
+    seasonal_category = NullablePrimaryKeyRelatedField(
+        queryset=SeasonalCategory.objects.all(), required=False, allow_null=True
+    )
     price = NullableDecimalField(
         max_digits=10, decimal_places=2, required=False, allow_null=True
     )
@@ -190,6 +205,8 @@ class ProductSerializer(serializers.ModelSerializer):
         return data
 
     def validate_category(self, category):
+        if category is None:
+            return None
         tenant_id = self.context["view"].kwargs["tenant_id"]
 
         if category.tenant_id != int(tenant_id):
@@ -197,6 +214,8 @@ class ProductSerializer(serializers.ModelSerializer):
         return category
 
     def validate_seasonal_category(self, category):
+        if category is None:
+            return None
         tenant_id = self.context["view"].kwargs["tenant_id"]
 
         if category.tenant_id != int(tenant_id):

@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../store/AuthContext'
 import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
+import EntryWelcome from '../components/admin/EntryWelcome'
 import PaymentGate from '../components/admin/PaymentGate'
 import WhatsNew from '../components/admin/WhatsNew'
 import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
@@ -134,8 +135,19 @@ export default function AdminApp() {
 }
 
 function GateOrShell() {
-  const { user } = useAuth()
+  const { user, entryTransition, finishEntryTransition } = useAuth()
   const { currentTenant, loading } = useTenant()
+
+  if (entryTransition) {
+    return (
+      <EntryWelcome
+        user={user}
+        type={entryTransition}
+        ready={!loading}
+        onComplete={finishEntryTransition}
+      />
+    )
+  }
 
   if (loading) return <div className="page-load">Cargando tiendas…</div>
 

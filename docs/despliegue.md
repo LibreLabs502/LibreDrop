@@ -197,13 +197,26 @@ Gunicorn en `$PORT`).
 ## 6. Verificación end-to-end
 
 1. Abrir `https://libredrop-cloud.vercel.app`.
-2. **Crear cuenta** (`/auth/register/` crea el usuario y su tienda automática).
-3. **Login** → panel de administración.
+2. En `/admin/`, revisar la bienvenida, iniciar sesión o recorrer el registro
+   guiado en tres pasos. Al completar el registro, la cuenta y su tienda se
+   crean automáticamente y se muestra el panel de activación.
+3. Iniciar sesión y revisar la bienvenida antes de entrar al panel.
 4. Editar la tienda: nombre, WhatsApp, logo (prueba Cloudinary), **canales de
    compra** y **texto de los botones de compra**.
-5. Abrir la tienda pública en `/tienda/<slug>` y probar los botones de compra.
+5. En un producto de prueba, asignar y luego quitar la categoría de temporada;
+   guardar y confirmar que ya no aparece asociado a esa categoría. Repetir al
+   editar una foto para cubrir la actualización multipart.
+6. Abrir la tienda pública en `/tienda/<slug>` y comprobar la portada, el orden
+   Temporada → Ofertas → Destacados, las filas de las otras colecciones, la
+   navegación móvil y la búsqueda. Buscar, tocar fuera del cuadro y comprobar
+   que el navbar permanece en su lugar.
+7. Probar los botones de compra.
    Por defecto dicen "Comprar por WhatsApp", "Comprar por Instagram", etc.; si
    cambiaste `purchase_button_text`, deben mostrar el texto personalizado.
+8. En una cuenta de prueba, enviar un comprobante para comprobar que se abre
+   WhatsApp con el mensaje de activación preparado. El texto se revisa antes de
+   enviarlo; después de activar el plan, usar **“¿Ya me activaron? Comprobar”**
+   para verificar la bienvenida antes del panel.
 
 Sanity de API (sin navegador):
 

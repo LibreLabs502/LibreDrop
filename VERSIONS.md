@@ -1,5 +1,32 @@
 # Versiones
 
+## v1.3 — Renovación visual de la tienda pública
+
+- La tienda compartida ahora abre con una portada a ancho completo que une el
+  logo y la bienvenida con la colección principal.
+- El carrusel principal prioriza **Temporada**, luego **Ofertas** y después
+  **Destacados**. Si no hay una colección disponible, la portada muestra el
+  logo y el nombre de la tienda en grande.
+- Las demás colecciones aparecen en filas desplazables, con flechas y el enlace
+  **Ver todas**.
+- La navegación principal incluye categorías, búsqueda y un menú hamburguesa
+  en teléfonos. La barra de categorías y filtros de productos permanece sobre
+  el listado.
+- Al abrir la búsqueda, el campo aparece flotando bajo el navbar sin mover la
+  página ni cambiar el punto de desplazamiento actual.
+- La portada, las tarjetas y los controles usan la paleta de la tienda,
+  transiciones de entrada y una animación renovada entre productos.
+- Se conservan los canales de compra que configura cada tienda y no se agrega
+  carrito.
+- `/admin/` presenta una bienvenida con accesos para iniciar sesión o crear una
+  cuenta. El registro se completa en tres pasos: nombre, apellido y correo;
+  nombre de usuario; contraseña y confirmación. El API sigue creando la tienda
+  automáticamente al terminar el registro.
+- Al iniciar sesión aparece un saludo antes del panel. Tras enviar el
+  comprobante de pago, se abre WhatsApp con el mensaje de activación preparado;
+  al usar **“¿Ya me activaron? Comprobar”**, si el plan está activo, aparece el
+  saludo antes de volver al panel.
+
 ## v1.2 — Descuentos calculados por porcentaje
 
 - El formulario de productos ya no pide un precio de oferta. Ingresá el precio

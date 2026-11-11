@@ -6,6 +6,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [entryTransition, setEntryTransition] = useState(null)
 
   const refresh = useCallback(async () => {
     if (!getAccessToken()) {
@@ -29,28 +30,33 @@ export function AuthProvider({ children }) {
     refresh()
   }, [refresh])
 
-  const login = async (username, password) => {
+  const login = async (username, password, transition = 'login') => {
     const tokens = await accountsApi.login(username, password)
     setTokens(tokens)
     const u = { username }
     setStoredUser(u)
     setUser(u)
+    setEntryTransition(transition)
     refresh()
     return tokens
   }
 
   const register = async (payload) => {
     await accountsApi.register(payload)
-    return login(payload.username, payload.password)
+    return login(payload.username, payload.password, 'registration')
   }
+
+  const finishEntryTransition = useCallback(() => setEntryTransition(null), [])
+  const showWelcomeTransition = useCallback(() => setEntryTransition('login'), [])
 
   const logout = () => {
     clearTokens()
     setUser(null)
+    setEntryTransition(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, entryTransition, finishEntryTransition, showWelcomeTransition }}>
       {children}
     </AuthContext.Provider>
   )
