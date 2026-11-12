@@ -5,14 +5,17 @@ import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
 import EntryWelcome from '../components/admin/EntryWelcome'
 import PaymentGate from '../components/admin/PaymentGate'
+import AgreementGate, { AGREEMENT_VERSION } from '../components/admin/AgreementGate'
 import WhatsNew from '../components/admin/WhatsNew'
-import { CatalogIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
+import AgreementInfoModal from '../components/admin/AgreementInfoModal'
+import { CatalogIcon, OrdersIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
 import { hasSeenLatestUpdate, markLatestUpdateSeen } from '../updates'
 import { hasAdminSubscriptionAccess } from '../subscriptionAccess'
 
 const LINKS = [
   { to: '/admin', end: true, label: 'Tiendas', Icon: StoresIcon },
   { to: '/admin/catalogo', label: 'Catálogo', Icon: CatalogIcon },
+  { to: '/admin/pedidos', label: 'Pedidos', Icon: OrdersIcon },
   { to: '/admin/apariencia', label: 'Apariencia', Icon: PaletteIcon },
   { to: '/admin/pagos', label: 'Pagos', Icon: PaymentIcon },
 ]
@@ -38,6 +41,7 @@ function Shell() {
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
   const [updatesOpen, setUpdatesOpen] = useState(false)
+  const [agreementInfoOpen, setAgreementInfoOpen] = useState(false)
   const [showAllUpdates, setShowAllUpdates] = useState(false)
   const [hasNews, setHasNews] = useState(() => !hasSeenLatestUpdate(user))
 
@@ -108,6 +112,9 @@ function Shell() {
             Novedades
             {hasNews && <span className="updates-tag">Nuevo</span>}
           </button>
+          <button className="btn ghost small block updates-btn" onClick={() => setAgreementInfoOpen(true)}>
+            Ver acuerdo y privacidad
+          </button>
           <button className="btn ghost small block" onClick={logout}>Cerrar sesión ({user.username})</button>
         </div>
       </aside>
@@ -117,6 +124,7 @@ function Shell() {
       </main>
 
       <WhatsNew open={updatesOpen} showAll={showAllUpdates} onClose={closeUpdates} />
+      <AgreementInfoModal open={agreementInfoOpen} onClose={() => setAgreementInfoOpen(false)} />
     </div>
   )
 }
@@ -150,6 +158,11 @@ function GateOrShell() {
   }
 
   if (loading) return <div className="page-load">Cargando tiendas…</div>
+
+  const agreementVersion = user?.agreement_required_version || AGREEMENT_VERSION
+  if (currentTenant && !user?.is_superuser && user?.agreement_version !== agreementVersion) {
+    return <AgreementGate />
+  }
 
   // Sin suscripción o después de terminar los diez días de gracia, el dueño
   // solo ve el flujo de pago. Durante `past_due` conserva el panel.

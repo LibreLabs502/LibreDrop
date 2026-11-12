@@ -92,6 +92,9 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "public_orders": "30/hour",
+    },
 }
 
 # CORS / CSRF: el frontend vive en otro origen (p. ej. Vercel).

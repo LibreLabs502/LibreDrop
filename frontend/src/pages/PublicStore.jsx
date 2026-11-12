@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { formatPrice, storefrontApi } from '../api'
-import { buildPurchaseLinks, waLink, ICONS } from '../channels'
+import { formatPrice, ordersApi, storefrontApi } from '../api'
+import { buildPurchaseLinks, waLink, ICONS, LIBREDROP_ORDER_FOOTER } from '../channels'
 import { productImages } from '../images'
 import { discountPercent, effectivePrice, hasOffer, offerCountdown } from '../pricing'
 import { themeStyle } from '../theme'
@@ -264,6 +264,11 @@ export default function PublicStore() {
   const [cartState, setCartState] = useState(() => ({ slug, items: readStoredCart(slug) }))
   const [cartOpen, setCartOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutCustomer, setCheckoutCustomer] = useState({ full_name: '', phone_number: '', address: '', email: '' })
+  const [checkoutNotes, setCheckoutNotes] = useState('')
+  const [checkoutError, setCheckoutError] = useState('')
+  const [checkoutBusy, setCheckoutBusy] = useState(false)
+  const checkoutFormRef = useRef(null)
   const [now, setNow] = useState(() => Date.now())
   const cartItems = cartState.slug === slug ? cartState.items : []
 
@@ -458,6 +463,7 @@ export default function PublicStore() {
   const cartHasUnpricedProduct = cartLines.some((line) => line.unitPrice === null)
   const cartMessage = cartLines.length ? cartOrderMessage(store, cartLines) : ''
   const cartChannelLinks = cartLines.length ? buildPurchaseLinks(store, cartMessage) : []
+  const orderChannelLinks = order ? buildPurchaseLinks(store, order.message) : []
   const hasPurchaseChannels = buildPurchaseLinks(store, 'pedido').length > 0
 
   const chooseCategory = (nextCategory) => {
@@ -540,21 +546,41 @@ export default function PublicStore() {
     updateCartItems((items) => items.filter((item) => item.productId !== String(productId)))
   }
 
-  const openOrder = (channel) => {
-    const message = cartMessage
-    setCheckoutOpen(false)
-    if (channel.key === 'whatsapp') {
-      window.open(channel.href, '_blank', 'noopener,noreferrer')
-      return
-    }
-    setOrder({ channel, message, copied: null })
-    // Aprovechamos el clic del usuario para copiar automáticamente. Si el
-    // navegador lo bloquea, el modal muestra el botón para copiar a mano.
-    copyText(message).then((copied) => {
-      setOrder((prev) =>
-        prev && prev.channel.key === channel.key ? { ...prev, copied } : prev,
+  const openOrder = async (channel) => {
+    if (checkoutBusy || !checkoutFormRef.current?.reportValidity()) return
+    setCheckoutBusy(true)
+    setCheckoutError('')
+    try {
+      const created = await ordersApi.createPublic(slug, {
+        customer: checkoutCustomer,
+        notes: checkoutNotes,
+        channel: channel.key,
+        items: cartLines.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
+      })
+      const items = created.items.map((item) =>
+        `• ${item.quantity} × ${item.product_name}${item.unit_price === null ? '' : ` — ${formatPrice(item.unit_price)} c/u`}`,
       )
-    })
+      const total = created.total === null ? '\nTotal: a confirmar' : `\nTotal: ${formatPrice(created.total)}`
+      const message = `Hola, soy ${checkoutCustomer.full_name}. Mi número de pedido es #${String(created.public_id).slice(0, 8)} y me gustaría pedir:\n\n${items.join('\n')}${total}${LIBREDROP_ORDER_FOOTER}`
+      const destination = buildPurchaseLinks(store, message).find((link) => link.key === channel.key)
+      const savedChannel = { ...channel, href: destination?.href || channel.href }
+      setOrder({ channel: savedChannel, message, copied: null, publicId: created.public_id })
+      setCheckoutOpen(false)
+      copyText(message).then((copied) => {
+        setOrder((prev) => prev && prev.channel.key === channel.key ? { ...prev, copied } : prev)
+      })
+    } catch (err) {
+      setCheckoutError(err.message || 'No se pudo registrar el pedido. Revisá los datos e intentá de nuevo.')
+    } finally {
+      setCheckoutBusy(false)
+    }
+  }
+
+  const selectOrderChannel = (channel) => {
+    const destination = orderChannelLinks.find((link) => link.key === channel.key)
+    if (!destination) return
+    setOrder((previous) => previous ? { ...previous, channel: { ...channel, href: destination.href } } : previous)
+    setCheckoutOpen(false)
   }
 
   const copyOrder = () => {
@@ -588,24 +614,14 @@ export default function PublicStore() {
   const socials = SOCIAL_LINKS.filter((s) => store[s.key])
   const selectedImages = selected ? productImages(selected) : []
   const currentCategory = store.categories.find((item) => String(item.id) === String(category))
-  const specialNavItems = [
-    seasonalCarouselProducts.length > 0 && { label: 'Temporada', type: 'seasonal' },
-    offerCarouselProducts.length > 0 && { label: 'Ofertas', type: 'offers' },
-    featuredCarouselProducts.length > 0 && { label: 'Destacados', type: 'featured' },
-  ].filter(Boolean)
-  const maxNavCategoryCharacters = 18
-  const useCompactNav = store.categories.some((item) => item.name.trim().length > maxNavCategoryCharacters)
-  const shortCategoryNavItems = store.categories
-    .filter((item) => item.name.trim().length <= maxNavCategoryCharacters)
-    .map((item) => ({ label: item.name, type: 'category', value: item.id }))
-  const topNavItems = useCompactNav
-    ? [{ label: 'Inicio', type: 'home' }, ...shortCategoryNavItems]
-    : store.categories.slice(0, 4).map((item) => ({ label: item.name, type: 'category', value: item.id }))
-  if (!useCompactNav && topNavItems.length < 4) {
-    const specialsNeeded = Math.max(0, 3 - topNavItems.length)
-    topNavItems.push(...specialNavItems.slice(0, specialsNeeded))
-    if (topNavItems.length < 4) topNavItems.push({ label: 'Ver todo', type: 'all' })
-  }
+  const topNavItems = [
+    { label: 'Inicio', type: 'home' },
+    ...store.categories.slice(0, 2).map((item) => ({
+      label: item.name,
+      type: 'category',
+      value: item.id,
+    })),
+  ]
   const collectionTitle = query.trim()
     ? `Resultados para “${query.trim()}”`
     : searchOpen
@@ -754,7 +770,7 @@ export default function PublicStore() {
                     <b>{cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'A consultar'}</b>
                   </div>
                   {cartHasUnpricedProduct && <p>Hay productos sin precio publicado; se confirmará el total por mensaje.</p>}
-                  <button type="button" className="btn-buy store-cart-checkout" onClick={() => { setCartOpen(false); setCheckoutOpen(true) }} disabled={!cartChannelLinks.length}>
+                  <button type="button" className="btn-buy store-cart-checkout" onClick={() => { setCartOpen(false); setOrder(null); setCheckoutError(''); setCheckoutOpen(true) }} disabled={!cartChannelLinks.length}>
                     Continuar con el pedido
                   </button>
                   {!cartChannelLinks.length && <p>Esta tienda todavía no tiene un canal de compra configurado.</p>}
@@ -775,19 +791,30 @@ export default function PublicStore() {
                 : <span className="store-checkout-logo-fallback">{String(store.name || 'T')[0].toUpperCase()}</span>}
               <span>{store.name}</span>
             </div>
-            <p className="store-checkout-kicker">Tu pedido está listo</p>
-            <h2 id="store-checkout-title">¿Por qué medio querés enviarlo?</h2>
-            <p className="store-checkout-summary">{cartCount} {cartCount === 1 ? 'producto' : 'productos'} · {cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'total a consultar'}</p>
+            <p className="store-checkout-kicker">Tu selección · {cartCount} {cartCount === 1 ? 'producto' : 'productos'}</p>
+            <h2 id="store-checkout-title">Completá tu pedido</h2>
+            <p className="store-checkout-summary">{cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'Total a consultar'}</p>
+            <form className="store-checkout-form" ref={checkoutFormRef} onSubmit={(event) => event.preventDefault()}>
+              <div className="store-checkout-fields">
+                <label>Nombre y apellido<input autoComplete="name" required maxLength={200} value={checkoutCustomer.full_name} onChange={(event) => setCheckoutCustomer((value) => ({ ...value, full_name: event.target.value }))} placeholder="Tu nombre completo" /></label>
+                <label>Teléfono<input autoComplete="tel" required maxLength={20} type="tel" value={checkoutCustomer.phone_number} onChange={(event) => setCheckoutCustomer((value) => ({ ...value, phone_number: event.target.value }))} placeholder="Tu número de teléfono" /></label>
+                <label className="wide">Dirección de entrega<textarea autoComplete="street-address" required rows={2} value={checkoutCustomer.address} onChange={(event) => setCheckoutCustomer((value) => ({ ...value, address: event.target.value }))} placeholder="Dirección, zona, referencias…" /></label>
+                <label className="wide">Correo electrónico <span>(opcional)</span><input autoComplete="email" type="email" value={checkoutCustomer.email} onChange={(event) => setCheckoutCustomer((value) => ({ ...value, email: event.target.value }))} placeholder="tunombre@correo.com" /></label>
+                <label className="wide">Notas del pedido <span>(opcional)</span><textarea rows={2} maxLength={4000} value={checkoutNotes} onChange={(event) => setCheckoutNotes(event.target.value)} placeholder="Indicaciones para la tienda" /></label>
+              </div>
+            </form>
+            <p className="store-checkout-instruction">¿Por dónde querés enviar el pedido a la tienda? Elegí una de sus redes:</p>
+            {checkoutError && <p className="store-checkout-error" role="alert">{checkoutError}</p>}
             <div className="store-checkout-channels">
-              {cartChannelLinks.map((channel) => (
-                <button type="button" key={channel.key} className={`store-checkout-channel ${channel.key}`} onClick={() => openOrder(channel)}>
+              {(order ? orderChannelLinks : cartChannelLinks).map((channel) => (
+                <button type="button" key={channel.key} className={`store-checkout-channel ${channel.key}`} onClick={() => order ? selectOrderChannel(channel) : openOrder(channel)} disabled={checkoutBusy}>
                   <svg viewBox={channel.viewBox} width="20" height="20" fill="currentColor" aria-hidden="true"><path d={channel.icon} /></svg>
-                  <span>Enviar por {channel.label}</span>
+                  <span>{checkoutBusy ? 'Guardando pedido…' : `${order ? 'Continuar por' : 'Enviar pedido por'} ${channel.label}`}</span>
                   <span aria-hidden="true">↗</span>
                 </button>
               ))}
             </div>
-            <button type="button" className="store-checkout-back" onClick={() => { setCheckoutOpen(false); setCartOpen(true) }}>Volver al carrito</button>
+            <button type="button" className="store-checkout-back" onClick={() => { setCheckoutOpen(false); if (!order) setCartOpen(true) }}>{order ? 'Volver al pedido' : 'Volver al carrito'}</button>
           </section>
         </div>
       )}
@@ -1049,57 +1076,30 @@ export default function PublicStore() {
         </div>
       )}
 
-      {order && (
+      {order && !checkoutOpen && (
         <div className="product-modal-overlay" onClick={() => setOrder(null)}>
-          <div
-            className="product-modal order-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="order-title"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="product-modal order-modal" role="dialog" aria-modal="true" aria-labelledby="order-title" onClick={(event) => event.stopPropagation()}>
             <button className="product-modal-close" onClick={() => setOrder(null)} aria-label="Cerrar">×</button>
             <div className="product-modal-body order-modal-body">
               <span className="order-channel">
-                <svg viewBox={order.channel.viewBox} width="16" height="16" fill="currentColor" aria-hidden="true">
-                  <path d={order.channel.icon} />
-                </svg>
+                <svg viewBox={order.channel.viewBox} width="16" height="16" fill="currentColor" aria-hidden="true"><path d={order.channel.icon} /></svg>
                 {order.channel.label}
               </span>
-              <h2 id="order-title">Hola, este es tu pedido</h2>
-              <p>Copiá el mensaje y envialo por {order.channel.label}.</p>
-
-              <div className="order-message">
-                <p>{order.message}</p>
-              </div>
-
-              <p
-                className={`order-status ${order.copied === false ? 'error' : order.copied ? 'ok' : ''}`}
-                role="status"
-                aria-live="polite"
-              >
-                {order.copied === null
-                  ? 'Copiando el pedido…'
-                  : order.copied
-                    ? '¡Pedido copiado!'
-                    : 'No se pudo copiar automáticamente. Tocá “Copiar pedido”.'}
+              <h2 id="order-title">¡Listo, tu pedido fue realizado!</h2>
+              <p>Tu pedido <b>#{String(order.publicId).slice(0, 8)}</b> quedó registrado. Revisá el mensaje y continuá por {order.channel.label}.</p>
+              <div className="order-message"><p>{order.message}</p></div>
+              <p className={`order-status ${order.copied === false ? 'error' : order.copied ? 'ok' : ''}`} role="status" aria-live="polite">
+                {order.copied === null ? 'Preparando el mensaje…' : order.copied ? '¡El mensaje del pedido está copiado!' : 'Si el canal no admite mensaje directo, tocá “Copiar pedido”.'}
               </p>
-
               <div className="order-actions">
-                <button type="button" className="btn-buy order-copy" onClick={copyOrder}>
-                  Copiar pedido
-                </button>
-                <a className="btn-buy" href={order.channel.href} target="_blank" rel="noreferrer">
-                  Continuar a {order.channel.label}
-                </a>
+                <button type="button" className="btn-buy order-copy" onClick={copyOrder}>Copiar pedido</button>
+                <a className="btn-buy" href={order.channel.href} target="_blank" rel="noreferrer">Continuar</a>
               </div>
-
+              <button type="button" className="order-change-channel" onClick={() => setCheckoutOpen(true)}>Elegir otro canal</button>
               <ol className="order-steps">
-                <li>Copiá el pedido.</li>
-                <li>Dale a continuar.</li>
-                <li>Ve a enviar mensaje.</li>
-                <li>Pegá el pedido en el mensaje.</li>
-                <li>Listo, ya estarías pidiendo por {order.channel.label}.</li>
+                {order.channel.key !== 'whatsapp' && <li>Copiá el mensaje si no se copió automáticamente.</li>}
+                <li>Tocá continuar para abrir {order.channel.label}.</li>
+                {order.channel.key !== 'whatsapp' && <li>Pegá el mensaje y envialo a la tienda.</li>}
               </ol>
             </div>
           </div>

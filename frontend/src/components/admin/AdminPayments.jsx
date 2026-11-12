@@ -4,6 +4,7 @@ import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
 import BankDetails from './BankDetails'
+import SubscriptionPaymentTransition, { waitForSubscriptionTransition } from './SubscriptionPaymentTransition'
 
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
 
@@ -55,6 +56,7 @@ function SubscriptionPanel({ isSuperuser }) {
   const [ok, setOk] = useState('')
   const [sent, setSent] = useState(null)
   const [billing, setBilling] = useState(null)
+  const [showPaymentTransition, setShowPaymentTransition] = useState(false)
 
   useEffect(() => {
     if (isSuperuser) return
@@ -123,16 +125,19 @@ function SubscriptionPanel({ isSuperuser }) {
       return
     }
     setBusy(true)
+    const whatsappTab = window.open('about:blank', '_blank')
     try {
+      setShowPaymentTransition(true)
+      await waitForSubscriptionTransition()
+      setShowPaymentTransition(false)
       const payment = await paymentsApi.create(tenant.id, { description }, file)
       setSent(payment)
       setOk('Comprobante enviado. Te escribiremos para activar tu cuenta.')
       setOpen(false)
-      window.open(
-        supportLink(`Hola LibreLabs, soy ${tenant.name}. Me gustaría que me reactivaran mi cuenta.`),
-        '_blank',
-      )
+      if (whatsappTab) whatsappTab.location.href = supportLink(`Hola LibreLabs, soy ${tenant.name}. Me gustaría que me reactivaran mi cuenta.`)
     } catch (err) {
+      setShowPaymentTransition(false)
+      whatsappTab?.close()
       setError(err.message)
     } finally {
       setBusy(false)
@@ -141,6 +146,7 @@ function SubscriptionPanel({ isSuperuser }) {
 
   return (
     <>
+      {showPaymentTransition && <SubscriptionPaymentTransition />}
       <Card title="Mi plan">
         <div className="kv">
           <span>Estado</span>

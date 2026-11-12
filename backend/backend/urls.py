@@ -47,6 +47,7 @@ urlpatterns = [
     path('auth/', include("accounts.urls")),
     path('catalog/', include("catalog.urls")),
     path('customers/', include("customers.urls")),
+    path('orders/', include("orders.urls")),
     path('', include("payments.urls")),
     path('health/', health, name="health"),
     path('version/', version, name="version"),

@@ -34,6 +34,7 @@ export const CHANNEL_BY_KEY = Object.fromEntries(PURCHASE_CHANNELS.map((c) => [c
 // puede personalizarlo (`Tenant.purchase_button_text`); si no lo hizo usamos el
 // default.
 export const DEFAULT_PURCHASE_BUTTON_TEXT = 'Comprar por'
+export const LIBREDROP_ORDER_FOOTER = '\n\nMi pedido ya está en el panel de la tienda.\nhttps://libredrop-cloud.vercel.app'
 
 export const purchaseButtonText = (store) => {
   const custom = String(store?.purchase_button_text || '').trim()

@@ -33,11 +33,15 @@ export function AuthProvider({ children }) {
   const login = async (username, password, transition = 'login') => {
     const tokens = await accountsApi.login(username, password)
     setTokens(tokens)
-    const u = { username }
+    let u = { username }
+    try {
+      u = await accountsApi.me()
+    } catch {
+      // Conservamos un fallback visual si el endpoint de perfil no responde.
+    }
     setStoredUser(u)
     setUser(u)
     setEntryTransition(transition)
-    refresh()
     return tokens
   }
 
@@ -49,6 +53,13 @@ export function AuthProvider({ children }) {
   const finishEntryTransition = useCallback(() => setEntryTransition(null), [])
   const showWelcomeTransition = useCallback(() => setEntryTransition('login'), [])
 
+  const acceptAgreement = async (version) => {
+    const updatedUser = await accountsApi.acceptAgreement(version)
+    setStoredUser(updatedUser)
+    setUser(updatedUser)
+    return updatedUser
+  }
+
   const logout = () => {
     clearTokens()
     setUser(null)
@@ -56,7 +67,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, entryTransition, finishEntryTransition, showWelcomeTransition }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, acceptAgreement, entryTransition, finishEntryTransition, showWelcomeTransition }}>
       {children}
     </AuthContext.Provider>
   )

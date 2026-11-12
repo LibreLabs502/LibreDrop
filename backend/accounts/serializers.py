@@ -5,6 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from payments.models import Payment
 from tenants.models import Membership, Tenant
+from .agreement import CURRENT_AGREEMENT_VERSION
 
 User = get_user_model()
 
@@ -48,7 +49,15 @@ class LoginSerializer(TokenObtainPairSerializer):
     pass
 
 class UserSerializer(serializers.ModelSerializer):
+    agreement_required_version = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "is_superuser"]
+        fields = [
+            "id", "username", "email", "first_name", "last_name", "is_superuser",
+            "agreement_version", "agreement_accepted_at", "agreement_required_version",
+        ]
         read_only_fields = fields
+
+    def get_agreement_required_version(self, user):
+        return CURRENT_AGREEMENT_VERSION

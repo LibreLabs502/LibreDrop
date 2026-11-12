@@ -10,6 +10,27 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v1.5',
+    date: 'Noviembre 2026',
+    title: 'Tu cuenta y tus datos, más claros',
+    items: [
+      'Antes de entrar al panel, revisá el acuerdo de uso y tratamiento de datos de LibreDrop.',
+      'La aceptación queda guardada en tu cuenta; si el acuerdo cambia, te pediremos revisarlo de nuevo.',
+      'Al enviar un comprobante de suscripción, aparece una transición con el logo de LibreDrop.',
+    ],
+  },
+  {
+    version: 'v1.4',
+    date: 'Noviembre 2026',
+    title: 'Recibí pedidos desde tu tienda',
+    items: [
+      'Tus clientes pueden agregar productos a un carrito y completar sus datos antes de hacer el pedido.',
+      'El pedido queda registrado con sus productos, cantidades, precios, datos del cliente y notas.',
+      'Después de confirmar, el cliente puede continuar por el canal de compra configurado y compartir el mensaje preparado.',
+      'En el panel ya podés revisar tus pedidos, desplegar sus detalles y actualizar su estado.',
+    ],
+  },
+  {
     version: 'v1.3',
     date: 'Noviembre 2026',
     title: 'Una tienda pública con más estilo',

@@ -48,10 +48,13 @@ python manage.py runserver   # :8000
 
 `migrate` aplica las migraciones pendientes del catálogo y de las demás apps.
 La migración `catalog.0015` agrega los campos de fin de oferta y orden de fotos
-y destacados. Para revisar el estado del catálogo:
+y destacados; `accounts.0002` registra aceptación del acuerdo y `orders.0001`
+crea las tablas de pedidos y sus artículos. Para revisar el estado:
 
 ```bash
 python manage.py showmigrations catalog
+python manage.py showmigrations orders
+python manage.py showmigrations accounts
 ```
 
 Si quitás la categoría normal o de temporada de un producto, guardá el cambio

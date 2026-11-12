@@ -13,6 +13,9 @@ Django 6.1 + DRF. Apps:
 - `accounts` — modelo `User` propio y autenticación JWT.
 - `tenants` — tiendas y miembros (roles) + paletas de color y canales de compra por tienda.
 - `catalog` — categorías y productos por tienda.
+- `customers` — datos de clientes asociados a una tienda.
+- `orders` — pedidos, líneas de producto y precios históricos; su endpoint
+  público crea pedidos sin cuenta y valida tienda, canal y productos activos.
 - `storefront` — API pública de la tienda (sin auth).
 - `payments` — pagos manuales (comprobantes) y datos de la cuenta bancaria de LibreDrop.
 
@@ -27,9 +30,8 @@ Facebook y TikTok; LinkedIn queda fuera por ser red de contacto). Un canal solo
 se activa si su destino es válido, y el storefront público expone únicamente los
 canales **efectivos** (activados y con destino válido), que el frontend
 transforma en botones. El panel reutiliza las mismas etiquetas desde
-`frontend/src/channels.js`. El texto que precede al canal se personaliza por
-tienda con `Tenant.purchase_button_text` (por defecto **“Comprar por”**); si está
-vacío o el backend no lo expone, el frontend usa ese valor predeterminado.
+`frontend/src/channels.js`. El texto que precede al canal es fijo:
+**“Comprar por”**.
 
 El cobro es **manual**: el dueño sube un comprobante (`Payment`, estado
 `pending`) y el superusuario lo aprueba (`POST /payments/<id>/activate/`), lo que
@@ -37,6 +39,19 @@ activa/renueva la suscripción de la tienda por 30 días. `Subscription` (app
 `tenants`) se calcula en vivo: `active`, `past_due` (10 días de gracia) y
 `suspended`. Los datos de la cuenta bancaria (`BillingInfo`) viven en la base de
 datos (fila única) y se editan desde el panel del superusuario.
+
+Cada usuario guarda `agreement_version` y `agreement_accepted_at`. El endpoint
+`/auth/me/` expone la versión vigente y `POST /auth/agreement/accept/` registra
+la aceptación autenticada. El panel la exige a quienes administran una tienda,
+tanto a las cuentas existentes como a las nuevas antes del primer pago. El
+texto se mantiene en `AgreementGate.jsx` y el panel ofrece una ventana para
+volver a consultarlo. La versión v3 explica la licencia GNU AGPL-3.0, que las
+mejoras aceptadas se integran al producto común para todas las tiendas y que la
+suscripción cubre alojamiento, actualizaciones y soporte de 6:00 a. m. a 10:00
+p. m. (hora de Guatemala), no una licencia del código. También describe el uso
+de datos de pedidos y los límites de `robots.txt`: solicita a todos los
+rastreadores que no recorran ninguna ruta, pero no es un control de acceso ni
+permite controlar bots que ignoran la directiva.
 
 Las **ofertas** se guardan únicamente en `Product.discount_percent` (entero de
 1 a 99). Si hay `price`, `Product.discounted_price` calcula el precio rebajado
@@ -79,9 +94,9 @@ Config vía variables de entorno `CLOUDINARY_*`.
 React SPA (Vite). Páginas:
 
 - `/` → redirige a `/admin` (login/registro si no hay sesión).
-- `/admin` — panel: Tiendas (con **canales de compra**), Catálogo, Apariencia y
-  Pagos (suscripción; si el plan no está activo el panel muestra el bloqueo de
-  activación). Al entrar se muestra una ventana de **Novedades** con la última
+- `/admin` — panel: Tiendas (con **canales de compra**), Catálogo, Apariencia,
+  Pedidos y Pagos (suscripción; si el plan no está activo el panel muestra el
+  bloqueo de activación). Al entrar se muestra una ventana de **Novedades** con la última
   actualización; al abrirla desde el botón **Novedades** o **Ver Novedades** se
   ve el historial completo separado por número y fecha. Se controla desde
   `frontend/src/updates.js` y se recuerda por usuario con `localStorage`.
@@ -94,6 +109,10 @@ React SPA (Vite). Páginas:
   el navegador abre WhatsApp con un mensaje de activación preparado. El botón
   **“¿Ya me activaron? Comprobar”** recarga las tiendas; si encuentra la
   suscripción activa, muestra el saludo de bienvenida antes de entrar al panel.
+- Antes del panel o del pago, según el estado de la cuenta, aparece el acuerdo
+  de uso y tratamiento de datos; la aceptación queda guardada por versión y
+  fecha. Al enviar un comprobante, el logo de LibreDrop hace un zoom al centro
+  y se reduce antes de continuar el envío.
 - `/tienda/<slug>` — tienda pública: portada de ancho completo con logo,
   bienvenida y colección principal; navbar de tienda con búsqueda, categorías y
   menú hamburguesa en teléfono; descripción de tienda centrada; colección de
@@ -102,15 +121,22 @@ React SPA (Vite). Páginas:
   permanece visible y **Descubre la tienda** muestra los resultados sin mover
   la posición de scroll. La búsqueda se cierra al tocar fuera. También hay
   filtros de categorías sobre los productos, modal de detalle y
-  **botones de compra por canal**: el texto es configurable por tienda
-  (`purchase_button_text`, por defecto "Comprar por"), así que puede verse "Comprar por
-  WhatsApp" o "Pedir por Instagram". En las redes sociales se abre una ventana con
+  **botones de compra por canal**, con el texto fijo "Comprar por". En las
+  redes sociales se abre una ventana con
   el pedido copiable y los pasos para pegarlo en el chat; WhatsApp abre el chat
   directo con el mensaje. Los productos con oferta muestran el precio rebajado,
   el anterior tachado, el porcentaje, la cuenta regresiva si hay vencimiento y
   el filtro **“Ofertas”**. Al elegir **Temporada**, aparecen subcategorías debajo
-  del buscador. La tienda se adapta a la paleta, tiene transiciones y responde a
-  móviles; mantiene compra directa por canales sin carrito.
+  del buscador. El carrito se guarda localmente por tienda; al completar los
+  datos y elegir un canal, el backend registra el pedido con copias históricas
+  de artículos y precios. La confirmación muestra el mensaje con nombre,
+  número de pedido y productos; para redes sociales se puede copiar antes de
+  continuar al perfil.
+- `/admin/pedidos` — pedidos de la tienda seleccionada. La lista muestra número,
+  fecha y estado; al desplegar una fila se ven los datos del cliente, artículos,
+  total y notas, y se puede actualizar el estado.
+
+La tienda se adapta a la paleta, tiene transiciones y responde a móviles.
 
 Estado de sesión en `AuthContext` + tokens en `localStorage`. El access token
 (1 día) se renueva automáticamente con el refresh token (30 días) ante un `401`,

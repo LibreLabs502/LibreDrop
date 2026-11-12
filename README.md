@@ -19,16 +19,28 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 - Tienda pública con portada de marca, un carrusel principal priorizado por
   temporada, ofertas y destacados, y filas desplazables para las colecciones
   restantes. Incluye navegación adaptable, búsqueda y filtros de productos.
+- Carrito local por tienda y checkout público para registrar pedidos con datos
+  del cliente, artículos, cantidades y notas; después se continúa por los
+  canales configurados por la tienda.
+- Panel de pedidos con filtros por estado, detalle desplegable y actualización
+  del estado del pedido.
+- Acuerdo de uso y tratamiento de datos con aceptación registrada por cuenta,
+  y una transición de marca al enviar comprobantes de suscripción.
+- El código está licenciado bajo GNU AGPL-3.0; la suscripción del servicio
+  oficial cubre alojamiento, soporte y actualizaciones. Las mejoras aceptadas
+  para el producto oficial se comparten con todas las tiendas.
+- `robots.txt` pide a todos los rastreadores que no recorran el sitio; no es una
+  barrera de seguridad ni puede controlar los bots que ignoren la instrucción.
 - Al elegir **Temporada**, aparecen sus subcategorías debajo del buscador para
   filtrar los productos por ocasión.
-- Los botones de compra abren los canales configurados por cada tienda; no hay
-  carrito. Fotos, colores y contenido visual se adaptan a la paleta de cada
-  tienda y a pantallas móviles.
+- Las compras se informan por los canales configurados por cada tienda.
+  Productos, carrito y pedidos se adaptan a pantallas móviles y a la paleta de
+  cada tienda.
 
 ## Estructura
 
 ```
-backend/    API Django (accounts, tenants, catalog, storefront, payments)
+backend/    API Django (accounts, tenants, catalog, customers, orders, storefront, payments)
 frontend/   SPA React (admin + tienda pública)
 docs/       Documentación
 ```

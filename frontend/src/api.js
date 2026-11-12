@@ -111,6 +111,7 @@ export const accountsApi = {
   refresh: (refresh) =>
     api('/auth/token/refresh/', { method: 'POST', body: { refresh }, auth: false }),
   me: () => api('/auth/me/'),
+  acceptAgreement: (version) => api('/auth/agreement/accept/', { method: 'POST', body: { version } }),
 }
 
 // Renueva el access token con el refresh token (sin pedir credenciales de nuevo).
@@ -171,6 +172,12 @@ export const membershipsApi = {
 
 export const storefrontApi = {
   getStore: (slug) => api(`/public/${slug}/`, { auth: false }),
+}
+
+export const ordersApi = {
+  createPublic: (slug, data) => api(`/orders/public/${slug}/`, { method: 'POST', body: data, auth: false }),
+  list: (tenantId) => api(`/orders/tenants/${tenantId}/`),
+  updateStatus: (tenantId, orderId, status) => api(`/orders/tenants/${tenantId}/${orderId}/status/`, { method: 'PATCH', body: { status } }),
 }
 
 const formDataFrom = (data, files = {}, keepEmpty = []) => {

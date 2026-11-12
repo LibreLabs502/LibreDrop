@@ -1,5 +1,63 @@
 # Versiones
 
+## v1.5 — Acuerdo de uso y protección de datos
+
+- Al iniciar sesión, las cuentas que administran una tienda revisan y aceptan
+  el acuerdo antes de entrar al panel. Las cuentas nuevas lo aceptan después
+  del registro y antes de enviar el primer pago de suscripción.
+- La aceptación se guarda en la cuenta con la versión del acuerdo y la fecha;
+  si se publica una versión nueva, vuelve a solicitarse.
+- El acuerdo explica el uso de datos de cuenta, tienda, clientes, pedidos y
+  comprobantes; los permisos de acceso, proveedores tecnológicos y canales
+  externos, y las responsabilidades de cada tienda.
+- La versión v3 del acuerdo detalla que la suscripción incluye alojamiento,
+  actualizaciones y soporte por redes sociales de 6:00 a. m. a 10:00 p. m.
+  (hora de Guatemala); el código se ofrece bajo GNU AGPL-3.0 y la suscripción
+  cubre el alojamiento, no una licencia del código.
+- El acuerdo explica que las mejoras aceptadas para el servicio oficial se
+  integran al producto común para todas las tiendas y que no se garantizan
+  desarrollos exclusivos ni la aprobación de cada solicitud.
+- El acuerdo aclara que LibreDrop no usa datos personales de pedidos para
+  entrenar modelos propios y que `robots.txt` solicita no rastrear el sitio,
+  pero no puede impedir que bots externos ignoren esa instrucción o reutilicen
+  contenido público.
+- El mensaje generado para los pedidos muestra que el pedido está en el panel
+  y agrega el enlace de LibreDrop. El cliente puede volver al selector y
+  cambiar de canal sin crear un pedido duplicado.
+- Se ajustaron las ventanas del checkout y confirmación de pedido para pantallas
+  pequeñas.
+- El panel permite volver a consultar el acuerdo desde **Ver acuerdo y
+  privacidad**.
+- Al enviar un comprobante de suscripción aparece una transición a pantalla
+  completa: el logo de LibreDrop crece al centro y luego se reduce antes de
+  continuar con el envío.
+- Los botones de compra usan el texto **“Comprar por”** en todas las tiendas;
+  se retiró la personalización por tienda para mantener modelo y serializers
+  alineados (`tenants/0015`).
+
+## v1.4 — Pedidos desde la tienda
+
+- La tienda pública incorpora un carrito local por tienda; no crea un pedido en
+  el backend hasta que el cliente completa sus datos y elige un canal.
+- El checkout pide nombre, teléfono y dirección, y permite agregar correo y
+  notas opcionales. El cliente puede revisar productos, cantidades y total antes
+  de continuar.
+- Al confirmar, el backend valida que la tienda, el canal y los productos estén
+  disponibles, registra el pedido y guarda una copia de los nombres, precios y
+  descuentos. Los datos del cliente se reutilizan dentro de la tienda según su
+  número de teléfono.
+- Después de registrar el pedido, el cliente ve **“¡Listo, tu pedido fue
+  realizado!”** y puede continuar al canal elegido. El mensaje incluye su
+  nombre, el número de pedido, productos y cantidades; en WhatsApp queda
+  preparado y en Instagram, Facebook o TikTok se puede copiar para enviarlo.
+- El panel agrega **Pedidos**, con filtro por estado. La lista muestra primero
+  número, fecha y estado; una flecha despliega los datos del cliente, artículos,
+  total y notas. El estado se actualiza desde ese detalle.
+- API: `POST /orders/public/<slug>/` para crear pedidos y endpoints bajo
+  `/orders/tenants/<tenant_id>/` para consultarlos y actualizar su estado.
+- La app `orders` incluye su migración inicial y limita la creación pública a
+  30 intentos por hora.
+
 ## v1.3 — Renovación visual de la tienda pública
 
 - La tienda compartida ahora abre con una portada a ancho completo que une el

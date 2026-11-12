@@ -4,6 +4,7 @@ import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field } from '../ui'
 import BankDetails from './BankDetails'
+import SubscriptionPaymentTransition, { waitForSubscriptionTransition } from './SubscriptionPaymentTransition'
 import { hasAdminSubscriptionAccess } from '../../subscriptionAccess'
 
 const SUBSCRIPTION_DESC = 'Pago de suscripción'
@@ -23,6 +24,7 @@ export default function PaymentGate() {
   const [billing, setBilling] = useState(null)
   const [checking, setChecking] = useState(false)
   const [checkMessage, setCheckMessage] = useState('')
+  const [showPaymentTransition, setShowPaymentTransition] = useState(false)
 
   useEffect(() => {
     billingApi
@@ -65,6 +67,9 @@ export default function PaymentGate() {
     // bloquee WhatsApp después de esperar la respuesta del servidor.
     const whatsappTab = window.open('about:blank', '_blank')
     try {
+      setShowPaymentTransition(true)
+      await waitForSubscriptionTransition()
+      setShowPaymentTransition(false)
       // POST del pago con comprobante.
       await paymentsApi.create(tenant.id, { description }, file)
       setSent(true)
@@ -75,6 +80,7 @@ export default function PaymentGate() {
         )
       }
     } catch (err) {
+      setShowPaymentTransition(false)
       whatsappTab?.close()
       setError(err.message)
     } finally {
@@ -84,6 +90,7 @@ export default function PaymentGate() {
 
   return (
     <div className="admin-gate">
+      {showPaymentTransition && <SubscriptionPaymentTransition />}
       <header className="admin-topbar gate-topbar">
         <span className="chip">{tenant.name}</span>
         <button className="btn ghost small" onClick={logout}>

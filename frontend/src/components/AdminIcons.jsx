@@ -71,3 +71,11 @@ export const PaymentIcon = () => (
     <path d="M6 15h4" />
   </svg>
 )
+
+export const OrdersIcon = () => (
+  <svg {...base}>
+    <path d="M4 4h16v16H4z" />
+    <path d="M8 9h8M8 13h8M8 17h5" />
+    <path d="M8 2v4M16 2v4" />
+  </svg>
+)

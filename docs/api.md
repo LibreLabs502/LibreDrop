@@ -11,6 +11,8 @@ Swagger UI: `/docs/` — Schema: `/schema/`
 | POST | `/auth/register/` | Registro de usuario |
 | POST | `/auth/login/` | Login → `access` + `refresh` |
 | POST | `/auth/token/refresh/` | Renovar access token |
+| GET | `/auth/me/` | Perfil autenticado y estado del acuerdo requerido |
+| POST | `/auth/agreement/accept/` | Registra la aceptación de la versión vigente del acuerdo |
 
 Registro (`POST /auth/register/`):
 
@@ -28,6 +30,11 @@ Registro (`POST /auth/register/`):
 El registro crea el usuario **y su tienda automáticamente**. JWT: access 1 día,
 refresh 30 días. Ante un `401`, el cliente renueva con `/auth/token/refresh/` y
 repite la petición (el frontend lo hace solo, así la sesión dura hasta 30 días).
+`/auth/me/` incluye `agreement_version`, `agreement_accepted_at` y
+`agreement_required_version`. Para aceptar, enviá
+`{"version":"v3"}` a `POST /auth/agreement/accept/`; el backend guarda la
+versión y la fecha en la cuenta autenticada. Una versión anterior no habilita
+el acceso.
 Nota: las URLs de imágenes (logo, producto) que devuelven los serializers son de
 Cloudinary con `f_auto,q_auto`.
 
@@ -38,6 +45,10 @@ mismo payload a `POST /auth/register/`; el wizard no requiere endpoints nuevos.
 Al completarse, el frontend inicia sesión automáticamente y el registro continúa
 en el bloqueo de activación/pago porque el API crea la tienda sin una
 suscripción activa.
+
+Las cuentas que administran una tienda deben aceptar el acuerdo vigente antes
+de entrar al panel. Las cuentas nuevas también lo revisan después del registro
+y antes de enviar un comprobante de suscripción.
 
 ## Tenants (`/tenants/`)
 
@@ -116,15 +127,10 @@ Reglas:
   Instagram."`.
 - LinkedIn no es un canal de compra (solo aparece como enlace).
 
-### Texto de los botones de compra
+### Botones de compra
 
-- `Tenant.purchase_button_text` (`CharField(max_length=40,
-  default="Comprar por")`) permite personalizar el texto que precede al nombre
-  del canal en los botones de la tienda (por ejemplo, **“Pedir por WhatsApp”**).
-- Se expone como `purchase_button_text` en el serializer del panel y en el
-  storefront público. Si viene vacío o no existe, el frontend usa siempre
-  **“Comprar por”** como respaldo.
-- El mismo texto se aplica a todos los canales activos.
+- La tienda usa el texto **“Comprar por”** antes del canal configurado, por
+  ejemplo **“Comprar por WhatsApp”**. El texto no se personaliza por tienda.
 - `Tenant.sale_text` y `Tenant.featured_products_text` personalizan los títulos
   de las secciones de ofertas y productos destacados. Ambos se editan desde el
   panel de Tiendas, admiten hasta 40 caracteres y el storefront los expone.
@@ -132,7 +138,6 @@ Reglas:
 
 ```json
 {
-  "purchase_button_text": "Pedir por",
   "sale_text": "Ofertas de temporada",
   "featured_products_text": "Favoritos de la tienda"
 }
@@ -200,9 +205,8 @@ deseado. Los productos deben pertenecer a la tienda:
 
 `purchase_channels` en el storefront son los **canales efectivos**: los activados
 que además tienen un destino válido. El frontend los convierte en los botones de
-compra. El texto que precede al canal viene de `purchase_button_text` (por
-defecto "Comprar por"), así que puede verse "Comprar por WhatsApp" o
-"Pedir por Instagram".
+compra. El texto que precede al canal es fijo: "Comprar por", así que se ve
+"Comprar por WhatsApp" o "Comprar por Instagram".
 
 `sale_text` y `featured_products_text` definen los encabezados de las secciones
 de ofertas y productos destacados. `seasonal_categories` lista las categorías de
@@ -239,8 +243,36 @@ el payload.
 | DELETE | `/customers/tenants/<tenant_id>/<id>/` | Elimina el cliente. |
 
 Campos de creación: `full_name`, `phone_number` y `address` son obligatorios;
-`email` es opcional. El endpoint todavía no es público ni crea pedidos: la
-captura desde la tienda se conectará cuando se implemente el flujo de compras.
+`email` es opcional. Al enviar un pedido desde la tienda, el backend reutiliza
+el cliente de esa tienda con el mismo teléfono y actualiza sus datos.
+
+## Pedidos (`/orders/`)
+
+| Método | Ruta | Permiso | Descripción |
+|---|---|---|---|
+| POST | `/orders/public/<slug>/` | Público, limitado por tasa | Crea un pedido y registra o actualiza el cliente de la tienda. |
+| GET | `/orders/tenants/<tenant_id>/` | Miembro autenticado | Lista los pedidos de esa tienda, del más reciente al más antiguo. |
+| GET | `/orders/tenants/<tenant_id>/<id>/` | Miembro autenticado | Consulta un pedido de esa tienda. |
+| PATCH | `/orders/tenants/<tenant_id>/<id>/status/` | Miembro autenticado | Actualiza el estado del pedido. |
+
+El alta pública recibe `customer` (`full_name`, `phone_number`, `address` y
+`email` opcional), `items` (`product_id` y `quantity`), `channel` y `notes`
+opcional. Los productos se vuelven a validar contra la tienda y su estado
+activo; los precios y descuentos se calculan en el servidor y quedan como una
+foto histórica en cada artículo. Si falta un precio, el total del pedido queda
+`null` para que se confirme con la tienda. Cada pedido guarda un `public_id`
+para poder identificarlo en el mensaje que el cliente envía por su canal.
+
+Estados: `new` (Nuevo), `confirmed` (Confirmado), `cancelled` (Cancelado) y
+`completed` (Completado). Canales: `whatsapp`, `instagram`, `facebook` y
+`tiktok`; solo se acepta uno que esté activo y tenga un destino válido en la
+configuración pública de la tienda. La creación pública está limitada a 30
+intentos por hora por cliente/IP.
+
+El panel incluye `/admin/pedidos` para revisar datos de contacto, dirección,
+productos, cantidades, total y notas, y para cambiar el estado. La lista del
+panel muestra primero número, fecha y estado; los detalles se despliegan desde
+la flecha de cada pedido.
 
 ## Pagos y suscripción (`/payments/`)
 

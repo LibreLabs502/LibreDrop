@@ -157,6 +157,9 @@ curl https://libredrop.onrender.com/version/     # commit desplegado (verificar 
 
 `frontend/vercel.json` ya incluye el rewrite de SPA para que `/admin`,
 `/admin/catalogo` y `/tienda/<slug>` funcionen al recargar.
+El archivo `frontend/public/robots.txt` se publica en la raíz del sitio y
+solicita a todos los rastreadores que no recorran sus páginas. Esta directiva
+no restringe el acceso público ni impide que bots la ignoren.
 
 ### Previews de Vercel (opcional)
 
@@ -210,9 +213,8 @@ Gunicorn en `$PORT`).
    Temporada → Ofertas → Destacados, las filas de las otras colecciones, la
    navegación móvil y la búsqueda. Buscar, tocar fuera del cuadro y comprobar
    que el navbar permanece en su lugar.
-7. Probar los botones de compra.
-   Por defecto dicen "Comprar por WhatsApp", "Comprar por Instagram", etc.; si
-   cambiaste `purchase_button_text`, deben mostrar el texto personalizado.
+7. Probar los botones de compra. Deben mostrar "Comprar por WhatsApp",
+   "Comprar por Instagram", etc.
 8. En una cuenta de prueba, enviar un comprobante para comprobar que se abre
    WhatsApp con el mensaje de activación preparado. El texto se revisa antes de
    enviarlo; después de activar el plan, usar **“¿Ya me activaron? Comprobar”**

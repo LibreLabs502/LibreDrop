@@ -83,7 +83,6 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "logo",
-            "purchase_button_text",
             "sale_text",
             "featured_products_text",
             "whatsapp",

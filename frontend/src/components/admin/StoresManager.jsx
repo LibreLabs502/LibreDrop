@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { tenantsApi, paymentsApi, waLink, SUPPORT_WHATSAPP } from '../../api'
-import { PURCHASE_CHANNELS, channelIsReady, DEFAULT_PURCHASE_BUTTON_TEXT, purchaseButtonText } from '../../channels'
+import { PURCHASE_CHANNELS, channelIsReady } from '../../channels'
 import { useAuth } from '../../store/AuthContext'
 import { useTenant } from '../../store/TenantContext'
 import { Alert, Card, Field, Spinner } from '../ui'
@@ -71,7 +71,6 @@ export default function StoresManager() {
       tiktok_url: t.tiktok_url || '',
       linkedin_url: t.linkedin_url || '',
       purchase_channels: Array.isArray(t.purchase_channels) ? t.purchase_channels : [],
-      purchase_button_text: t.purchase_button_text || '',
     })
     setLogoFile(null)
     setError('')
@@ -107,7 +106,6 @@ export default function StoresManager() {
         ...form,
         sale_text: String(form.sale_text || '').trim() || 'Productos con ofertas',
         featured_products_text: String(form.featured_products_text || '').trim() || 'Productos destacados',
-        purchase_button_text: String(form.purchase_button_text || '').trim() || DEFAULT_PURCHASE_BUTTON_TEXT,
         purchase_channels: (form.purchase_channels || []).filter((k) => channelIsReady(k, form)),
       }
       await tenantsApi.update(editing, payload, logoFile)
@@ -194,7 +192,7 @@ export default function StoresManager() {
               </div>
             </EditSection>
 
-            <EditSection title="Pedidos y canales" description="Elegí dónde recibir pedidos y personalizá el texto de tus botones.">
+            <EditSection title="Pedidos y canales" description="Elegí dónde querés recibir los pedidos de tu tienda.">
               <div className="channels-block">
                 <div className="channel-list">
                   {PURCHASE_CHANNELS.map((c) => {
@@ -214,14 +212,6 @@ export default function StoresManager() {
                     )
                   })}
                 </div>
-              </div>
-              <div className="purchase-button-text-block">
-                <Field label="Texto de los botones de compra" hint="Se verá, por ejemplo, como «Comprar por WhatsApp».">
-                  <input value={form.purchase_button_text} maxLength={40} placeholder={DEFAULT_PURCHASE_BUTTON_TEXT} onChange={(e) => setForm({ ...form, purchase_button_text: e.target.value })} />
-                </Field>
-                <p className="channel-preview">
-                  Vista previa: <b>{purchaseButtonText(form)} {PURCHASE_CHANNELS.find((c) => (form.purchase_channels || []).includes(c.key))?.label || 'WhatsApp'}</b>
-                </p>
               </div>
             </EditSection>
 
@@ -339,12 +329,6 @@ export default function StoresManager() {
                         .map((c) => c.label)
                         .join(', ')}
                     </span>
-                  </>
-                )}
-                {t.purchase_button_text && (
-                  <>
-                    <span className="store-field-label">Texto de compra</span>
-                    <span>{t.purchase_button_text}</span>
                   </>
                 )}
               </div>

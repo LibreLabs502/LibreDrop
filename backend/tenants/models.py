@@ -11,7 +11,6 @@ class Tenant(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     description = models.TextField(blank=True)
     logo = CloudinaryField("logo")
-    purchase_button_text = models.CharField(max_length=40, default="Comprar por")
     sale_text = models.CharField(max_length=40, default="Productos con ofertas", blank=True)
     featured_products_text = models.CharField(max_length=40, default="Productos destacados", blank=True)
     whatsapp = models.CharField(max_length=20, blank=True, null=True, default="")
