@@ -590,6 +590,12 @@ export default function PublicStore() {
     })
   }
 
+  const closeOrder = () => {
+    setOrder(null)
+    setCheckoutOpen(false)
+    setCheckoutError('')
+  }
+
   const renderAddToCartButton = (product) => (
     <button type="button" className="btn-buy store-add-to-cart" onClick={() => addToCart(product)}>
       <CartIcon size={17} />Agregar al carrito
@@ -1077,9 +1083,9 @@ export default function PublicStore() {
       )}
 
       {order && !checkoutOpen && (
-        <div className="product-modal-overlay" onClick={() => setOrder(null)}>
+        <div className="product-modal-overlay" onClick={closeOrder}>
           <div className="product-modal order-modal" role="dialog" aria-modal="true" aria-labelledby="order-title" onClick={(event) => event.stopPropagation()}>
-            <button className="product-modal-close" onClick={() => setOrder(null)} aria-label="Cerrar">×</button>
+            <button type="button" className="product-modal-close" onClick={closeOrder} aria-label="Cerrar pedido">×</button>
             <div className="product-modal-body order-modal-body">
               <span className="order-channel">
                 <svg viewBox={order.channel.viewBox} width="16" height="16" fill="currentColor" aria-hidden="true"><path d={order.channel.icon} /></svg>

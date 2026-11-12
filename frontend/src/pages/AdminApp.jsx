@@ -5,7 +5,7 @@ import { TenantProvider, useTenant } from '../store/TenantContext'
 import AdminAuth from '../components/admin/AdminAuth'
 import EntryWelcome from '../components/admin/EntryWelcome'
 import PaymentGate from '../components/admin/PaymentGate'
-import AgreementGate, { AGREEMENT_VERSION } from '../components/admin/AgreementGate'
+import { AGREEMENT_VERSION } from '../components/admin/AgreementGate'
 import WhatsNew from '../components/admin/WhatsNew'
 import AgreementInfoModal from '../components/admin/AgreementInfoModal'
 import { CatalogIcon, OrdersIcon, PaletteIcon, PaymentIcon, StoresIcon } from '../components/AdminIcons'
@@ -36,7 +36,7 @@ function TenantSwitcher() {
   )
 }
 
-function Shell() {
+function Shell({ agreementRequired = false }) {
   const { user, logout } = useAuth()
   const { currentTenant } = useTenant()
   const [open, setOpen] = useState(false)
@@ -120,11 +120,15 @@ function Shell() {
       </aside>
 
       <main className="admin-main">
-        <Outlet context={{ openUpdates: () => openUpdates(true), hasNews }} />
+        <Outlet context={{ openUpdates: () => openUpdates(true), openAgreement: () => setAgreementInfoOpen(true), hasNews }} />
       </main>
 
       <WhatsNew open={updatesOpen} showAll={showAllUpdates} onClose={closeUpdates} />
-      <AgreementInfoModal open={agreementInfoOpen} onClose={() => setAgreementInfoOpen(false)} />
+      <AgreementInfoModal
+        open={agreementInfoOpen || agreementRequired}
+        required={agreementRequired}
+        onClose={() => setAgreementInfoOpen(false)}
+      />
     </div>
   )
 }
@@ -160,9 +164,7 @@ function GateOrShell() {
   if (loading) return <div className="page-load">Cargando tiendas…</div>
 
   const agreementVersion = user?.agreement_required_version || AGREEMENT_VERSION
-  if (stores.length > 0 && !user?.is_superuser && user?.agreement_version !== agreementVersion) {
-    return <AgreementGate />
-  }
+  const agreementRequired = stores.length > 0 && !user?.is_superuser && user?.agreement_version !== agreementVersion
 
   // Sin suscripción o después de terminar los diez días de gracia, el dueño
   // solo ve el flujo de pago. Durante `past_due` conserva el panel.
@@ -170,7 +172,7 @@ function GateOrShell() {
     currentTenant.subscription,
     !!user?.is_superuser,
   )
-  if (blocked) return <PaymentGate />
+  if (blocked && !agreementRequired) return <PaymentGate />
 
-  return <Shell />
+  return <Shell agreementRequired={agreementRequired} />
 }

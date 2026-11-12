@@ -20,7 +20,7 @@ function EditSection({ title, description, children }) {
 
 export default function StoresManager() {
   const { user } = useAuth()
-  const { openUpdates, hasNews } = useOutletContext() || {}
+  const { openUpdates, openAgreement, hasNews } = useOutletContext() || {}
   const { stores, current, currentTenant, select, reload, loading, error: loadError } = useTenant()
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(null)
@@ -255,12 +255,19 @@ export default function StoresManager() {
       <Card
         title={`Tus tiendas (${stores.length})`}
         actions={
-          openUpdates && (
-            <button type="button" className="btn small ghost updates-link" onClick={openUpdates}>
-              Ver Novedades
-              {hasNews && <span className="updates-tag">Nuevo</span>}
-            </button>
-          )
+          <div className="btn-group">
+            {openAgreement && (
+              <button type="button" className="btn small ghost updates-link" onClick={openAgreement}>
+                Ver acuerdo
+              </button>
+            )}
+            {openUpdates && (
+              <button type="button" className="btn small ghost updates-link" onClick={openUpdates}>
+                Ver Novedades
+                {hasNews && <span className="updates-tag">Nuevo</span>}
+              </button>
+            )}
+          </div>
         }
       >
         <Alert>{loadError}</Alert>

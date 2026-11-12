@@ -676,6 +676,7 @@ input:focus, select:focus, textarea:focus {
 .agreement-info-copy .agreement-privacy-callout { margin: 0; }
 .agreement-info-copy .agreement-copy { max-height: 48vh; margin: 0; padding-right: 10px; }
 .agreement-info-actions { grid-template-columns: 1fr; margin-top: 4px; }
+.agreement-info-acceptance { display: flex; flex-direction: column; gap: 12px; padding: 8px 0 0; }
 
 .catalog-modal-backdrop { z-index: 120; }
 .catalog-edit-modal { max-width: 520px; }
@@ -1898,7 +1899,7 @@ input:focus, select:focus, textarea:focus {
 
 .store-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(245px, 100%), 1fr));
   gap: 22px;
 }
 
@@ -2358,6 +2359,7 @@ input:focus, select:focus, textarea:focus {
 
 .product-modal-close {
   position: absolute;
+  z-index: 3;
   top: 10px;
   right: 12px;
   background: rgba(255, 255, 255, 0.85);

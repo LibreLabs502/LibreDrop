@@ -43,11 +43,13 @@ datos (fila única) y se editan desde el panel del superusuario.
 Cada usuario guarda `agreement_version` y `agreement_accepted_at`. El endpoint
 `/auth/me/` expone la versión vigente y `POST /auth/agreement/accept/` registra
 la aceptación autenticada. El panel la exige a quienes administran una tienda,
-tanto a las cuentas existentes como a las nuevas antes del primer pago. El
-texto se mantiene en `AgreementGate.jsx` y el panel ofrece una ventana para
-volver a consultarlo. La versión v4 vuelve a exigir aceptación a las cuentas
-con tiendas existentes al entrar al panel, incluso si mantienen una sesión
-activa. La versión v3 explica la licencia GNU AGPL-3.0, que las
+tanto a las cuentas existentes como a las nuevas antes del primer pago. Si
+falta aceptar la versión vigente, `AgreementInfoModal.jsx` aparece sobre el
+panel, no se puede cerrar ni usar el panel hasta aceptar, y la sesión permanece
+activa. El botón **Ver acuerdo** está en **Tus tiendas** para volver a leerlo.
+La versión v4 vuelve a exigir aceptación a las cuentas con tiendas existentes
+al entrar al panel, incluso si mantienen una sesión activa. La versión v3
+explica la licencia GNU AGPL-3.0, que las
 mejoras aceptadas se integran al producto común para todas las tiendas y que la
 suscripción cubre alojamiento, actualizaciones y soporte de 6:00 a. m. a 10:00
 p. m. (hora de Guatemala), no una licencia del código. También describe el uso
