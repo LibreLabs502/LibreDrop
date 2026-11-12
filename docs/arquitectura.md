@@ -45,7 +45,9 @@ Cada usuario guarda `agreement_version` y `agreement_accepted_at`. El endpoint
 la aceptación autenticada. El panel la exige a quienes administran una tienda,
 tanto a las cuentas existentes como a las nuevas antes del primer pago. El
 texto se mantiene en `AgreementGate.jsx` y el panel ofrece una ventana para
-volver a consultarlo. La versión v3 explica la licencia GNU AGPL-3.0, que las
+volver a consultarlo. La versión v4 vuelve a exigir aceptación a las cuentas
+con tiendas existentes al entrar al panel, incluso si mantienen una sesión
+activa. La versión v3 explica la licencia GNU AGPL-3.0, que las
 mejoras aceptadas se integran al producto común para todas las tiendas y que la
 suscripción cubre alojamiento, actualizaciones y soporte de 6:00 a. m. a 10:00
 p. m. (hora de Guatemala), no una licencia del código. También describe el uso

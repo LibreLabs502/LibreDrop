@@ -28,6 +28,8 @@
   pequeñas.
 - El panel permite volver a consultar el acuerdo desde **Ver acuerdo y
   privacidad**.
+- La versión v4 vuelve a pedir aceptación a las cuentas que ya tienen tienda
+  cuando entran al panel; la sesión y el token permanecen activos.
 - Al enviar un comprobante de suscripción aparece una transición a pantalla
   completa: el logo de LibreDrop crece al centro y luego se reduce antes de
   continuar con el envío.

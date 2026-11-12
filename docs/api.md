@@ -32,7 +32,7 @@ refresh 30 días. Ante un `401`, el cliente renueva con `/auth/token/refresh/` y
 repite la petición (el frontend lo hace solo, así la sesión dura hasta 30 días).
 `/auth/me/` incluye `agreement_version`, `agreement_accepted_at` y
 `agreement_required_version`. Para aceptar, enviá
-`{"version":"v3"}` a `POST /auth/agreement/accept/`; el backend guarda la
+`{"version":"v4"}` a `POST /auth/agreement/accept/`; el backend guarda la
 versión y la fecha en la cuenta autenticada. Una versión anterior no habilita
 el acceso.
 Nota: las URLs de imágenes (logo, producto) que devuelven los serializers son de

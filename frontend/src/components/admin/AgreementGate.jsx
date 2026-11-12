@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../store/AuthContext'
 
-export const AGREEMENT_VERSION = 'v3'
+export const AGREEMENT_VERSION = 'v4'
 
 export function AgreementCopy() {
   return (

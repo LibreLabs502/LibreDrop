@@ -144,7 +144,7 @@ export default function AdminApp() {
 
 function GateOrShell() {
   const { user, entryTransition, finishEntryTransition } = useAuth()
-  const { currentTenant, loading } = useTenant()
+  const { currentTenant, stores, loading } = useTenant()
 
   if (entryTransition) {
     return (
@@ -160,7 +160,7 @@ function GateOrShell() {
   if (loading) return <div className="page-load">Cargando tiendas…</div>
 
   const agreementVersion = user?.agreement_required_version || AGREEMENT_VERSION
-  if (currentTenant && !user?.is_superuser && user?.agreement_version !== agreementVersion) {
+  if (stores.length > 0 && !user?.is_superuser && user?.agreement_version !== agreementVersion) {
     return <AgreementGate />
   }
 
