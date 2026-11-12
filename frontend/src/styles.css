@@ -1335,7 +1335,7 @@ input:focus, select:focus, textarea:focus {
   --store-hero-overlay: rgba(255, 255, 255, 0.12);
   --store-hero-border: rgba(255, 255, 255, 0.5);
   --store-hero-border-strong: rgba(255, 255, 255, 0.7);
-  max-width: 1080px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 16px 72px;
   min-height: 100vh;
@@ -1802,6 +1802,12 @@ input:focus, select:focus, textarea:focus {
 
 .store-cats button.active .store-filter-count { background: var(--store-on-primary); color: var(--store-primary); }
 
+@media (min-width: 1024px) {
+  .store-toolbar { gap: 14px; margin-bottom: 24px; padding: 14px 18px; }
+  .store-cats { gap: 10px; }
+  .store-cats button { min-height: 44px; padding: 11px 26px; font-size: 14px; }
+}
+
 .store-search {
   border: 1px solid var(--store-border);
   border-radius: 999px;
@@ -2225,7 +2231,7 @@ input:focus, select:focus, textarea:focus {
   .store-product-count { padding: 6px 9px; font-size: 10px; }
   .store-toolbar { padding: 9px; border-radius: 15px; }
   .store-toolbar { gap: 8px; }
-  .store-cats button { padding: 9px 18px; }
+  .store-cats button { min-height: 38px; padding: 9px 20px; font-size: 13px; }
   .store-mobile-menu-toggle { width: 34px; height: 34px; flex-basis: 34px; }
   .store-search-toggle span { display: none; }
   .store-search-toggle { width: 36px; height: 36px; padding: 0; }
