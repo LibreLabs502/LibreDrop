@@ -84,6 +84,16 @@ const cartOrderMessage = (store, lines) => {
   return `Hola ${store?.name || ''}, quiero realizar este pedido:\n${items.join('\n')}${subtotal}`
 }
 
+const sameHeading = (first, second) => {
+  const normalize = (value) => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLocaleLowerCase('es')
+  return Boolean(normalize(first) && normalize(first) === normalize(second))
+}
+
 function CartIcon({ size = 19 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden="true">
@@ -148,13 +158,14 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, 
 
   const product = visibleProducts[slide % visibleProducts.length]
   const cover = productImages(product)[0]
+  const showEyebrow = !sameHeading(eyebrow, title)
 
   return (
     <section id="store-hero" className="store-hero-carousel" aria-label={title}>
       <div className="store-hero-glow" aria-hidden="true" />
       <div className="store-hero-slide" key={product.id}>
         <div className="store-hero-copy">
-          <span className="store-hero-eyebrow">{eyebrow}</span>
+          {showEyebrow && <span className="store-hero-eyebrow">{eyebrow}</span>}
           <p className="store-hero-kicker">{title}</p>
           <h1>{product.name}</h1>
           {product.description && <p className="store-hero-product-desc">{product.description}</p>}
@@ -212,12 +223,13 @@ function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll })
   }
 
   if (!products.length) return null
+  const showEyebrow = !sameHeading(eyebrow, title)
 
   return (
     <section className="store-collection-rail-section" id={id}>
       <header className="store-rail-heading">
         <div>
-          <span className="store-section-eyebrow">{eyebrow}</span>
+          {showEyebrow && <span className="store-section-eyebrow">{eyebrow}</span>}
           <h2>{title}</h2>
         </div>
         <div className="store-rail-actions">
