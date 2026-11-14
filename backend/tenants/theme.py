@@ -66,6 +66,20 @@ PALETTES = {
         "background": "#18181B",
         "text": "#F4F4F5",
     },
+    "turquoise": {
+        "label": "Turquesa",
+        "primary": "#0F9D9A",
+        "secondary": "#CCFBF1",
+        "background": "#F0FDFA",
+        "text": "#123331",
+    },
+    "black_yellow": {
+        "label": "Negro y amarillo",
+        "primary": "#FACC15",
+        "secondary": "#292510",
+        "background": "#111111",
+        "text": "#F8FAFC",
+    },
 }
 
 # El azul es el tema predeterminado y no cambia la apariencia de las tiendas

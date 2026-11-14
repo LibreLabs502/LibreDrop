@@ -10,6 +10,15 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v1.6',
+    date: 'Noviembre 2026',
+    title: 'Nuevas paletas para tu tienda',
+    items: [
+      'Elegí la nueva paleta Turquesa para darle a tu tienda un estilo fresco y luminoso.',
+      'También podés usar Negro y amarillo, una combinación oscura con acentos amarillos.',
+    ],
+  },
+  {
     version: 'v1.5',
     date: 'Noviembre 2026',
     title: 'Tu cuenta y tus datos, más claros',

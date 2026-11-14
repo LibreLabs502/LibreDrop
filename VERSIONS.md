@@ -1,5 +1,13 @@
 # Versiones
 
+## v1.6 — Dos nuevas paletas para las tiendas
+
+- Se agregan las paletas **Turquesa** y **Negro y amarillo** al selector de
+  apariencia. La primera usa fondos claros y acentos turquesa; la segunda,
+  fondos oscuros con acentos amarillos.
+- El catálogo del backend las expone junto con las paletas existentes y el
+  panel las muestra automáticamente.
+
 ## v1.5 — Acuerdo de uso y protección de datos
 
 - Al iniciar sesión, las cuentas que administran una tienda revisan y aceptan
@@ -336,7 +344,8 @@
   `tenants/0006`). El valor por defecto es la paleta **Azul**, por lo que las
   tiendas existentes no cambian de apariencia.
 - Catálogo de paletas con **una única definición** en `tenants/theme.py`
-  (Azul, Rosa, Verde, Morado, Café, Oscuro) expuesto en `GET /tenants/palettes/`.
+  (Azul, Rosa, Verde, Morado, Café, Oscuro, Turquesa y Negro y amarillo)
+  expuesto en `GET /tenants/palettes/`.
 - `PATCH /tenants/tenant/<id>/` acepta `theme_palette` (clave de paleta) o
   colores hexadecimales sueltos; la lectura se expone en `theme`.
 - El storefront público devuelve los colores en `theme` y el frontend los aplica
