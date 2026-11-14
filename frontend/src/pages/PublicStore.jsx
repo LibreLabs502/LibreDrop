@@ -84,16 +84,6 @@ const cartOrderMessage = (store, lines) => {
   return `Hola ${store?.name || ''}, quiero realizar este pedido:\n${items.join('\n')}${subtotal}`
 }
 
-const sameHeading = (first, second) => {
-  const normalize = (value) => String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim()
-    .toLocaleLowerCase('es')
-  return Boolean(normalize(first) && normalize(first) === normalize(second))
-}
-
 function CartIcon({ size = 19 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" aria-hidden="true">
@@ -109,7 +99,6 @@ function PriceTag({ product, now = Date.now() }) {
     const percent = discountPercent(product, now)
     const oldPrice = formatPrice(product.price)
     const offerPrice = formatPrice(effectivePrice(product, now))
-    const countdown = offerCountdown(product, now)
     return (
       <div className="product-price-row offer-price-list">
         {oldPrice && <div className="product-price-line product-price-old">Precio original: {oldPrice}</div>}
@@ -124,12 +113,28 @@ function PriceTag({ product, now = Date.now() }) {
             <span className="product-price">{offerPrice}</span>
           </div>
         )}
-        {countdown && <div className="product-price-line product-offer-countdown">Termina en {countdown}</div>}
+        <OfferCountdown product={product} />
       </div>
     )
   }
   const price = formatPrice(product.price)
   return price ? <span className="product-price">{price}</span> : null
+}
+
+function OfferCountdown({ product }) {
+  const [now, setNow] = useState(() => Date.now())
+  const endAt = product.offer_ends_at
+
+  useEffect(() => {
+    if (!endAt || new Date(endAt).getTime() <= Date.now()) return undefined
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [endAt])
+
+  const countdown = offerCountdown(product, now)
+  return countdown
+    ? <div className="product-price-line product-offer-countdown">Termina en {countdown}</div>
+    : null
 }
 
 function ArrowIcon({ direction = 'right' }) {
@@ -158,15 +163,14 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, 
 
   const product = visibleProducts[slide % visibleProducts.length]
   const cover = productImages(product)[0]
-  const showEyebrow = !sameHeading(eyebrow, title)
+  const collectionHeading = title || eyebrow || 'Productos destacados'
 
   return (
-    <section id="store-hero" className="store-hero-carousel" aria-label={title}>
+    <section id="store-hero" className="store-hero-carousel" aria-label={collectionHeading}>
       <div className="store-hero-glow" aria-hidden="true" />
       <div className="store-hero-slide" key={product.id}>
         <div className="store-hero-copy">
-          {showEyebrow && <span className="store-hero-eyebrow">{eyebrow}</span>}
-          <p className="store-hero-kicker">{title}</p>
+          <p className="store-hero-kicker">{collectionHeading}</p>
           <h1>{product.name}</h1>
           {product.description && <p className="store-hero-product-desc">{product.description}</p>}
           <PriceTag product={product} now={now} />
@@ -176,7 +180,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, 
           </div>
         </div>
         <button type="button" className="store-hero-image" onClick={() => onOpen(product)} aria-label={`Ver ${product.name}`}>
-          <img src={cover} alt={product.name} />
+          <img src={cover} alt={product.name} loading="eager" fetchPriority="high" decoding="async" />
           {hasOffer(product, now) && <span className="store-hero-offer">-{discountPercent(product, now)}% OFF</span>}
         </button>
       </div>
@@ -223,14 +227,13 @@ function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll })
   }
 
   if (!products.length) return null
-  const showEyebrow = !sameHeading(eyebrow, title)
+  const collectionHeading = title || eyebrow || 'Colección'
 
   return (
     <section className="store-collection-rail-section" id={id}>
       <header className="store-rail-heading">
         <div>
-          {showEyebrow && <span className="store-section-eyebrow">{eyebrow}</span>}
-          <h2>{title}</h2>
+          <h2>{collectionHeading}</h2>
         </div>
         <div className="store-rail-actions">
           <button type="button" className="store-see-all" onClick={onSeeAll}>Ver todas <ArrowIcon /></button>
@@ -244,7 +247,7 @@ function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll })
           return (
             <button key={product.id} type="button" className="store-rail-product" onClick={() => onOpen(product)}>
               <span className="store-rail-product-media">
-                <img src={cover} alt="" />
+                <img src={cover} alt="" loading="lazy" decoding="async" />
                 {hasOffer(product, now) && <span className="store-rail-badge">-{discountPercent(product, now)}%</span>}
               </span>
               <span className="store-rail-product-info">
@@ -385,11 +388,15 @@ export default function PublicStore() {
   }, [slug])
 
   useEffect(() => {
-    const hasUpcomingEnd = store?.products?.some(
-      (product) => product.offer_ends_at && new Date(product.offer_ends_at).getTime() > now,
-    )
-    if (!hasUpcomingEnd) return undefined
-    const timer = window.setTimeout(() => setNow(Date.now()), 1000)
+    const nextEnd = (store?.products || [])
+      .map((product) => new Date(product.offer_ends_at).getTime())
+      .filter((end) => Number.isFinite(end) && end > now)
+      .sort((a, b) => a - b)[0]
+    if (!nextEnd) return undefined
+    // Actualizamos la tienda cuando una oferta vence, no cada segundo. La
+    // cuenta regresiva vive en su propio componente para no re-renderizar el
+    // catálogo completo continuamente.
+    const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, nextEnd - now + 25))
     return () => window.clearTimeout(timer)
   }, [store, now])
 
@@ -842,7 +849,7 @@ export default function PublicStore() {
           <span className="store-intro-decoration one" aria-hidden="true" />
           <span className="store-intro-decoration two" aria-hidden="true" />
           {store.logo ? (
-            <img className="store-intro-logo" src={store.logo} alt={`Logo de ${store.name}`} />
+            <img className="store-intro-logo" src={store.logo} alt={`Logo de ${store.name}`} loading="eager" fetchPriority="high" decoding="async" />
           ) : (
             <span className="store-intro-logo store-intro-logo-fallback" aria-hidden="true">{String(store.name || 'T')[0].toUpperCase()}</span>
           )}
@@ -1026,7 +1033,7 @@ export default function PublicStore() {
               <div className="product-media">
                 {cover ? (
                   <button type="button" className="product-image-button" onClick={() => openProduct(p)} aria-label={`Ver ${p.name}`}>
-                    <img className="product-cover" src={cover} alt={p.name} />
+                    <img className="product-cover" src={cover} alt={p.name} loading="lazy" decoding="async" />
                     <span className="product-quick-view">Vista rápida <span aria-hidden="true">↗</span></span>
                   </button>
                 ) : (
@@ -1064,6 +1071,8 @@ export default function PublicStore() {
                   className="product-gallery-main"
                   src={selectedImages[activeImage] || selectedImages[0]}
                   alt={selected.name}
+                  loading="lazy"
+                  decoding="async"
                 />
                 {selectedImages.length > 1 && (
                   <div className="product-gallery-thumbs">
@@ -1076,7 +1085,7 @@ export default function PublicStore() {
                         aria-label={`Ver foto ${index + 1}`}
                         aria-pressed={index === activeImage}
                       >
-                        <img src={src} alt="" />
+                        <img src={src} alt="" loading="lazy" decoding="async" />
                       </button>
                     ))}
                   </div>

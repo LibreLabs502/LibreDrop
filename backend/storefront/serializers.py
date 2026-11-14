@@ -60,7 +60,9 @@ class PublicProductSerializer(serializers.ModelSerializer):
         for field in ("image", "image2", "image3", "image4", "image5"):
             image = getattr(instance, field, None)
             if image:
-                data[field] = optimized(image.url)
+                # El catálogo público se consume en tarjetas y galerías de
+                # producto; limitar el ancho evita descargar originales enormes.
+                data[field] = optimized(image.url, "f_auto,q_auto,w_1200,c_limit")
         return data
 
 
@@ -122,5 +124,5 @@ class PublicTenantSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
-            data["logo"] = optimized(instance.logo.url)
+            data["logo"] = optimized(instance.logo.url, "f_auto,q_auto,w_400,c_limit")
         return data

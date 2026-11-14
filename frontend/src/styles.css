@@ -1442,7 +1442,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--store-on-primary);
   background: linear-gradient(130deg, var(--store-primary-dark) 0%, var(--store-primary) 72%, var(--store-primary-dark) 100%);
   box-shadow: 0 22px 48px rgba(15, 23, 42, .17);
-  animation: storefront-opening .9s cubic-bezier(.16,.72,.2,1) both;
+  animation: storefront-opening .55s cubic-bezier(.2,.75,.25,1) both;
 }
 .storefront-feature::before, .storefront-feature::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; }
 .storefront-feature::before { top: -300px; right: -130px; width: 620px; height: 620px; background: radial-gradient(circle, var(--store-hero-overlay), transparent 69%); }
@@ -1472,8 +1472,8 @@ input:focus, select:focus, textarea:focus {
 .storefront-feature.no-carousel .store-intro > p { max-width: 760px; font-size: clamp(16px, 2vw, 21px); }
 .store-wordmark span { display: block; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @keyframes storefront-logo-arrive { from { opacity: 0; transform: translateY(9px) scale(.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes storefront-opening { from { clip-path: circle(0 at 50% 44%); opacity: .82; } to { clip-path: circle(150vmax at 50% 44%); opacity: 1; } }
-@keyframes storefront-image-pop { from { opacity: 0; clip-path: circle(0 at 50% 50%); transform: scale(.82); } to { opacity: 1; clip-path: circle(150% at 50% 50%); transform: scale(1); } }
+@keyframes storefront-opening { from { opacity: .72; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes storefront-image-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
 
 @media (max-width: 720px) {
   .store-navbar { margin-bottom: -62px; padding-right: 12px; padding-left: 12px; }
@@ -1519,8 +1519,8 @@ input:focus, select:focus, textarea:focus {
 .store-rail-choose { display: inline-flex; align-items: center; gap: 5px; margin-top: auto; color: var(--store-primary-ink, var(--store-primary)); font-size: 11px; font-weight: 850; }
 .store-rail-choose svg { width: 14px; height: 14px; }
 
-@keyframes storefront-hero-arrive { from { opacity: 0; transform: translateX(24px); filter: blur(3px); } 72% { opacity: 1; filter: blur(0); } to { opacity: 1; transform: translateX(0); filter: blur(0); } }
-@keyframes storefront-carousel-image { from { opacity: 0; transform: translateX(30px) scale(.96); filter: blur(4px); } 75% { opacity: 1; filter: blur(0); } to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); } }
+@keyframes storefront-hero-arrive { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes storefront-carousel-image { from { opacity: 0; transform: translateX(18px) scale(.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
 @keyframes storefront-search-arrive { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: translateY(0); } }
 
 .store-hero-brand {
