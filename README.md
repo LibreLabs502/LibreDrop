@@ -29,8 +29,9 @@ Plataforma multitenant para catálogos de tiendas públicas con pedidos y consul
 - El código está licenciado bajo GNU AGPL-3.0; la suscripción del servicio
   oficial cubre alojamiento, soporte y actualizaciones. Las mejoras aceptadas
   para el producto oficial se comparten con todas las tiendas.
-- `robots.txt` pide a todos los rastreadores que no recorran el sitio; no es una
-  barrera de seguridad ni puede controlar los bots que ignoren la instrucción.
+- `robots.txt` permite a Google rastrear las tiendas públicas, excluye el panel
+  de administración y solicita a rastreadores conocidos de IA que no recorran
+  el sitio. Es una instrucción voluntaria, no una barrera de seguridad.
 - Al elegir **Temporada**, aparecen sus subcategorías debajo del buscador para
   filtrar los productos por ocasión.
 - Las compras se informan por los canales configurados por cada tienda.

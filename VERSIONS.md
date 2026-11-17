@@ -1,5 +1,15 @@
 # Versiones
 
+## v1.7 — Tiendas públicas visibles para Google
+
+- `robots.txt` permite a Google rastrear las tiendas públicas y excluye el
+  panel de administración. También solicita a rastreadores conocidos de IA que
+  no recorran el sitio; estas directivas son voluntarias.
+- El acuerdo actualizado aclara esta política, que Google decide qué páginas
+  incluye en sus resultados y que el rastreo permitido no garantiza aparecer.
+- La actualización del acuerdo pasa a v5 y vuelve a solicitar aceptación en el
+  panel.
+
 ## v1.6 — Dos nuevas paletas para las tiendas
 
 - Se agregan las paletas **Turquesa** y **Negro y amarillo** al selector de
@@ -26,9 +36,9 @@
   integran al producto común para todas las tiendas y que no se garantizan
   desarrollos exclusivos ni la aprobación de cada solicitud.
 - El acuerdo aclara que LibreDrop no usa datos personales de pedidos para
-  entrenar modelos propios y que `robots.txt` solicita no rastrear el sitio,
-  pero no puede impedir que bots externos ignoren esa instrucción o reutilicen
-  contenido público.
+  entrenar modelos propios y que `robots.txt` solicita a rastreadores conocidos
+  de IA que no recorran el sitio, pero no puede impedir que bots externos
+  ignoren esa instrucción o reutilicen contenido público.
 - El mensaje generado para los pedidos muestra que el pedido está en el panel
   y agrega el enlace de LibreDrop. El cliente puede volver al selector y
   cambiar de canal sin crear un pedido duplicado.

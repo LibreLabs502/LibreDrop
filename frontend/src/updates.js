@@ -10,6 +10,16 @@
 // localStorage por usuario.
 export const UPDATES = [
   {
+    version: 'v1.7',
+    date: 'Noviembre 2026',
+    title: 'Tus tiendas públicas pueden aparecer en Google',
+    items: [
+      'Google puede recorrer las tiendas públicas; el panel de administración queda excluido del rastreo.',
+      'Solicitamos a rastreadores conocidos de inteligencia artificial que no recorran el sitio. Estas reglas son voluntarias y no impiden el acceso público.',
+      'Actualizamos el acuerdo de uso a v5 para explicar cómo se rastrea el contenido público.',
+    ],
+  },
+  {
     version: 'v1.6',
     date: 'Noviembre 2026',
     title: 'Nuevas paletas para tu tienda',

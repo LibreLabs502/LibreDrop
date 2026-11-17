@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../store/AuthContext'
 
-export const AGREEMENT_VERSION = 'v4'
+export const AGREEMENT_VERSION = 'v5'
 
 export function AgreementCopy() {
   return (
@@ -18,7 +18,7 @@ export function AgreementCopy() {
         <h2>3. Información y privacidad</h2>
         <p>LibreDrop guarda datos de cuenta y tienda, catálogo, pedidos, información de contacto de clientes y comprobantes de suscripción para prestar el servicio, dar soporte, proteger las cuentas y administrar pagos. Aplicamos permisos por tienda y acceso restringido a funciones administrativas.</p>
         <p>Los datos personales que el cliente proporciona al hacer un pedido se guardan para que la tienda lo atienda y se muestran a quienes administran esa tienda; no se publican en su catálogo. LibreDrop no usa esos datos de pedidos para entrenar modelos propios de inteligencia artificial.</p>
-        <p>Las descripciones, fotos y demás contenido que publicás en una tienda pública sí son accesibles por internet. LibreDrop usa robots.txt para pedir a buscadores y rastreadores que no recorran ni indexen el sitio. Es una instrucción voluntaria: algunos bots pueden ignorarla y LibreDrop no puede controlar qué hacen terceros con contenido público que hayan recopilado, incluido su posible uso para entrenar modelos. No publiques contenido confidencial o información personal que no quieras hacer pública.</p>
+        <p>Las descripciones, fotos y demás contenido que publicás en una tienda pública sí son accesibles por internet. LibreDrop permite que Google Search recorra las tiendas públicas para que puedan aparecer en sus resultados y solicita a algunos rastreadores conocidos de inteligencia artificial que no recorran el sitio. robots.txt es una instrucción voluntaria: algunos bots pueden ignorarla y LibreDrop no puede controlar qué hacen terceros con contenido público que hayan recopilado. Google decide qué páginas incluye en sus resultados; permitir el rastreo no garantiza que una tienda aparezca. No publiques contenido confidencial o información personal que no quieras hacer pública.</p>
         <p>Para operar usamos proveedores tecnológicos de alojamiento, base de datos y almacenamiento de imágenes. Cuando continuás a WhatsApp, Instagram, Facebook o TikTok, esos servicios aplican sus propias condiciones y políticas. LibreDrop no controla sus prácticas. Ningún servicio conectado a internet puede prometer seguridad absoluta.</p>
       </section>
       <section>

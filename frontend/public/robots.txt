@@ -1,2 +1,35 @@
+# Google puede recorrer las tiendas públicas para mostrarlas en sus resultados.
+# El panel de administración no necesita aparecer en búsquedas.
 User-agent: *
+Disallow: /admin
+
+# Regla explícita para Google Search: mantener pública la tienda y excluir el panel.
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+
+# Solicitudes voluntarias para rastreadores conocidos relacionados con IA.
+# No son controles de acceso y no todos los bots obedecen robots.txt.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
 Disallow: /

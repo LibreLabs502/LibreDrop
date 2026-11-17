@@ -157,9 +157,10 @@ curl https://libredrop.onrender.com/version/     # commit desplegado (verificar 
 
 `frontend/vercel.json` ya incluye el rewrite de SPA para que `/admin`,
 `/admin/catalogo` y `/tienda/<slug>` funcionen al recargar.
-El archivo `frontend/public/robots.txt` se publica en la raíz del sitio y
-solicita a todos los rastreadores que no recorran sus páginas. Esta directiva
-no restringe el acceso público ni impide que bots la ignoren.
+El archivo `frontend/public/robots.txt` se publica en la raíz del sitio.
+Permite a Google rastrear las tiendas públicas, excluye `/admin` y solicita a
+rastreadores conocidos de IA que no recorran el sitio. Estas directivas no
+restringen el acceso público ni impiden que bots las ignoren.
 
 ### Previews de Vercel (opcional)
 

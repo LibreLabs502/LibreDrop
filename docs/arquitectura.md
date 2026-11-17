@@ -53,9 +53,9 @@ explica la licencia GNU AGPL-3.0, que las
 mejoras aceptadas se integran al producto común para todas las tiendas y que la
 suscripción cubre alojamiento, actualizaciones y soporte de 6:00 a. m. a 10:00
 p. m. (hora de Guatemala), no una licencia del código. También describe el uso
-de datos de pedidos y los límites de `robots.txt`: solicita a todos los
-rastreadores que no recorran ninguna ruta, pero no es un control de acceso ni
-permite controlar bots que ignoran la directiva.
+de datos de pedidos y los límites de `robots.txt`: permite que Google rastree
+las tiendas públicas, excluye `/admin` y solicita a rastreadores conocidos de IA
+que no recorran el sitio. Son directivas voluntarias, no controles de acceso.
 
 Las **ofertas** se guardan únicamente en `Product.discount_percent` (entero de
 1 a 99). Si hay `price`, `Product.discounted_price` calcula el precio rebajado
