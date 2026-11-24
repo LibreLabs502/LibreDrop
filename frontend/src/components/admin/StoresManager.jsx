@@ -29,6 +29,14 @@ export default function StoresManager() {
   const [ok, setOk] = useState('')
   const [busy, setBusy] = useState(false)
   const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0)
+  const subscription = currentTenant?.subscription
+  const subscriptionStatus = subscription?.status
+  const graceDaysRemaining = subscription?.grace_days_remaining ?? 0
+  const subscriptionPaymentWarning = subscriptionStatus === 'past_due'
+    ? `Tu plan finalizó. Tienes ${graceDaysRemaining} ${graceDaysRemaining === 1 ? 'día' : 'días'} para pagar la suscripción.`
+    : subscriptionStatus === 'suspended'
+      ? 'Tu plan venció y la tienda quedó suspendida. Paga la suscripción para reactivarla.'
+      : ''
 
   useEffect(() => {
     if (!user?.is_superuser) return undefined
@@ -238,6 +246,15 @@ export default function StoresManager() {
               Me gustaría activar mi cuenta
             </a>
           </div>
+        </div>
+      )}
+
+      {!user?.is_superuser && subscriptionPaymentWarning && (
+        <div className="notice warn">
+          <p className="notice-text">{subscriptionPaymentWarning}</p>
+          <Link className="btn small" to="/admin/pagos">
+            Hacer pago
+          </Link>
         </div>
       )}
 
