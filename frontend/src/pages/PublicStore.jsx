@@ -671,7 +671,7 @@ export default function PublicStore() {
     : category === 'offers'
       ? 'Ofertas especiales'
       : category === 'seasonal'
-        ? 'Colección de temporada'
+        ? seasonalCategories.find((season) => String(season.id) === String(seasonalSubcategory))?.name || 'Colección de temporada'
         : category === 'featured'
           ? 'Selección destacada'
           : currentCategory?.name || 'Nuestra colección'
@@ -953,20 +953,31 @@ export default function PublicStore() {
             <button className={category === 'all' ? 'active' : ''} onClick={() => chooseCategory('all')}>
               Todos
             </button>
+            {seasonalCategories.map((season) => {
+              const count = seasonalProducts.filter(
+                (product) => String(product.seasonal_category) === String(season.id),
+              ).length
+              const active = category === 'seasonal' && String(seasonalSubcategory) === String(season.id)
+              return (
+                <button
+                  key={`season-${season.id}`}
+                  className={`store-filter${active ? ' active' : ''}`}
+                  onClick={() => {
+                    setCategory('seasonal')
+                    setSeasonalSubcategory(String(season.id))
+                  }}
+                  aria-pressed={active}
+                >
+                  {season.name} <span className="store-filter-count">{count}</span>
+                </button>
+              )
+            })}
             {offerProducts.length > 0 && (
               <button
                 className={`store-filter${category === 'offers' ? ' active' : ''}`}
                 onClick={() => chooseCategory('offers')}
               >
                 Ofertas <span className="store-filter-count">{offerProducts.length}</span>
-              </button>
-            )}
-            {seasonalProducts.length > 0 && (
-              <button
-                className={`store-filter${category === 'seasonal' ? ' active' : ''}`}
-                onClick={() => chooseCategory('seasonal')}
-              >
-                Temporada <span className="store-filter-count">{seasonalProducts.length}</span>
               </button>
             )}
             {featuredProducts.length > 0 && (
@@ -1009,39 +1020,6 @@ export default function PublicStore() {
           )}
         </div>
       </div>
-
-      {category === 'seasonal' && seasonalCategories.length > 0 && (
-        <nav className="store-seasonal-subcategories" aria-label="Subcategorías de temporada">
-          <span className="store-seasonal-subcategories-label">Explorá por temporada</span>
-          <div className="store-seasonal-subcategory-list">
-            <button
-              type="button"
-              className={seasonalSubcategory === 'all' ? 'active' : ''}
-              onClick={() => setSeasonalSubcategory('all')}
-              aria-pressed={seasonalSubcategory === 'all'}
-            >
-              Todas <span>{seasonalProducts.length}</span>
-            </button>
-            {seasonalCategories.map((season) => {
-              const count = seasonalProducts.filter(
-                (product) => String(product.seasonal_category) === String(season.id),
-              ).length
-              const active = String(seasonalSubcategory) === String(season.id)
-              return (
-                <button
-                  key={season.id}
-                  type="button"
-                  className={active ? 'active' : ''}
-                  onClick={() => setSeasonalSubcategory(String(season.id))}
-                  aria-pressed={active}
-                >
-                  {season.name} <span>{count}</span>
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-      )}
 
       <div className="store-grid">
         {products.length === 0 && <p className="muted">No hay productos.</p>}
