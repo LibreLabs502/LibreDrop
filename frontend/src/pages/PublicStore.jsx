@@ -128,6 +128,22 @@ function PriceTag({ product, now = Date.now(), showDecimals = false }) {
   return price ? <span className="product-price">{price}</span> : null
 }
 
+function ProductBadges({ product, now, seasonalCategories = [], placement = 'card' }) {
+  const season = seasonalCategories.find(
+    (item) => String(item.id) === String(product.seasonal_category),
+  )
+  const hasBadges = hasOffer(product, now) || product.featured || season
+  if (!hasBadges) return null
+
+  return (
+    <span className={`product-card-badges${placement === 'card' ? '' : ` ${placement}`}`}>
+      {hasOffer(product, now) && <span className="product-card-badge offer">-{discountPercent(product, now)}%</span>}
+      {product.featured && <span className="product-card-badge featured">Destacado</span>}
+      {season && <span className="product-card-badge seasonal">{season.name}</span>}
+    </span>
+  )
+}
+
 function OfferCountdown({ product }) {
   const [now, setNow] = useState(() => Date.now())
   const endAt = product.offer_ends_at
@@ -188,7 +204,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, showDecimals,
         </div>
         <button type="button" className="store-hero-image" onClick={() => onOpen(product)} aria-label={`Ver ${product.name}`}>
           <img src={cover} alt={product.name} loading="eager" fetchPriority="high" decoding="async" />
-          {hasOffer(product, now) && <span className="store-hero-offer">-{discountPercent(product, now)}% OFF</span>}
+          <ProductBadges product={product} now={now} seasonalCategories={store?.seasonal_categories || []} placement="hero" />
         </button>
       </div>
       {visibleProducts.length > 1 && (
@@ -202,7 +218,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, showDecimals,
   )
 }
 
-function CollectionRail({ id, title, eyebrow, products, now, showDecimals, onOpen, onSeeAll }) {
+function CollectionRail({ id, title, eyebrow, products, now, showDecimals, seasonalCategories = [], onOpen, onSeeAll }) {
   const railRef = useRef(null)
   const [railEdges, setRailEdges] = useState({ left: false, right: false })
   const updateRailEdges = useCallback(() => {
@@ -255,7 +271,7 @@ function CollectionRail({ id, title, eyebrow, products, now, showDecimals, onOpe
             <button key={product.id} type="button" className="store-rail-product" onClick={() => onOpen(product)}>
               <span className="store-rail-product-media">
                 <img src={cover} alt="" loading="lazy" decoding="async" />
-                {hasOffer(product, now) && <span className="store-rail-badge">-{discountPercent(product, now)}%</span>}
+                <ProductBadges product={product} now={now} seasonalCategories={seasonalCategories} placement="rail" />
               </span>
               <span className="store-rail-product-info">
                 {product.brand && <span className="product-brand">{product.brand}</span>}
@@ -910,6 +926,7 @@ export default function PublicStore() {
           {...collection}
           now={now}
           showDecimals={showPriceDecimals}
+          seasonalCategories={store.seasonal_categories || []}
           onOpen={openProduct}
           onSeeAll={() => {
             chooseCategory(collection.type === 'offers' ? 'offers' : collection.type === 'seasonal' ? 'seasonal' : 'featured')
@@ -1036,10 +1053,7 @@ export default function PublicStore() {
                 ) : (
                   <div className="product-image-placeholder">Foto próximamente</div>
                 )}
-                <div className="product-card-badges">
-                  {hasOffer(p, now) && <span className="product-card-badge offer">-{discountPercent(p, now)}%</span>}
-                  {p.featured && <span className="product-card-badge featured">Destacado</span>}
-                </div>
+                <ProductBadges product={p} now={now} seasonalCategories={store.seasonal_categories || []} />
               </div>
               <div className="product-body">
                 {p.brand && <span className="product-brand">{p.brand}</span>}

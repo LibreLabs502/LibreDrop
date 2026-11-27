@@ -1373,7 +1373,6 @@ input:focus, select:focus, textarea:focus {
 .store-hero-image { position: relative; display: block; width: 100%; max-width: 460px; aspect-ratio: 4 / 4.6; justify-self: end; padding: 0; overflow: hidden; border: 8px solid rgba(255,255,255,.82); border-radius: 38px; background: var(--store-surface); box-shadow: 0 24px 55px rgba(0,0,0,.26); cursor: pointer; transform: rotate(1.5deg); transition: transform .35s cubic-bezier(.2,.75,.25,1); }
 .store-hero-image:hover { transform: rotate(0) scale(1.015); }
 .store-hero-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.store-hero-offer { position: absolute; top: 15px; left: 15px; padding: 9px 13px; border-radius: 999px; color: #fff; background: #dc2626; box-shadow: 0 4px 15px rgba(15,23,42,.2); font-size: 12px; font-weight: 850; }
 .store-hero-dots { position: absolute; z-index: 2; bottom: 20px; left: 50%; display: flex; gap: 7px; transform: translateX(-50%); }
 .store-hero-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: var(--store-hero-border-strong, rgba(255,255,255,.65)); cursor: pointer; transition: width .2s ease, background .2s ease; }
 .store-hero-dots button.active { width: 24px; background: var(--store-on-primary); }
@@ -1509,7 +1508,6 @@ input:focus, select:focus, textarea:focus {
 .store-rail-product-media { position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 4.5; background: var(--store-secondary); }
 .store-rail-product-media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
 .store-rail-product:hover .store-rail-product-media img { transform: scale(1.045); }
-.store-rail-badge { position: absolute; top: 10px; left: 10px; padding: 6px 9px; border-radius: 999px; color: #fff; background: #dc2626; font-size: 10px; font-weight: 850; }
 .store-rail-product-info { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-height: 135px; padding: 13px; }
 .store-rail-product-info .product-brand { font-size: 9px; }
 .store-rail-product-info strong { display: -webkit-box; overflow: hidden; width: 100%; color: var(--store-text); font-size: 14px; line-height: 1.3; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -1959,9 +1957,12 @@ input:focus, select:focus, textarea:focus {
   font-size: 13px;
 }
 .product-card-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.product-card-badges.rail { top: 10px; left: 10px; }
+.product-card-badges.hero { top: 15px; left: 15px; }
 .product-card-badge { padding: 6px 12px; border-radius: 999px; color: var(--store-text); background: var(--store-surface); box-shadow: 0 3px 10px rgba(15, 23, 42, .12); font-size: 11px; font-weight: 850; line-height: 1; }
 .product-card-badge.offer { color: #fff; background: #dc2626; }
 .product-card-badge.featured { color: var(--store-primary-ink, var(--store-primary)); }
+.product-card-badge.seasonal { color: var(--store-primary-ink, var(--store-primary)); background: var(--store-secondary); }
 .product-quick-view {
   position: absolute;
   right: 11px;
@@ -2233,6 +2234,7 @@ input:focus, select:focus, textarea:focus {
   .product-price { font-size: 15px; }
   .btn-buy { font-size: 11px; padding: 8px 6px; white-space: normal; line-height: 1.25; }
   .product-card-badges { top: 7px; left: 7px; gap: 4px; }
+  .product-card-badges.rail, .product-card-badges.hero { top: 7px; left: 7px; }
   .product-card-badge { padding: 5px 9px; font-size: 9px; }
   .product-quick-view { right: 7px; bottom: 7px; padding: 6px 8px; font-size: 9px; }
   .store-collection-heading { align-items: center; margin-bottom: 12px; }
