@@ -73,7 +73,7 @@ export default function StoresManager() {
       description: t.description || '',
       sale_text: t.sale_text || 'Productos con ofertas',
       featured_products_text: t.featured_products_text || 'Productos destacados',
-      show_price_decimals: Boolean(t.show_price_decimals),
+      show_price_decimals: t.show_price_decimals !== false,
       whatsapp: t.whatsapp || '',
       instagram_url: t.instagram_url || '',
       facebook_url: t.facebook_url || '',
@@ -188,17 +188,19 @@ export default function StoresManager() {
               <div className="channel-list">
                 <div className="channel-row">
                   <div className="channel-info">
-                    <span className="channel-name">Mostrar decimales</span>
-                    <span className="channel-note">Si está desactivado, los precios se muestran como números enteros y los pedidos usan ese mismo importe.</span>
+                    <span className="channel-name">¿Mostrar decimales en los precios?</span>
+                    <span className="channel-note">Sí muestra, por ejemplo, Q 35.50. No muestra Q 35 y los pedidos usan ese mismo importe.</span>
                   </div>
                   <label className="switch">
                     <input
                       type="checkbox"
                       checked={Boolean(form.show_price_decimals)}
+                      aria-label="Mostrar decimales en los precios"
                       onChange={(event) => setForm({ ...form, show_price_decimals: event.target.checked })}
                     />
                     <span className="switch-track"><span className="switch-thumb" /></span>
                   </label>
+                  <span className="channel-name" aria-live="polite">{form.show_price_decimals ? 'Sí' : 'No'}</span>
                 </div>
               </div>
             </EditSection>

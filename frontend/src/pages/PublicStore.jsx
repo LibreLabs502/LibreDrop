@@ -469,7 +469,7 @@ export default function PublicStore() {
       (product) => String(product.seasonal_category) === String(season.id),
     ),
   })).filter((collection) => collection.products.length > 0)
-  const showPriceDecimals = Boolean(store?.show_price_decimals)
+  const showPriceDecimals = store?.show_price_decimals !== false
   const isSearching = searchOpen || Boolean(query.trim())
   const showStoreHighlights = category === 'all' && !isSearching
   const heroCollection = seasonalCollections.length
