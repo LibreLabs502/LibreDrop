@@ -1759,7 +1759,14 @@ input:focus, select:focus, textarea:focus {
 .store-cats-arrow:disabled { opacity: 0.35; cursor: default; }
 
 .store-cats button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   flex: 0 0 auto;
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
   border: 1px solid var(--store-secondary);
   background: var(--store-secondary);
   color: var(--store-text);
@@ -1767,6 +1774,7 @@ input:focus, select:focus, textarea:focus {
   padding: 9px 20px;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
@@ -1806,7 +1814,7 @@ input:focus, select:focus, textarea:focus {
 @media (min-width: 1024px) {
   .store-toolbar { gap: 14px; margin-bottom: 24px; padding: 14px 18px; }
   .store-cats { gap: 10px; }
-  .store-cats button { min-height: 44px; padding: 11px 26px; font-size: 14px; }
+  .store-cats button { height: 44px; min-height: 44px; padding: 11px 26px; font-size: 14px; }
 }
 
 .store-search {
@@ -2232,7 +2240,7 @@ input:focus, select:focus, textarea:focus {
   .store-product-count { padding: 6px 9px; font-size: 10px; }
   .store-toolbar { padding: 9px; border-radius: 15px; }
   .store-toolbar { gap: 8px; }
-  .store-cats button { min-height: 38px; padding: 9px 20px; font-size: 13px; }
+  .store-cats button { height: 38px; min-height: 38px; padding: 9px 20px; font-size: 13px; }
   .store-mobile-menu-toggle { width: 34px; height: 34px; flex-basis: 34px; }
   .store-search-toggle span { display: none; }
   .store-search-toggle { width: 36px; height: 36px; padding: 0; }
