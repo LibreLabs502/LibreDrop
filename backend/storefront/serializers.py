@@ -87,6 +87,7 @@ class PublicTenantSerializer(serializers.ModelSerializer):
             "logo",
             "sale_text",
             "featured_products_text",
+            "show_price_decimals",
             "whatsapp",
             "instagram_url",
             "facebook_url",

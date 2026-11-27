@@ -1,5 +1,5 @@
 from datetime import timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 
 from django.db import transaction
 from django.db.models import Q
@@ -93,10 +93,16 @@ class PublicOrderCreateView(generics.GenericAPIView):
                 original_price = product.price if offer_active else None
                 unit_price = product.price
                 applied_discount = discount if offer_active else None
+                if not tenant.show_price_decimals and unit_price is not None:
+                    unit_price = unit_price.quantize(Decimal("1"), rounding=ROUND_DOWN)
+                    if original_price is not None:
+                        original_price = original_price.quantize(Decimal("1"), rounding=ROUND_DOWN)
                 if offer_active and product.price is not None:
-                    unit_price = (product.price * (Decimal("100") - Decimal(discount)) / Decimal("100")).quantize(
-                        Decimal("0.01"), rounding=ROUND_HALF_UP
-                    )
+                    precision = Decimal("0.01") if tenant.show_price_decimals else Decimal("1")
+                    rounding = ROUND_HALF_UP if tenant.show_price_decimals else ROUND_DOWN
+                    unit_price = (
+                        unit_price * (Decimal("100") - Decimal(discount)) / Decimal("100")
+                    ).quantize(precision, rounding=rounding)
                 order_items.append(OrderItem(
                     order=order,
                     product=product,

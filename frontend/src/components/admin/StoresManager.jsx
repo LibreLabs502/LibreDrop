@@ -73,6 +73,7 @@ export default function StoresManager() {
       description: t.description || '',
       sale_text: t.sale_text || 'Productos con ofertas',
       featured_products_text: t.featured_products_text || 'Productos destacados',
+      show_price_decimals: Boolean(t.show_price_decimals),
       whatsapp: t.whatsapp || '',
       instagram_url: t.instagram_url || '',
       facebook_url: t.facebook_url || '',
@@ -180,6 +181,25 @@ export default function StoresManager() {
                 <Field label="Título de productos destacados" hint="Encabezado de la selección destacada. Máximo 40 caracteres.">
                   <input value={form.featured_products_text} maxLength={40} onChange={(e) => setForm({ ...form, featured_products_text: e.target.value })} />
                 </Field>
+              </div>
+            </EditSection>
+
+            <EditSection title="Precios" description="Elegí si los precios de la tienda muestran centavos.">
+              <div className="channel-list">
+                <div className="channel-row">
+                  <div className="channel-info">
+                    <span className="channel-name">Mostrar decimales</span>
+                    <span className="channel-note">Si está desactivado, los precios se muestran como números enteros y los pedidos usan ese mismo importe.</span>
+                  </div>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.show_price_decimals)}
+                      onChange={(event) => setForm({ ...form, show_price_decimals: event.target.checked })}
+                    />
+                    <span className="switch-track"><span className="switch-thumb" /></span>
+                  </label>
+                </div>
               </div>
             </EditSection>
 

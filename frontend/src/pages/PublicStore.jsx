@@ -74,13 +74,20 @@ const readStoredCart = (slug) => {
   }
 }
 
-const cartOrderMessage = (store, lines) => {
+const formatStorePrice = (value, showDecimals = false) => {
+  if (value === null || value === undefined || value === '') return ''
+  const amount = Number(value)
+  if (!Number.isFinite(amount)) return `Q ${value}`
+  return showDecimals ? formatPrice(amount) : `Q ${Math.floor(amount + Number.EPSILON)}`
+}
+
+const cartOrderMessage = (store, lines, showDecimals = false) => {
   const items = lines.map(({ product, quantity, unitPrice }) =>
-    `• ${quantity} × ${product.name}${unitPrice === null ? '' : ` — ${formatPrice(unitPrice)} c/u`}`,
+    `• ${quantity} × ${product.name}${unitPrice === null ? '' : ` — ${formatStorePrice(unitPrice, showDecimals)} c/u`}`,
   )
   const allItemsHavePrice = lines.every((line) => line.unitPrice !== null)
   const total = lines.reduce((sum, line) => sum + (line.unitPrice === null ? 0 : line.unitPrice * line.quantity), 0)
-  const subtotal = allItemsHavePrice ? `\nSubtotal: ${formatPrice(total)}` : ''
+  const subtotal = allItemsHavePrice ? `\nSubtotal: ${formatStorePrice(total, showDecimals)}` : ''
   return `Hola ${store?.name || ''}, quiero realizar este pedido:\n${items.join('\n')}${subtotal}`
 }
 
@@ -94,11 +101,11 @@ function CartIcon({ size = 19 }) {
   )
 }
 
-function PriceTag({ product, now = Date.now() }) {
+function PriceTag({ product, now = Date.now(), showDecimals = false }) {
   if (hasOffer(product, now)) {
     const percent = discountPercent(product, now)
-    const oldPrice = formatPrice(product.price)
-    const offerPrice = formatPrice(effectivePrice(product, now))
+    const oldPrice = formatStorePrice(product.price, showDecimals)
+    const offerPrice = formatStorePrice(effectivePrice(product, now, showDecimals), showDecimals)
     return (
       <div className="product-price-row offer-price-list">
         {oldPrice && <div className="product-price-line product-price-old">Precio original: {oldPrice}</div>}
@@ -117,7 +124,7 @@ function PriceTag({ product, now = Date.now() }) {
       </div>
     )
   }
-  const price = formatPrice(product.price)
+  const price = formatStorePrice(effectivePrice(product, now, showDecimals), showDecimals)
   return price ? <span className="product-price">{price}</span> : null
 }
 
@@ -145,7 +152,7 @@ function ArrowIcon({ direction = 'right' }) {
   )
 }
 
-function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, onAddToCart, onOpen }) {
+function StoreHeroCarousel({ products, eyebrow, title, store, now, showDecimals, canPurchase, onAddToCart, onOpen }) {
   const [slide, setSlide] = useState(0)
   const visibleProducts = products.filter((product) => productImages(product).length > 0)
 
@@ -173,7 +180,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, 
           <p className="store-hero-kicker">{collectionHeading}</p>
           <h1>{product.name}</h1>
           {product.description && <p className="store-hero-product-desc">{product.description}</p>}
-          <PriceTag product={product} now={now} />
+          <PriceTag product={product} now={now} showDecimals={showDecimals} />
           <div className="store-hero-actions">
             {canPurchase && <button type="button" className="btn-buy store-add-to-cart" onClick={() => onAddToCart(product)}><CartIcon size={17} />Agregar al carrito</button>}
             <button type="button" className="store-hero-details" onClick={() => onOpen(product)}>Ver producto</button>
@@ -195,7 +202,7 @@ function StoreHeroCarousel({ products, eyebrow, title, store, now, canPurchase, 
   )
 }
 
-function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll }) {
+function CollectionRail({ id, title, eyebrow, products, now, showDecimals, onOpen, onSeeAll }) {
   const railRef = useRef(null)
   const [railEdges, setRailEdges] = useState({ left: false, right: false })
   const updateRailEdges = useCallback(() => {
@@ -253,7 +260,7 @@ function CollectionRail({ id, title, eyebrow, products, now, onOpen, onSeeAll })
               <span className="store-rail-product-info">
                 {product.brand && <span className="product-brand">{product.brand}</span>}
                 <strong>{product.name}</strong>
-                <PriceTag product={product} now={now} />
+                <PriceTag product={product} now={now} showDecimals={showDecimals} />
                 <span className="store-rail-choose">Ver opciones <ArrowIcon /></span>
               </span>
             </button>
@@ -453,34 +460,44 @@ export default function PublicStore() {
     () => featuredProducts.filter((product) => productImages(product).length > 0),
     [featuredProducts],
   )
+  const seasonalCollections = seasonalCategories.map((season) => ({
+    type: 'seasonal',
+    id: `rail-seasonal-${season.id}`,
+    title: season.name,
+    eyebrow: 'CATEGORÍA DE TEMPORADA',
+    products: seasonalCarouselProducts.filter(
+      (product) => String(product.seasonal_category) === String(season.id),
+    ),
+  })).filter((collection) => collection.products.length > 0)
+  const showPriceDecimals = Boolean(store?.show_price_decimals)
   const isSearching = searchOpen || Boolean(query.trim())
   const showStoreHighlights = category === 'all' && !isSearching
-  const heroCollection = seasonalCarouselProducts.length
-    ? { type: 'seasonal', products: seasonalCarouselProducts, eyebrow: 'COLECCIÓN DE TEMPORADA', title: 'Para cada ocasión' }
+  const heroCollection = seasonalCollections.length
+    ? seasonalCollections[0]
     : offerCarouselProducts.length
       ? { type: 'offers', products: offerCarouselProducts, eyebrow: 'OFERTAS ESPECIALES', title: store?.sale_text || 'Encontrá tu favorito' }
       : featuredCarouselProducts.length
         ? { type: 'featured', products: featuredCarouselProducts, eyebrow: 'PRODUCTOS DESTACADOS', title: store?.featured_products_text || 'Nuestra selección' }
         : null
   const secondaryCollections = [
-    { type: 'seasonal', id: 'rail-seasonal', title: 'Productos de temporada', eyebrow: 'PARA CADA OCASIÓN', products: seasonalCarouselProducts },
+    ...seasonalCollections.slice(1),
     { type: 'offers', id: 'rail-offers', title: store?.sale_text || 'Ofertas especiales', eyebrow: 'PRECIOS ESPECIALES', products: offerCarouselProducts },
     { type: 'featured', id: 'rail-featured', title: store?.featured_products_text || 'Productos destacados', eyebrow: 'SELECCIÓN DE LA TIENDA', products: featuredCarouselProducts },
-  ].filter((collection) => collection.type !== heroCollection?.type && collection.products.length > 0)
+  ].filter((collection) => collection.products.length > 0 && !(collection.type === heroCollection?.type && collection.id === heroCollection?.id))
   const cartLines = useMemo(() => {
     if (!store) return []
     return cartItems
       .map((item) => {
         const product = store.products.find((candidate) => String(candidate.id) === item.productId)
         if (!product) return null
-        return { product, quantity: item.quantity, unitPrice: effectivePrice(product, now) }
+        return { product, quantity: item.quantity, unitPrice: effectivePrice(product, now, showPriceDecimals) }
       })
       .filter(Boolean)
   }, [store, cartItems, now])
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
   const cartTotal = cartLines.reduce((total, line) => total + (line.unitPrice === null ? 0 : line.unitPrice * line.quantity), 0)
   const cartHasUnpricedProduct = cartLines.some((line) => line.unitPrice === null)
-  const cartMessage = cartLines.length ? cartOrderMessage(store, cartLines) : ''
+  const cartMessage = cartLines.length ? cartOrderMessage(store, cartLines, showPriceDecimals) : ''
   const cartChannelLinks = cartLines.length ? buildPurchaseLinks(store, cartMessage) : []
   const orderChannelLinks = order ? buildPurchaseLinks(store, order.message) : []
   const hasPurchaseChannels = buildPurchaseLinks(store, 'pedido').length > 0
@@ -577,9 +594,9 @@ export default function PublicStore() {
         items: cartLines.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
       })
       const items = created.items.map((item) =>
-        `• ${item.quantity} × ${item.product_name}${item.unit_price === null ? '' : ` — ${formatPrice(item.unit_price)} c/u`}`,
+        `• ${item.quantity} × ${item.product_name}${item.unit_price === null ? '' : ` — ${formatStorePrice(item.unit_price, showPriceDecimals)} c/u`}`,
       )
-      const total = created.total === null ? '\nTotal: a confirmar' : `\nTotal: ${formatPrice(created.total)}`
+      const total = created.total === null ? '\nTotal: a confirmar' : `\nTotal: ${formatStorePrice(created.total, showPriceDecimals)}`
       const message = `Hola, soy ${checkoutCustomer.full_name}. Mi número de pedido es #${String(created.public_id).slice(0, 8)} y me gustaría pedir:\n\n${items.join('\n')}${total}${LIBREDROP_ORDER_FOOTER}`
       const destination = buildPurchaseLinks(store, message).find((link) => link.key === channel.key)
       const savedChannel = { ...channel, href: destination?.href || channel.href }
@@ -778,7 +795,7 @@ export default function PublicStore() {
                         : <span className="store-cart-line-placeholder" aria-hidden="true" />}
                       <div className="store-cart-line-info">
                         <b>{product.name}</b>
-                        <span>{unitPrice === null ? 'Precio a consultar' : formatPrice(unitPrice)}</span>
+                        <span>{unitPrice === null ? 'Precio a consultar' : formatStorePrice(unitPrice, showPriceDecimals)}</span>
                         <div className="store-cart-quantity" aria-label={`Cantidad de ${product.name}`}>
                           <button type="button" onClick={() => quantity === 1 ? removeFromCart(product.id) : changeCartQuantity(product.id, quantity - 1)} aria-label={quantity === 1 ? `Quitar ${product.name}` : `Reducir cantidad de ${product.name}`}>{quantity === 1 ? '−' : '−'}</button>
                           <span>{quantity}</span>
@@ -792,7 +809,7 @@ export default function PublicStore() {
                 <footer className="store-cart-foot">
                   <div className="store-cart-total">
                     <span>{cartHasUnpricedProduct ? 'Subtotal parcial' : 'Subtotal'}</span>
-                    <b>{cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'A consultar'}</b>
+                    <b>{cartLines.some((line) => line.unitPrice !== null) ? formatStorePrice(cartTotal, showPriceDecimals) : 'A consultar'}</b>
                   </div>
                   {cartHasUnpricedProduct && <p>Hay productos sin precio publicado; se confirmará el total por mensaje.</p>}
                   <button type="button" className="btn-buy store-cart-checkout" onClick={() => { setCartOpen(false); setOrder(null); setCheckoutError(''); setCheckoutOpen(true) }} disabled={!cartChannelLinks.length}>
@@ -818,7 +835,7 @@ export default function PublicStore() {
             </div>
             <p className="store-checkout-kicker">Tu selección · {cartCount} {cartCount === 1 ? 'producto' : 'productos'}</p>
             <h2 id="store-checkout-title">Completá tu pedido</h2>
-            <p className="store-checkout-summary">{cartLines.some((line) => line.unitPrice !== null) ? formatPrice(cartTotal) : 'Total a consultar'}</p>
+            <p className="store-checkout-summary">{cartLines.some((line) => line.unitPrice !== null) ? formatStorePrice(cartTotal, showPriceDecimals) : 'Total a consultar'}</p>
             <form className="store-checkout-form" ref={checkoutFormRef} onSubmit={(event) => event.preventDefault()}>
               <div className="store-checkout-fields">
                 <label>Nombre y apellido<input autoComplete="name" required maxLength={200} value={checkoutCustomer.full_name} onChange={(event) => setCheckoutCustomer((value) => ({ ...value, full_name: event.target.value }))} placeholder="Tu nombre completo" /></label>
@@ -879,6 +896,7 @@ export default function PublicStore() {
             title={heroCollection.title}
             store={store}
             now={now}
+            showDecimals={showPriceDecimals}
             canPurchase={hasPurchaseChannels}
             onAddToCart={addToCart}
             onOpen={openProduct}
@@ -891,6 +909,7 @@ export default function PublicStore() {
           key={collection.id}
           {...collection}
           now={now}
+          showDecimals={showPriceDecimals}
           onOpen={openProduct}
           onSeeAll={() => {
             chooseCategory(collection.type === 'offers' ? 'offers' : collection.type === 'seasonal' ? 'seasonal' : 'featured')
@@ -1048,7 +1067,7 @@ export default function PublicStore() {
                 {p.brand && <span className="product-brand">{p.brand}</span>}
                 <button type="button" className="product-name-link" onClick={() => openProduct(p)}>{p.name}</button>
                 {p.description && <p className="store-product-desc">{p.description}</p>}
-                <PriceTag product={p} now={now} />
+                <PriceTag product={p} now={now} showDecimals={showPriceDecimals} />
                 {hasPurchaseChannels && (
                   <div className="product-buy">
                     {renderAddToCartButton(p)}
@@ -1096,7 +1115,7 @@ export default function PublicStore() {
               <h2>{selected.name}</h2>
               {selected.brand && <span className="product-brand">{selected.brand}</span>}
               {selected.description && <p>{selected.description}</p>}
-              <PriceTag product={selected} now={now} />
+              <PriceTag product={selected} now={now} showDecimals={showPriceDecimals} />
               {hasPurchaseChannels && renderAddToCartButton(selected)}
             </div>
           </div>

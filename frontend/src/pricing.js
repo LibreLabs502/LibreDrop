@@ -38,17 +38,26 @@ export const discountPercent = (product, now = Date.now()) => {
   return manualDiscountPercent(product) || 0
 }
 
-export const discountedPrice = (product, now = Date.now()) => {
+export const discountedPrice = (product, now = Date.now(), showDecimals = true) => {
   if (!hasOffer(product, now)) return null
-  const price = productPrice(product)
+  const originalPrice = productPrice(product)
   const percent = discountPercent(product, now)
-  if (price === null) return null
-  return Math.round((price * (100 - percent) / 100 + Number.EPSILON) * 100) / 100
+  if (originalPrice === null) return null
+  const price = showDecimals ? originalPrice : Math.floor(originalPrice + Number.EPSILON)
+  const discounted = price * (100 - percent) / 100
+  return showDecimals
+    ? Math.round((discounted + Number.EPSILON) * 100) / 100
+    : Math.floor(discounted + Number.EPSILON)
 }
 
 // Precio principal: calculado si hay oferta y precio normal; si no, el normal.
-export const effectivePrice = (product, now = Date.now()) =>
-  hasOffer(product, now) ? discountedPrice(product, now) : productPrice(product)
+export const effectivePrice = (product, now = Date.now(), showDecimals = true) => {
+  const price = hasOffer(product, now)
+    ? discountedPrice(product, now, showDecimals)
+    : productPrice(product)
+  if (price === null || showDecimals) return price
+  return Math.floor(price + Number.EPSILON)
+}
 
 // Milisegundos que le quedan a la oferta. Null si no tiene fecha de fin.
 export const offerRemaining = (product, now = Date.now()) => {
